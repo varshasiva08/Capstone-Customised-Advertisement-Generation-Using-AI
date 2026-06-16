@@ -1,0 +1,11 @@
+streamlit
+pyyaml
+requests
+python-dotenv
+diffusers
+transformers
+accelerate
+sentencepiece
+protobuf
+huggingface_hub
+Pillow

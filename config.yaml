@@ -1,0 +1,79 @@
+required_fields: [ethnicity, body_type, age]
+
+options:
+  ethnicity: [South Asian, East Asian, African American]
+  body_type: [slim, medium, plus-size]
+  age: [20s, 30s, 40s, 50s]
+  clothing: [White Blazer Suit, Black Blazer Suit, Navy Blue Suit,
+             Kurta & Pants, Anarkali Suit, Modest Maxi Dress]
+  background: [Warm Beige, Pure White, Light Grey,
+               Soft Pink, Sage Green, Deep Navy]
+
+defaults:
+  clothing: White Blazer Suit
+  background: Pure White
+
+# Local LLM used for parsing the user's brief into a demographic profile.
+# phi3:mini is a good fit for 8GB RAM machines - small (~2.3GB), fast,
+# and reliable enough at short structured-JSON extraction.
+# llama3.2:3b is a solid alternative if you want to compare accuracy.
+ollama:
+  model: phi3:mini
+  host: http://localhost:11434
+
+# LLaVA via Hugging Face Inference API — used for DFC verification (Module 3).
+# Runs on HF's GPU servers. No local model needed. Uses your HF_TOKEN_1 from .env.
+# No ollama pull required. Fast (~3–5s per question).
+hf_dfc:
+  model_id: llava-hf/llava-1.5-7b-hf
+
+keywords:
+  ethnicity:
+    South Asian: [indian, south asian, desi, pakistani]
+    East Asian: [east asian, chinese, japanese, korean]
+    African American: [african american, black, african]
+  body_type:
+    slim: [slim, thin, lean, petite]
+    medium: [medium, average, regular]
+    plus-size: [plus size, plus-size, curvy, fuller, size 18]
+  age:
+    20s: [20s, twenties, young]
+    30s: [30s, thirties]
+    40s: [40s, forties, middle aged]
+    50s: [50s, fifties, older]
+
+body_type_extras:
+  plus-size: "size 18, wide hips, fuller waist, rounder face, heavier build,"
+  medium: ""
+  slim: ""
+
+generation:
+  model_id: black-forest-labs/FLUX.1-schnell
+  resolution: [768, 1280]       # used on GPU
+  num_inference_steps: 4         # used on GPU
+  cpu_resolution: [512, 512]     # used on CPU (faster testing)
+  cpu_steps: 2                   # used on CPU (faster testing)
+  dfc_threshold: 0.70
+  max_iterations: 3
+
+corrections:
+  BTF:
+    mild: "fuller figure, size 16,"
+    strong: "size 18, wide hips, fuller waist, visibly heavier build,"
+  STF:
+    mild: "deep brown skin tone,"
+    strong: "very dark rich brown skin, deep melanin-rich complexion,"
+  AF:
+    mild: "mature woman,"
+    strong: "visible age lines, mature face, silver streaks in hair,"
+
+# Advertisement-framed prompt. Leaves clear empty space so the
+# Module 4 (product/brand compositor) has room to place a product or logo.
+prompt_template: >
+  professional advertisement photograph for a clothing brand campaign,
+  full body shot of a {body_type} {ethnicity} woman in her {age},
+  {body_type_extras} head to toe, standing pose, wearing {clothing},
+  high neckline, fully covered, long sleeves,
+  commercial fashion advertising, high fashion editorial, studio photography,
+  seamless {background} background, softbox lighting, sharp focus, 8k,
+  visible feet, empty space reserved for product placement and logo
