@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from profiler.profile_gen import generate_profiles
 from profiler.prompt_builder import build_prompt
 from profiler.text_parser import check_ollama, parse_brief
- 
+from generator.modules.motion import animate_image
 load_dotenv()
  
 # ---------- Config ----------
@@ -207,8 +207,8 @@ if ss.stage == "ready":
         p1.file_uploader("Upload product image", type=["png", "jpg"], disabled=True,
                           help="Module 4 — product compositing, coming soon")
         p1.selectbox("Logo position", ["Top Left", "Top Right", "Bottom Right"], disabled=True)
-        p2.selectbox("Animation style", ["Subtle sway", "Camera pan", "Zoom in"], disabled=True,
-                      help="Module 5 — motion, coming soon")
+        animation_style = p2.selectbox("Animation style", ["Subtle sway", "Camera pan", "Zoom in"],
+              help="Module 5 — Viggle motion template")
         st.divider()
  
     c1, c2 = st.columns(2)
@@ -235,6 +235,22 @@ if ss.stage == "ready":
             out_path = f"outputs/output_{key_suffix}_seed{seed}.png"
             img.save(out_path)
             container.caption(f"Saved to `{out_path}`")
+            # ---- Module 5: animation ----
+            if ss.want_product:
+                with container.status("Animating...", expanded=True) as anim_status:
+                    anim_status.write("🎬 Applying motion...")
+                    try:
+                        video_path = animate_image(
+                            image=img,
+                            style=animation_style,
+                            api_key=os.getenv("VIGGLE_API_KEY"),
+                        )
+                        anim_status.update(label="Done!", state="complete")
+                        container.video(video_path)
+                        container.caption(f"Saved to `{video_path}`")
+                    except Exception as e:
+                        container.error(f"Animation failed: {e}")
+            # ---- end Module 5 ----
  
         except Exception as e:
             import traceback
@@ -254,6 +270,7 @@ if ss.stage == "ready":
                     expanded=(i == 1)
                 ):
                     render_output(profile, f"profile{i}", st.container())
+    
  
 st.divider()
 if st.button("🔄 Start new brief", use_container_width=False):
@@ -264,3 +281,11 @@ if st.button("🔄 Start new brief", use_container_width=False):
     ss.want_product = None
     ss.messages     = ss.messages[:1]
     st.rerun()
+
+
+
+video_path = animate_image(
+    image=img,                          # the PIL.Image from generate_image()
+    driving_video_path=video_path,      # from the new file_uploader
+    api_key=os.getenv("VIGGLE_API_KEY"),
+)
