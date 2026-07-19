@@ -31,7 +31,9 @@ def load_config(path: str = "config.yaml") -> dict:
 def build_prompt(profile: dict, clothing: str, background: str,
                  config: dict = None,
                  correction_keys: list[str] = None,
-                 iteration: int = 0) -> str:
+                 iteration: int = 0,
+                 product_description: str = None,
+                 product_category: str = "handbag") -> str:
     """
     Build the full advertisement image prompt.
 
@@ -44,6 +46,16 @@ def build_prompt(profile: dict, clothing: str, background: str,
                          Empty or None means no correction (first generation).
         iteration:       Which CDVR iteration this is (0 = first attempt).
                          Controls correction severity: 0→none, 1→mild, 2→strong.
+        product_description: Optional short text description of a product
+                         (e.g. "black leather structured handbag with gold
+                         buckle"). If provided, the model is instructed to
+                         generate the subject naturally wearing/carrying it,
+                         so the product is drawn integrated into the
+                         pose/lighting rather than composited afterward.
+        product_category: How the product is used - "handbag" (carried on
+                         shoulder), "sunglasses" (worn on face), "jewelry"
+                         (worn - necklace/earrings), or "other" (generic
+                         hand-held). Picks the matching phrasing template.
 
     Returns:
         The complete prompt string. Never shown in the UI.
@@ -61,6 +73,48 @@ def build_prompt(profile: dict, clothing: str, background: str,
         clothing=clothing,
         background=background,
     ).strip()
+
+    if product_description:
+        clause_templates = {
+            "handbag": (
+                ", body and shoulders facing the camera, one hand on hip, a "
+                "medium-sized {desc} sized proportionally to her body, roughly "
+                "torso-height, not oversized, hanging from her other shoulder "
+                "and resting at her side, carried naturally like a real "
+                "handbag, still facing forward toward camera, face clearly "
+                "visible, product clearly visible and in focus, realistic "
+                "contact shadow where the bag meets her arm"
+            ),
+            "sunglasses": (
+                ", body facing the camera, head turned slightly toward camera, "
+                "wearing {desc} on her face, sunglasses fitted naturally and "
+                "correctly sized to her face, resting on the bridge of her "
+                "nose, temples over her ears, clearly visible, sharp focus on "
+                "the eyewear, realistic reflections and shadow on the lenses"
+            ),
+            "jewelry": (
+                ", body and shoulders facing the camera, face clearly visible, "
+                "wearing {desc}, fitted naturally, clearly visible, sharp "
+                "focus, realistic scale relative to her features"
+            ),
+            "other": (
+                ", body and shoulders facing the camera, one hand on hip, "
+                "other hand holding a medium-sized {desc} sized proportionally "
+                "to her body, not oversized, held naturally at waist level, "
+                "still facing forward toward camera, face clearly visible, "
+                "product clearly visible and in focus, realistic grip and "
+                "shadow"
+            ),
+        }
+        template = clause_templates.get(product_category, clause_templates["handbag"])
+        product_clause = template.format(desc=product_description)
+        # Insert right after the pose/clothing description, before the
+        # lighting/background tail, so it reads as part of the main subject.
+        insert_after = "visible feet, empty space reserved for product placement and logo"
+        if insert_after in base_prompt:
+            base_prompt = base_prompt.replace(insert_after, "visible feet" + product_clause)
+        else:
+            base_prompt = base_prompt.rstrip(", ") + product_clause
 
     # No corrections needed on first attempt or if all axes passed
     if not correction_keys or iteration == 0:

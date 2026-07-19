@@ -199,14 +199,20 @@ if user_input := st.chat_input("Describe your brand or ad..."):
 if ss.stage == "ready":
     st.divider()
  
+    product_file = None
+    product_category = "handbag"
+
     if ss.want_product:
         st.markdown(
-            "##### 🛍️ Product & 🎬 Motion <span class='coming-soon'>placeholder</span>",
+            "##### 🛍️ Product & 🎬 Motion <span class='coming-soon'>motion coming soon</span>",
             unsafe_allow_html=True)
         p1, p2 = st.columns(2)
-        p1.file_uploader("Upload product image", type=["png", "jpg"], disabled=True,
-                          help="Module 4 — product compositing, coming soon")
-        p1.selectbox("Logo position", ["Top Left", "Top Right", "Bottom Right"], disabled=True)
+        product_file = p1.file_uploader("Upload product image", type=["png", "jpg"],
+                          help="AI will describe the product and generate the model wearing/carrying it")
+        product_category = p1.selectbox(
+            "Product type",
+            ["handbag", "sunglasses", "jewelry", "other"],
+            help="Picks how the model is posed with the product")
         p2.selectbox("Animation style", ["Subtle sway", "Camera pan", "Zoom in"], disabled=True,
                       help="Module 5 — motion, coming soon")
         st.divider()
@@ -224,11 +230,24 @@ if ss.stage == "ready":
             return
  
         from generator.flux_pipeline import generate_image
+        from modules.product_describe import describe_product
         try:
-            prompt = build_prompt(profile, clothing, background, CFG)
             with container.status("Generating...", expanded=True) as status:
+                product_description = None
+                if ss.want_product and product_file is not None:
+                    status.write("👁️ Looking at your product image...")
+                    from PIL import Image as PILImage
+                    product_img = PILImage.open(product_file)
+                    product_description = describe_product(product_img)
+                    status.write(f"🛍️ Product identified as: *{product_description}*")
+
+                prompt = build_prompt(profile, clothing, background, CFG,
+                                       product_description=product_description,
+                                       product_category=product_category)
+
                 status.write("⚙️ Calling FLUX.1-schnell...")
                 img, device, res, steps = generate_image(prompt, int(seed), CFG)
+
                 status.update(label="Done!", state="complete")
  
             container.image(img, caption=f"{device.upper()} · {res[0]}×{res[1]} · seed {seed}")
