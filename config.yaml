@@ -72,7 +72,8 @@ corrections:
 prompt_template: >
   professional advertisement photograph for a clothing brand campaign,
   full body shot of a {body_type} {ethnicity} woman in her {age},
-  {body_type_extras} head to toe, standing pose, wearing {clothing},
+  {body_type_extras} head to toe, standing pose, facing directly toward camera,
+  looking at camera, front-facing, face clearly visible, wearing {clothing},
   high neckline, fully covered, long sleeves,
   commercial fashion advertising, high fashion editorial, studio photography,
   seamless {background} background, softbox lighting, sharp focus, 8k,

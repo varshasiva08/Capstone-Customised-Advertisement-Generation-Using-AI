@@ -3,4 +3,4 @@ __pycache__/
 *.pyc
 outputs/
 venv/
-.venv/
+.venv/.DS_Store
