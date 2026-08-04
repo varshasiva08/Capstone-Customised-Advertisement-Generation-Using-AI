@@ -71,8 +71,7 @@ FOLLOW_UPS = {
  
 PRODUCT_QUESTION = (
     "Would you like to add a **product** to this ad? If yes, I'll also "
-    "ask about the **motion/animation** style — both are placeholders "
-    "(Modules 4 & 5, coming soon). Reply **yes** or **no**."
+    "ask about the **motion/animation** style. Reply **yes** or **no**."
 )
  
 YES_WORDS = {"yes", "yeah", "yep", "yup", "y", "sure", "ok", "okay"}
@@ -142,7 +141,7 @@ if user_input := st.chat_input("Describe your brand or ad..."):
             ss.want_product = True
             ss.stage = "ready"
             ss.messages.append({"role": "assistant", "content":
-                "Got it — set the product & motion placeholders below, "
+                "Got it — set the product & motion options below, "
                 "pick clothing and background, then hit **Generate**."})
         elif answer is False:
             ss.want_product = False
@@ -201,11 +200,11 @@ if ss.stage == "ready":
  
     product_file = None
     product_category = "handbag"
-
+    animate_enabled = False
+    animation_style = "Subtle sway"
+ 
     if ss.want_product:
-        st.markdown(
-            "##### 🛍️ Product & 🎬 Motion <span class='coming-soon'>motion coming soon</span>",
-            unsafe_allow_html=True)
+        st.markdown("##### 🛍️ Product & 🎬 Motion", unsafe_allow_html=True)
         p1, p2 = st.columns(2)
         product_file = p1.file_uploader("Upload product image", type=["png", "jpg"],
                           help="AI will describe the product and generate the model wearing/carrying it")
@@ -213,13 +212,28 @@ if ss.stage == "ready":
             "Product type",
             ["handbag", "sunglasses", "jewelry", "other"],
             help="Picks how the model is posed with the product")
-        p2.selectbox("Animation style", ["Subtle sway", "Camera pan", "Zoom in"], disabled=True,
-                      help="Module 5 — motion, coming soon")
+        animation_style = p2.selectbox(
+            "Animation style", ["Subtle sway", "Camera pan", "Zoom in"],
+            help="All styles currently produce the same walking animation while more motion options are added")
+        animate_enabled = p2.checkbox(
+            "Also animate this ad (uses Viggle credits)", value=False,
+            help="Generates a short walking video from the final image, in addition to the static photo")
         st.divider()
+    else:
+        animate_enabled = st.checkbox(
+            "Also animate this ad (uses Viggle credits)", value=False,
+            help="Generates a short walking video from the final image, in addition to the static photo")
  
     c1, c2 = st.columns(2)
     clothing   = c1.selectbox("Clothing",   CFG["options"]["clothing"])
     background = c2.selectbox("Background", CFG["options"]["background"])
+ 
+    if animate_enabled and st.session_state.get("mode") == "multi":
+        st.warning(
+            "⚠️ Animation is on and this will generate **6 profiles** — that's "
+            "6 separate Viggle charges in one click. Turn it off above if you "
+            "only want to preview the static images first."
+        )
  
     def render_output(profile, key_suffix, container):
         if not enable_generation:
@@ -254,6 +268,18 @@ if ss.stage == "ready":
             out_path = f"outputs/output_{key_suffix}_seed{seed}.png"
             img.save(out_path)
             container.caption(f"Saved to `{out_path}`")
+
+            if animate_enabled:
+                from modules.motion import animate_image
+                try:
+                    with container.status("Animating (Viggle)...", expanded=True) as anim_status:
+                        anim_status.write("🎬 Submitting to Viggle and waiting for render...")
+                        video_path = animate_image(img, style=animation_style, config=CFG)
+                        anim_status.update(label="Animation done!", state="complete")
+                    container.video(video_path)
+                    container.caption(f"Saved to `{video_path}`")
+                except Exception as e:
+                    container.error(f"Animation failed: {type(e).__name__}: {e}")
  
         except Exception as e:
             import traceback

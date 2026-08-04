@@ -26,6 +26,11 @@ ollama:
 # No ollama pull required. Fast (~3–5s per question).
 hf_dfc:
   model_id: llava-hf/llava-1.5-7b-hf
+viggle:
+  base_url: https://apis.viggle.ai
+  model: V4_Preview
+  background_mode: transparent
+  driving_video: driving_videos/walking_forward_back.mp4
 
 keywords:
   ethnicity:

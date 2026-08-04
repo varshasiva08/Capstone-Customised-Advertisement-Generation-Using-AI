@@ -9,3 +9,6 @@ sentencepiece
 protobuf
 huggingface_hub
 Pillow
+opencv-python
+imageio
+imageio-ffmpeg
