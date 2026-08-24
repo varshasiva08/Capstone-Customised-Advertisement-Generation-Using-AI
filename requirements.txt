@@ -1,14 +1,19 @@
+# Core
 streamlit
 pyyaml
 requests
 python-dotenv
-diffusers
-transformers
-accelerate
-sentencepiece
-protobuf
+
+# HuggingFace
 huggingface_hub
+
+# Image processing
 Pillow
 opencv-python
+
+# Video processing
 imageio
 imageio-ffmpeg
+
+# Ollama (local LLM — phi3:mini for parsing, llava for DFC)
+ollama
