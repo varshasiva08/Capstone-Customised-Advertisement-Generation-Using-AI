@@ -1,6 +1,12 @@
 .env
 __pycache__/
 *.pyc
+*.pyo
 outputs/
 venv/
-.venv/.DS_Store
+.venv/
+.DS_Store
+driving_videos/
+*.mp4
+*.png
+*.jpg

@@ -26,6 +26,9 @@ ollama:
 # No ollama pull required. Fast (~3–5s per question).
 hf_dfc:
   model_id: llava-hf/llava-1.5-7b-hf
+wan:
+  model: Wan-AI/Wan2.1-I2V-14B-720P
+  provider: fal-ai
 
 keywords:
   ethnicity:
@@ -72,9 +75,11 @@ corrections:
 prompt_template: >
   professional advertisement photograph for a clothing brand campaign,
   full body shot of a {body_type} {ethnicity} woman in her {age},
-  {body_type_extras} head to toe, standing pose, facing directly toward camera,
-  looking at camera, front-facing, face clearly visible, wearing {clothing},
-  high neckline, fully covered, long sleeves,
+  {body_type_extras} head to toe, standing pose, body squarely facing camera,
+  feet pointing forward, shoulders square to camera, face clearly visible,
+  looking directly into camera, strictly front-facing view, no side profile,
+  wearing {clothing}, modest outfit, high neckline, fully covered arms and legs,
+  no bare skin, no revealing clothing, conservative modest fashion,
   commercial fashion advertising, high fashion editorial, studio photography,
   seamless {background} background, softbox lighting, sharp focus, 8k,
   visible feet, empty space reserved for product placement and logo
