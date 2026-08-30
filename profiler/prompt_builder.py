@@ -83,19 +83,22 @@ def build_prompt(profile: dict, clothing: str, background: str,
                 "and resting at her side, carried naturally like a real "
                 "handbag, still facing forward toward camera, face clearly "
                 "visible, product clearly visible and in focus, realistic "
-                "contact shadow where the bag meets her arm"
+                "contact shadow where the bag meets her arm, anatomically "
+                "correct proportions"
             ),
             "sunglasses": (
                 ", body facing the camera, head turned slightly toward camera, "
                 "wearing {desc} on her face, sunglasses fitted naturally and "
                 "correctly sized to her face, resting on the bridge of her "
                 "nose, temples over her ears, clearly visible, sharp focus on "
-                "the eyewear, realistic reflections and shadow on the lenses"
+                "the eyewear, realistic reflections and shadow on the lenses, no "
+                "other eyewear or bags visible"
             ),
             "jewelry": (
                 ", body and shoulders facing the camera, face clearly visible, "
                 "wearing {desc}, fitted naturally, clearly visible, sharp "
-                "focus, realistic scale relative to her features"
+                "focus, realistic scale relative to her features, no jewelry on her fingers or nails "
+                "unless it is a ring"
             ),
             "other": (
                 ", body and shoulders facing the camera, one hand on hip, "
