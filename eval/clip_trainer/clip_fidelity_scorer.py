@@ -5,7 +5,11 @@ Uses the fine-tuned CLIP classifier heads to score how well a generated
 image matches its intended demographic profile.
 
 Replaces / complements the LLaVA-based fidelity_scorer.py.
-No Ollama needed — runs entirely from saved .pt files.
+No Ollama needed - runs entirely from saved .pt files.
+
+Feeds race_target_confidence into CPDC (modules/cpdc.py) as the
+ethnicity-axis error signal - CLIP is the more reliable judge on that
+axis (96.3% vs LLaVA's 89.8%, see EVALUATION_RESULTS.md Table 3).
 
 Where to put this file:
     adfidelity/eval/clip_fidelity_scorer.py
@@ -27,6 +31,8 @@ Output:
         "gender_score":    10.0,
         "race_score":      10.0,
         "overall_fidelity": 10.0,
+        "age_target_confidence": 0.91,
+        "race_target_confidence": 0.94,
         "predicted": {
             "age":    "30-39",
             "gender": "Female",
@@ -44,24 +50,24 @@ import torch.nn as nn
 from PIL import Image
 from transformers import CLIPModel, CLIPProcessor
 
-# ── Config ───────────────────────────────────────────────────────────────────
+# -- Config -------------------------------------------------------------------
 
 CLIP_MODEL  = "openai/clip-vit-base-patch32"
 MODEL_DIR   = os.path.join(os.path.dirname(__file__), "clip_fidelity_model")
 DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Map from FairFace race labels → your config.yaml ethnicity labels
+# Map from FairFace race labels -> your config.yaml ethnicity labels
 RACE_TO_ETHNICITY = {
     "Indian":           "South Asian",
     "Southeast Asian":  "South Asian",
-    "Middle Eastern":   None,               # no direct mapping — excluded from scoring
+    "Middle Eastern":   None,               # no direct mapping - excluded from scoring
     "East Asian":       "East Asian",
     "Black":            "African American",
-    "White":            None,               # no direct mapping — excluded from scoring
-    "Latino_Hispanic":  None,               # no direct mapping — excluded from scoring
+    "White":            None,               # no direct mapping - excluded from scoring
+    "Latino_Hispanic":  None,               # no direct mapping - excluded from scoring
 }
 
-# Map from FairFace age labels → your config.yaml age labels
+# Map from FairFace age labels -> your config.yaml age labels
 AGE_TO_CONFIG = {
     "0-2":   "20s",
     "3-9":   "20s",
@@ -75,7 +81,7 @@ AGE_TO_CONFIG = {
 }
 
 
-# ── Classifier head (must match train_clip_fidelity.py) ──────────────────────
+# -- Classifier head (must match train_clip_fidelity.py) ----------------------
 
 class CLIPClassifierHead(nn.Module):
     def __init__(self, num_classes: int, embed_dim: int = 512):
@@ -91,7 +97,7 @@ class CLIPClassifierHead(nn.Module):
         return self.net(x)
 
 
-# ── Scorer class ──────────────────────────────────────────────────────────────
+# -- Scorer class ---------------------------------------------------------------
 
 class CLIPFidelityScorer:
     """
@@ -110,7 +116,7 @@ class CLIPFidelityScorer:
         with open(label_maps_path) as f:
             self.label_maps = json.load(f)
 
-        # Invert maps: int → string label
+        # Invert maps: int -> string label
         self.idx_to_age    = {v: k for k, v in self.label_maps["age"].items()}
         self.idx_to_gender = {v: k for k, v in self.label_maps["gender"].items()}
         self.idx_to_race   = {v: k for k, v in self.label_maps["race"].items()}
@@ -161,7 +167,8 @@ class CLIPFidelityScorer:
                         e.g. {"ethnicity": "South Asian", "age": "30s", "gender": "Female"}
 
         Returns:
-            Dict with per-axis match booleans, scores, and overall fidelity.
+            Dict with per-axis match booleans, scores, target-class
+            confidences (for CPDC), and overall fidelity.
         """
         image = Image.open(image_path).convert("RGB")
         inputs = self.processor(images=image, return_tensors="pt")
@@ -184,7 +191,7 @@ class CLIPFidelityScorer:
         pred_gender_ff = self.idx_to_gender.get(pred_gender_idx, "unknown")
         pred_race_ff   = self.idx_to_race.get(pred_race_idx, "unknown")
 
-        # Convert FairFace labels → your config labels for comparison
+        # Convert FairFace labels -> your config labels for comparison
         pred_age_cfg  = AGE_TO_CONFIG.get(pred_age_ff, "unknown")
         pred_race_cfg = RACE_TO_ETHNICITY.get(pred_race_ff, "unknown")
 
@@ -201,15 +208,38 @@ class CLIPFidelityScorer:
         race_match   = False if race_unmapped else (pred_race_cfg.lower() == intended_ethnicity.lower())
 
         # Scores: 10 if match, partial credit from softmax confidence otherwise
-        age_conf    = torch.softmax(age_logits, dim=-1).max().item()
-        gender_conf = torch.softmax(gender_logits, dim=-1).max().item()
-        race_conf   = torch.softmax(race_logits, dim=-1).max().item()
+        age_probs    = torch.softmax(age_logits, dim=-1)
+        gender_probs = torch.softmax(gender_logits, dim=-1)
+        race_probs   = torch.softmax(race_logits, dim=-1)
+
+        age_conf    = age_probs.max().item()
+        gender_conf = gender_probs.max().item()
+        race_conf   = race_probs.max().item()
 
         age_score    = 10.0 if age_match    else round(age_conf * 5, 2)
         gender_score = 10.0 if gender_match else round(gender_conf * 5, 2)
         race_score   = 10.0 if race_match   else round(race_conf * 5, 2)
 
         overall = round((age_score + gender_score + race_score) / 3, 2)
+
+        # NEW - confidence in the INTENDED target class, not just top-1.
+        # This is what CPDC uses as its error signal: top-1 confidence is
+        # meaningless once the prediction is wrong (it tells you how sure
+        # the model was about the WRONG answer, not how close it is to
+        # the right one). Several FairFace bins can map to one config
+        # label (e.g. Indian + Southeast Asian both -> South Asian), so
+        # this sums probability mass across all matching indices.
+        age_target_indices = [i for i, lbl in self.idx_to_age.items()
+                               if AGE_TO_CONFIG.get(lbl) == intended_age]
+        race_target_indices = [i for i, lbl in self.idx_to_race.items()
+                                if RACE_TO_ETHNICITY.get(lbl) == intended_ethnicity]
+
+        age_target_confidence = (
+            age_probs[0, age_target_indices].sum().item() if age_target_indices else 0.0
+        )
+        race_target_confidence = (
+            race_probs[0, race_target_indices].sum().item() if race_target_indices else 0.0
+        )
 
         return {
             "age_match":        age_match,
@@ -219,6 +249,8 @@ class CLIPFidelityScorer:
             "gender_score":     gender_score,
             "race_score":       race_score,
             "overall_fidelity": overall,
+            "age_target_confidence":  age_target_confidence,   # NEW - for CPDC
+            "race_target_confidence": race_target_confidence,  # NEW - for CPDC
             "predicted": {
                 "age":    pred_age_ff,
                 "gender": pred_gender_ff,
@@ -227,7 +259,7 @@ class CLIPFidelityScorer:
         }
 
 
-# ── CLI runner ────────────────────────────────────────────────────────────────
+# -- CLI runner -------------------------------------------------------------
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Score a generated image for demographic fidelity.")

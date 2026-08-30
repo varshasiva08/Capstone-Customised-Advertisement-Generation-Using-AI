@@ -1,18 +1,26 @@
 """
-run_full_evaluation.py — Master Evaluation Runner
+run_full_evaluation.py - Master Evaluation Runner
 ===================================================
-Generates the full 36-combination demographic grid (3 ethnicities × 3 body types × 4 ages)
+Generates the full 36-combination demographic grid (3 ethnicities x 3 body types x 4 ages)
 with CDVR on and CDVR off, then scores every output with both LLaVA DFC and CLIP fidelity.
+
+CDVR now uses CPDC (Confidence-Proportional Demographic Correction,
+modules/cpdc.py) instead of a fixed mild/strong escalation: correction
+severity is chosen from a continuous error signal per axis (CLIP
+target-class confidence for ethnicity, LLaVA self-reported confidence for
+age), and a diminishing-returns detector stops correcting an axis once
+further attempts stop improving, rather than always burning the full
+iteration budget.
 
 Produces:
     eval/results/
-        generated_images/          — all generated PNGs
-        dfc_scores.csv             — LLaVA-based fidelity scores
-        clip_scores.csv            — CLIP-based fidelity scores
-        cdvr_ablation.csv          — iteration-0 vs final scores
-        bias_distribution.json     — BiasTracker output
-        scorer_agreement.csv       — LLaVA vs CLIP correlation
-        summary.json               — aggregate stats for paper tables
+        generated_images/          - all generated PNGs
+        dfc_scores.csv             - LLaVA-based fidelity scores
+        clip_scores.csv            - CLIP-based fidelity scores
+        cdvr_ablation.csv          - iteration-0 vs final scores
+        bias_distribution.json     - BiasTracker output
+        scorer_agreement.csv       - LLaVA vs CLIP correlation
+        summary.json               - aggregate stats for paper tables
 
 Usage:
     cd adfidelity/
@@ -43,7 +51,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# ── Demographic grid ─────────────────────────────────────────────────────────
+# -- Demographic grid ---------------------------------------------------------
 
 ETHNICITIES = ["South Asian", "East Asian", "African American"]
 BODY_TYPES  = ["slim", "medium", "plus-size"]
@@ -64,19 +72,23 @@ def build_profile_grid():
     return grid
 
 
-# ── Step 1: Generate images ──────────────────────────────────────────────────
+# -- Step 1: Generate images ---------------------------------------------------
 
 def generate_all(profiles, seeds, output_dir, clothing, background):
-    """Generate images for every profile × seed, with and without CDVR."""
+    """Generate images for every profile x seed, with and without CDVR."""
     from profiler.prompt_builder import build_prompt, load_config
     from generator.flux_pipeline import generate_image
+    from modules.cpdc import AxisTracker
+    from eval.fidelity_scorer import score_fidelity
+    from eval.clip_trainer.clip_fidelity_scorer import CLIPFidelityScorer
 
     cfg = load_config()
     os.makedirs(output_dir, exist_ok=True)
+    clip_scorer = CLIPFidelityScorer()   # load ONCE - reused for every image
 
     manifest = []  # tracks what was generated and where
 
-    total = len(profiles) * len(seeds) * 2  # ×2 for CDVR on/off
+    total = len(profiles) * len(seeds) * 2  # x2 for CDVR on/off
     count = 0
 
     for seed in seeds:
@@ -104,36 +116,52 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
                     iterations_used = 0
 
                     if cdvr_enabled:
-                        # Run CDVR loop (up to max_iterations)
+                        # CPDC-driven CDVR loop (up to max_iterations)
                         max_iter = cfg.get("generation", {}).get("max_iterations", 3)
-                        threshold = cfg.get("generation", {}).get("dfc_threshold", 0.70)
+                        trackers = {
+                            "STF": AxisTracker(axis="STF"),
+                            "AF":  AxisTracker(axis="AF"),
+                        }
 
                         for iteration in range(1, max_iter + 1):
-                            # Score current image
                             img.save(out_path)
+
                             try:
-                                from eval.fidelity_scorer import score_fidelity
-                                scores = score_fidelity(out_path, profile)
-                                overall = scores.get("overall", 0)
-                                if overall >= threshold * 10:
-                                    break  # passed
+                                llava_scores = score_fidelity(out_path, profile)
                             except Exception:
-                                break  # can't score, stop
-
-                            # Build correction keys from failed axes
-                            correction_keys = []
-                            if scores.get("ethnicity_score", 0) < 7:
-                                correction_keys.append("STF")
-                            if profile.get("body_type") == "plus-size" and scores.get("overall", 0) < 7:
-                                correction_keys.append("BTF")
-                            if scores.get("age_score", 0) < 7:
-                                correction_keys.append("AF")
-
-                            if not correction_keys:
                                 break
+
+                            try:
+                                clip_scores = clip_scorer.score(out_path, profile)
+                            except Exception:
+                                clip_scores = {}
+
+                            age_conf = llava_scores.get(
+                                "age_confidence", llava_scores.get("age_score", 0) / 10)
+                            eth_conf = clip_scores.get("race_target_confidence", 0.0)
+
+                            correction_levels = {}
+                            for conf, key in [(age_conf, "AF"), (eth_conf, "STF")]:
+                                stop = trackers[key].update(conf)
+                                if stop:
+                                    continue  # diminishing returns - stop correcting this axis
+                                level = trackers[key].current_level()
+                                if level > 0:
+                                    correction_levels[key] = level
+
+                            # Body type keeps the old binary rule (no trained
+                            # confidence classifier exists for it)
+                            correction_keys = []
+                            if (profile.get("body_type") == "plus-size"
+                                    and llava_scores.get("overall", 0) < 7):
+                                correction_keys = ["BTF"]
+
+                            if not correction_levels and not correction_keys:
+                                break  # passed, or every failing axis has stalled
 
                             prompt = build_prompt(
                                 profile, clothing, background, cfg,
+                                correction_levels=correction_levels,
                                 correction_keys=correction_keys,
                                 iteration=iteration,
                             )
@@ -158,7 +186,7 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
     return manifest
 
 
-# ── Step 2: Score with LLaVA DFC ─────────────────────────────────────────────
+# -- Step 2: Score with LLaVA DFC ----------------------------------------------
 
 def score_with_llava(manifest, output_csv):
     """Score all generated images with LLaVA-based DFC."""
@@ -186,7 +214,7 @@ def score_with_llava(manifest, output_csv):
     return results
 
 
-# ── Step 3: Score with CLIP ──────────────────────────────────────────────────
+# -- Step 3: Score with CLIP ---------------------------------------------------
 
 def score_with_clip(manifest, output_csv):
     """Score all generated images with CLIP fidelity scorer."""
@@ -215,7 +243,7 @@ def score_with_clip(manifest, output_csv):
     return results
 
 
-# ── Step 4: Compute agreement between scorers ────────────────────────────────
+# -- Step 4: Compute agreement between scorers ---------------------------------
 
 def compute_agreement(llava_results, clip_results, output_csv):
     """Compute per-image agreement between LLaVA and CLIP fidelity scores."""
@@ -259,7 +287,7 @@ def compute_agreement(llava_results, clip_results, output_csv):
     return rows
 
 
-# ── Step 5: Build summary stats ──────────────────────────────────────────────
+# -- Step 5: Build summary stats ------------------------------------------------
 
 def build_summary(llava_results, clip_results, manifest, output_json):
     """Aggregate stats for paper tables."""
@@ -305,11 +333,11 @@ def build_summary(llava_results, clip_results, manifest, output_json):
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
     with open(output_json, "w") as f:
         json.dump(summary, f, indent=2)
-    print(f"\n  Summary saved → {output_json}")
+    print(f"\n  Summary saved -> {output_json}")
     return summary
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers ---------------------------------------------------------------------
 
 def _save_csv(rows, path):
     if not rows:
@@ -319,10 +347,10 @@ def _save_csv(rows, path):
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
-    print(f"  Saved → {path} ({len(rows)} rows)")
+    print(f"  Saved -> {path} ({len(rows)} rows)")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description="AdFidelity full evaluation runner")
@@ -343,10 +371,10 @@ def main():
     os.makedirs(results_dir, exist_ok=True)
 
     profiles = build_profile_grid()
-    print(f"Demographic grid: {len(profiles)} profiles × {len(args.seeds)} seeds × 2 (CDVR on/off)")
+    print(f"Demographic grid: {len(profiles)} profiles x {len(args.seeds)} seeds x 2 (CDVR on/off)")
     print(f"Total images to generate: {len(profiles) * len(args.seeds) * 2}\n")
 
-    # ── Step 1: Generate ──────────────────────────────────────────────────
+    # -- Step 1: Generate ---------------------------------------------------
     manifest_path = os.path.join(results_dir, "manifest.json")
     if args.skip_generation and os.path.exists(manifest_path):
         print("=== Step 1: Loading existing manifest ===")
@@ -360,9 +388,9 @@ def main():
         )
         with open(manifest_path, "w") as f:
             json.dump(manifest, f, indent=2)
-        print(f"Manifest saved → {manifest_path}\n")
+        print(f"Manifest saved -> {manifest_path}\n")
 
-    # ── Step 2: LLaVA DFC scoring ─────────────────────────────────────────
+    # -- Step 2: LLaVA DFC scoring -------------------------------------------
     llava_results = []
     llava_csv = os.path.join(results_dir, "dfc_scores.csv")
     if not args.skip_llava:
@@ -373,7 +401,7 @@ def main():
         with open(llava_csv) as f:
             llava_results = list(csv_mod.DictReader(f))
 
-    # ── Step 3: CLIP scoring ──────────────────────────────────────────────
+    # -- Step 3: CLIP scoring -------------------------------------------------
     clip_results = []
     clip_csv = os.path.join(results_dir, "clip_scores.csv")
     if not args.skip_clip:
@@ -384,7 +412,7 @@ def main():
         with open(clip_csv) as f:
             clip_results = list(csv_mod.DictReader(f))
 
-    # ── Step 4: Agreement ─────────────────────────────────────────────────
+    # -- Step 4: Agreement -----------------------------------------------------
     if llava_results and clip_results:
         print("\n=== Step 4: Scorer agreement ===")
         compute_agreement(
@@ -392,7 +420,7 @@ def main():
             os.path.join(results_dir, "scorer_agreement.csv"),
         )
 
-    # ── Step 5: Summary ───────────────────────────────────────────────────
+    # -- Step 5: Summary --------------------------------------------------------
     print("\n=== Step 5: Building summary ===")
     build_summary(
         llava_results, clip_results, manifest,
