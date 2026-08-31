@@ -3,7 +3,7 @@ Builds the advertisement image prompt from a demographic profile,
 clothing, and background choices.
 
 The prompt is always framed as a professional fashion advertisement
-photograph — never as a portrait or generic image. This is intentional:
+photograph - never as a portrait or generic image. This is intentional:
   - It ensures the generated image has the compositional quality of a
     real ad (studio lighting, full body, clean background, product space).
   - It frames the model as a commercial subject, not a person, which
@@ -14,10 +14,12 @@ Also handles CDVR prompt correction: when the DFC check fails on one or
 more axes, correction tokens from config.yaml are injected into the prompt
 before the next generation attempt.
 
-Correction token severity escalates across iterations:
-    Iteration 1: mild correction tokens
-    Iteration 2: strong correction tokens
-    Iteration 3: strong + explicit negative framing (last attempt)
+CPDC (Confidence-Proportional Demographic Correction) replaces the old
+fixed mild/strong severity ladder for STF and AF with a graduated,
+error-proportional level (1-4), selected by modules/cpdc.py based on how
+far off the previous attempt's scorer confidence was. BTF keeps the
+original mild/strong path since no trained confidence classifier exists
+for body type.
 """
 
 import yaml
@@ -32,6 +34,7 @@ def build_prompt(profile: dict, clothing: str, background: str,
                  config: dict = None,
                  correction_keys: list[str] = None,
                  iteration: int = 0,
+                 correction_levels: dict = None,
                  product_description: str = None,
                  product_category: str = "handbag") -> str:
     """
@@ -42,10 +45,18 @@ def build_prompt(profile: dict, clothing: str, background: str,
         clothing:        Selected clothing style (from config options).
         background:      Selected background colour (from config options).
         config:          Loaded config.yaml dict. Loaded from disk if None.
-        correction_keys: List of correction keys to apply, e.g. ['BTF', 'STF'].
-                         Empty or None means no correction (first generation).
+        correction_keys: List of LEGACY correction keys to apply, e.g.
+                         ['BTF']. Used only for the binary mild/strong path
+                         (body type). Empty or None means no correction.
         iteration:       Which CDVR iteration this is (0 = first attempt).
-                         Controls correction severity: 0→none, 1→mild, 2→strong.
+                         Controls legacy severity: 0->none, 1->mild, 2+->strong.
+        correction_levels: dict of CPDC graduated correction levels, e.g.
+                         {"STF": 3, "AF": 2}. Keys are axis names (STF,
+                         AF), values are integer levels 1-4 looked up as
+                         config['corrections'][axis]['level_N']. This is
+                         the CPDC path and takes priority over the legacy
+                         iteration-based severity for whichever axes it
+                         covers.
         product_description: Optional short text description of a product
                          (e.g. "black leather structured handbag with gold
                          buckle"). If provided, the model is instructed to
@@ -116,21 +127,29 @@ def build_prompt(profile: dict, clothing: str, background: str,
         else:
             base_prompt = base_prompt.rstrip(", ") + product_clause
 
-    # No corrections needed on first attempt or if all axes passed
-    if not correction_keys or iteration == 0:
-        return base_prompt
-
-    # Determine severity based on iteration number
-    severity = "mild" if iteration == 1 else "strong"
-
-    correction_tokens = []
     corrections_cfg = config.get("corrections", {})
+    correction_tokens = []
 
-    for key in correction_keys:
-        if key in corrections_cfg:
-            token = corrections_cfg[key].get(severity, "")
+    # CPDC graduated-level path - STF (ethnicity) and AF (age)
+    if correction_levels:
+        for axis, level in correction_levels.items():
+            if level <= 0:
+                continue
+            axis_cfg = corrections_cfg.get(axis, {})
+            token = axis_cfg.get(f"level_{level}", "")
             if token:
                 correction_tokens.append(token.strip().rstrip(","))
+
+    # Legacy binary path - BTF only (no trained confidence classifier
+    # exists for body type, so it stays on the original mild/strong ladder)
+    if correction_keys and iteration > 0:
+        severity = "mild" if iteration == 1 else "strong"
+        for key in correction_keys:
+            axis_cfg = corrections_cfg.get(key, {})
+            if "mild" in axis_cfg:
+                token = axis_cfg.get(severity, "")
+                if token:
+                    correction_tokens.append(token.strip().rstrip(","))
 
     if not correction_tokens:
         return base_prompt
@@ -162,10 +181,10 @@ if __name__ == "__main__":
     print("=== Iteration 0 (first attempt, no corrections) ===")
     print(build_prompt(profile, "White Blazer Suit", "Pure White"))
 
-    print("\n=== Iteration 1 (mild correction on BTF + AF) ===")
+    print("\n=== Legacy path: iteration 1, mild correction on BTF ===")
     print(build_prompt(profile, "White Blazer Suit", "Pure White",
-                       correction_keys=["BTF", "AF"], iteration=1))
+                       correction_keys=["BTF"], iteration=1))
 
-    print("\n=== Iteration 2 (strong correction on BTF + STF) ===")
+    print("\n=== CPDC path: graduated level 3 on AF, level 2 on STF ===")
     print(build_prompt(profile, "White Blazer Suit", "Pure White",
-                       correction_keys=["BTF", "STF"], iteration=2))
+                       correction_levels={"AF": 3, "STF": 2}))

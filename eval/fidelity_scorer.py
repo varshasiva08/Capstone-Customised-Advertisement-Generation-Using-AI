@@ -1,12 +1,16 @@
 """
-eval/fidelity_scorer.py — Demographic Fidelity Check (DFC)
+eval/fidelity_scorer.py - Demographic Fidelity Check (DFC)
 
 Runs LLaVA offline via Ollama to score how well a generated advertisement
 image matches its intended demographic profile.
 
 Used for:
   - Offline evaluation batch (generates Table 1 in the paper)
-  - Optional: wired back into the live pipeline as a CDVR trigger
+  - Wired into the live pipeline as a CDVR trigger
+  - Feeds age_confidence into CPDC (modules/cpdc.py) as the age-axis
+    error signal - CLIP's age classifier is unreliable (36% accuracy,
+    see EVALUATION_RESULTS.md Table 3), so CPDC uses LLaVA's own
+    self-reported confidence for that axis instead.
 
 Requires:
   - Ollama running locally: ollama serve
@@ -34,8 +38,9 @@ def score_fidelity(image_path: str, demographic_profile: dict) -> dict:
         demographic_profile: Dict with keys: ethnicity, body_type, age.
 
     Returns:
-        Dict with keys: age_score, gender_score, ethnicity_score,
-        overall, notes. All scores are 0–10.
+        Dict with keys: age_score, age_confidence, gender_score,
+        gender_confidence, ethnicity_score, ethnicity_confidence,
+        overall, notes. Scores are 0-10, confidences are 0.0-1.0.
         Returns a zero-score dict on parse failure rather than raising.
     """
     try:
@@ -49,13 +54,17 @@ def score_fidelity(image_path: str, demographic_profile: dict) -> dict:
     prompt = (
         f"Look at this advertisement image carefully.\n"
         f"The intended demographic profile is: {json.dumps(demographic_profile)}\n\n"
-        f"Score on each dimension from 0 to 10:\n"
-        f"1. Age match — does the model appear to be in their {demographic_profile.get('age','?')}?\n"
-        f"2. Gender match — is this a woman?\n"
-        f"3. Ethnicity/skin tone match — does the appearance match {demographic_profile.get('ethnicity','?')}?\n"
-        f"4. Overall demographic fidelity — how well does the image match the full profile?\n\n"
+        f"Score on each dimension from 0 to 10, AND give your confidence (0.0-1.0) "
+        f"that your assessment is correct:\n"
+        f"1. Age match - does the model appear to be in their {demographic_profile.get('age','?')}?\n"
+        f"2. Gender match - is this a woman?\n"
+        f"3. Ethnicity/skin tone match - does the appearance match {demographic_profile.get('ethnicity','?')}?\n"
+        f"4. Overall demographic fidelity - how well does the image match the full profile?\n\n"
         f"Respond in JSON only, no extra text:\n"
-        f'{{\"age_score\": X, \"gender_score\": X, \"ethnicity_score\": X, \"overall\": X, \"notes\": \"...\"}}'
+        f'{{"age_score": X, "age_confidence": X, '
+        f'"gender_score": X, "gender_confidence": X, '
+        f'"ethnicity_score": X, "ethnicity_confidence": X, '
+        f'"overall": X, "notes": "..."}}'
     )
 
     try:
@@ -98,16 +107,19 @@ def _parse_json(raw: str) -> dict:
 
 def _zero_scores(notes: str) -> dict:
     return {
-        "age_score":       0,
-        "gender_score":    0,
-        "ethnicity_score": 0,
-        "overall":         0,
-        "notes":           notes,
+        "age_score":            0,
+        "age_confidence":       0.0,
+        "gender_score":         0,
+        "gender_confidence":    0.0,
+        "ethnicity_score":      0,
+        "ethnicity_confidence": 0.0,
+        "overall":              0,
+        "notes":                notes,
     }
 
 
 # ---------------------------------------------------------------------------
-# Batch scorer — generates Table 1 for the paper
+# Batch scorer - generates Table 1 for the paper
 # ---------------------------------------------------------------------------
 
 def score_batch(image_folder: str, profiles: list,
@@ -144,24 +156,27 @@ def score_batch(image_folder: str, profiles: list,
         image_path = next((p for p in candidates if os.path.exists(p)), None)
 
         if image_path is None:
-            print(f"  [{i+1}/{total}] SKIP — no image found for profile {i}")
+            print(f"  [{i+1}/{total}] SKIP - no image found for profile {i}")
             continue
 
         print(f"  [{i+1}/{total}] Scoring {os.path.basename(image_path)}...")
         scores = score_fidelity(image_path, profile)
 
         result = {
-            "index":           i,
-            "image":           os.path.basename(image_path),
-            "ethnicity":       profile.get("ethnicity", ""),
-            "body_type":       profile.get("body_type", ""),
-            "age":             profile.get("age", ""),
-            "age_score":       scores["age_score"],
-            "gender_score":    scores["gender_score"],
-            "ethnicity_score": scores["ethnicity_score"],
-            "overall":         scores["overall"],
-            "notes":           scores.get("notes", ""),
-            "timestamp":       datetime.now().isoformat(),
+            "index":                i,
+            "image":                os.path.basename(image_path),
+            "ethnicity":            profile.get("ethnicity", ""),
+            "body_type":            profile.get("body_type", ""),
+            "age":                  profile.get("age", ""),
+            "age_score":            scores["age_score"],
+            "age_confidence":       scores.get("age_confidence", 0.0),
+            "gender_score":         scores["gender_score"],
+            "gender_confidence":    scores.get("gender_confidence", 0.0),
+            "ethnicity_score":      scores["ethnicity_score"],
+            "ethnicity_confidence": scores.get("ethnicity_confidence", 0.0),
+            "overall":              scores["overall"],
+            "notes":                scores.get("notes", ""),
+            "timestamp":            datetime.now().isoformat(),
         }
         results.append(result)
         print(f"         overall={scores['overall']}/10  "
@@ -181,7 +196,7 @@ def _save_csv(results: list, path: str) -> None:
         writer = csv.DictWriter(f, fieldnames=results[0].keys())
         writer.writeheader()
         writer.writerows(results)
-    print(f"\n[DFC] Results saved → {path}")
+    print(f"\n[DFC] Results saved -> {path}")
 
 
 def _print_summary(results: list) -> None:
@@ -195,7 +210,7 @@ def _print_summary(results: list) -> None:
 
 
 # ---------------------------------------------------------------------------
-# CLI — run as script for batch evaluation
+# CLI - run as script for batch evaluation
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -216,7 +231,7 @@ if __name__ == "__main__":
         {"ethnicity": "African American", "body_type": "slim",      "age": "20s"},
         {"ethnicity": "African American", "body_type": "medium",    "age": "30s"},
         {"ethnicity": "African American", "body_type": "plus-size", "age": "40s"},
-        # Add more as needed — 30 total recommended for the paper
+        # Add more as needed - 30 total recommended for the paper
     ]
 
     score_batch(
