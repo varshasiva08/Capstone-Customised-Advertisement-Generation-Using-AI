@@ -113,7 +113,7 @@ def update(self, confidence_target_class: float) -> bool:
 | `eval/run_full_evaluation.py` | Modified | The CDVR loop inside `generate_all()` now uses `AxisTracker` per axis instead of a flat `if score < 7` check, and stops correcting an axis once `tracker.update()` returns `True`. **Both axes currently use LLaVA's confidence** (see §6 for why). |
 | `eval/clip_trainer/train_clip_fidelity.py` | Modified | Unrelated compatibility fix found during debugging: newer `transformers` wraps `get_image_features()` output differently. Not part of CPDC itself. |
 
-## 5. Known limitations (be upfront about these in the paper)
+## 5. Some limitations 
 - **The verification signal is a VLM's subjective judgment, not an
   objective measurement.** Manual inspection of one correction pair (a
   South Asian profile scored 4/10 pre-correction despite already reading
