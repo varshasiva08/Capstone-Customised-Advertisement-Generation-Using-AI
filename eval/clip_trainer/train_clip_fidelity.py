@@ -165,6 +165,8 @@ def train_one_head(
 
             with torch.no_grad():
                 embeddings = clip_model.get_image_features(pixel_values=pixel_values)
+                if hasattr(embeddings, "image_embeds"):
+                    embeddings = embeddings.image_embeds
                 embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
 
             logits = head(embeddings)
