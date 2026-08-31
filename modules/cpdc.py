@@ -55,19 +55,14 @@ CONSECUTIVE_STALL_LIMIT = 2
 # ---------------------------------------------------------------------------
 
 def compute_error(confidence_target_class: float) -> float:
-    """
-    Turn a scorer's confidence-in-the-target-class into an error in [0, 1].
-
-    Args:
-        confidence_target_class: The scorer's probability/confidence that
-            the image matches the INTENDED class for this axis (not the
-            confidence of whatever it predicted, if that differs from the
-            target — you want P(target), not max(P)).
-
-    Returns:
-        error in [0, 1]. 0 = perfect match, 1 = totally wrong.
-    """
-    c = max(0.0, min(1.0, confidence_target_class))
+    c = confidence_target_class
+    if c > 1.0:
+        # LLaVA occasionally answers the confidence field on the same
+        # 0-10 scale as the score field despite the prompt asking for
+        # 0.0-1.0 - defensively normalize rather than silently misreading
+        # e.g. "9.0" as near-total error.
+        c = c / 10.0
+    c = max(0.0, min(1.0, c))
     return 1.0 - c
 
 
