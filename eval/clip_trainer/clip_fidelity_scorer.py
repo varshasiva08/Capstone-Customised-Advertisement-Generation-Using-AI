@@ -175,7 +175,8 @@ class CLIPFidelityScorer:
         pixel_values = inputs["pixel_values"].to(DEVICE)
 
         with torch.no_grad():
-            embedding = self.clip_model.get_image_features(pixel_values=pixel_values)
+            out = self.clip_model.get_image_features(pixel_values=pixel_values)
+            embedding = out.pooler_output if hasattr(out, "pooler_output") else out
             embedding = embedding / embedding.norm(dim=-1, keepdim=True)
 
             age_logits    = self.age_head(embedding)
