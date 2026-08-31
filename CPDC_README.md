@@ -114,13 +114,6 @@ def update(self, confidence_target_class: float) -> bool:
 | `eval/clip_trainer/train_clip_fidelity.py` | Modified | Unrelated compatibility fix found during debugging: newer `transformers` wraps `get_image_features()` output differently. Not part of CPDC itself. |
 
 ## 5. Known limitations (be upfront about these in the paper)
-
-- **LLaVA occasionally violates the requested confidence range.** In one
-  live test run, `age_confidence` came back as `9.000` instead of `0.900`
-  — LLaVA answered the confidence field on the score's 0–10 scale despite
-  the prompt asking for 0.0–1.0. `compute_error()` now defensively
-  normalizes any value `> 1.0` by dividing by 10. Worth stating plainly in
-  a limitations paragraph rather than hiding it.
 - **The verification signal is a VLM's subjective judgment, not an
   objective measurement.** Manual inspection of one correction pair (a
   South Asian profile scored 4/10 pre-correction despite already reading
@@ -143,53 +136,4 @@ def update(self, confidence_target_class: float) -> bool:
   LLaVA for both axes is a legitimate, documented engineering decision, not
   a silent compromise — state it as such.
 
-## 6. What's still needed before this goes in the paper
 
-**Not yet done — needed for the results table:**
-
-1. **A real comparison run, not just the one live demo.** Take the ~25
-   profiles from `cdvr_ablation.csv` that needed correction under blind
-   escalation, re-run them through CPDC on the **held-out seeds (123, 456)**
-   — seed 42 was the original ablation seed, so using it again for CPDC's
-   comparison would be circular.
-2. **Log per-iteration confidence trajectories**, not just final outcomes —
-   extend the CSV output in `run_full_evaluation.py` to record
-   `(profile, axis, iteration, confidence, level_applied, stopped_early)`
-   so the comparison table can show *why* CPDC stopped where it did, not
-   just that it did.
-3. **Compute the comparison metrics:**
-   - Avg iterations-to-converge: CPDC vs. blind escalation (from the
-     existing `cdvr_ablation.csv` baseline).
-   - % of corrected profiles that hit the early-stop vs. burned the full
-     budget (the direct counter to the 88% figure in §1).
-   - Final confidence/fidelity achieved — confirm CPDC doesn't sacrifice
-     quality for speed (should match or beat blind escalation, not just be
-     faster).
-   - Generation calls saved — a concrete efficiency number (e.g. "N fewer
-     FLUX API calls across the evaluation set").
-4. **Save example before/after image pairs** (like `iter0`/`iter1` from the
-   live test) for a qualitative figure in the paper — pick ones where the
-   correction genuinely improved things, and be honest in the caption if a
-   chosen example shows the §5 stereotype-amplification effect instead.
-5. **A short paragraph and one paragraph in Results**, using the template
-   in §3 as a starting point.
-
-**Optional, if time allows:**
-- Fix the CLIP classifier's training bug (lower LR, add class weighting)
-  and re-enable it for the ethnicity axis specifically, matching the
-  original design and giving a stronger, non-VLM-dependent signal on that
-  axis.
-- Re-run the self-consistency idea discussed earlier (sample LLaVA's
-  judgment 2–3× and vote, rather than trusting one call) as a further
-  robustness improvement, if the confidence-range bug in §5 suggests
-  single-call LLaVA outputs aren't fully reliable.
-
-## 7. Quick verification (no GPU/API needed)
-
-`modules/cpdc.py` has no external dependencies and can be sanity-checked on
-its own:
-```bash
-python modules/cpdc.py
-```
-Should print the level-selection table and two simulated trajectories
-(one that stalls, one that converges) with no errors.
