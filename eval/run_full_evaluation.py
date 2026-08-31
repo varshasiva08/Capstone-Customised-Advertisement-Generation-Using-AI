@@ -80,11 +80,8 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
     from generator.flux_pipeline import generate_image
     from modules.cpdc import AxisTracker
     from eval.fidelity_scorer import score_fidelity
-    from eval.clip_trainer.clip_fidelity_scorer import CLIPFidelityScorer
-
     cfg = load_config()
     os.makedirs(output_dir, exist_ok=True)
-    clip_scorer = CLIPFidelityScorer()   # load ONCE - reused for every image
 
     manifest = []  # tracks what was generated and where
 
@@ -131,14 +128,10 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
                             except Exception:
                                 break
 
-                            try:
-                                clip_scores = clip_scorer.score(out_path, profile)
-                            except Exception:
-                                clip_scores = {}
-
                             age_conf = llava_scores.get(
                                 "age_confidence", llava_scores.get("age_score", 0) / 10)
-                            eth_conf = clip_scores.get("race_target_confidence", 0.0)
+                            eth_conf = llava_scores.get(
+                                "ethnicity_confidence", llava_scores.get("ethnicity_score", 0) / 10)
 
                             correction_levels = {}
                             for conf, key in [(age_conf, "AF"), (eth_conf, "STF")]:
