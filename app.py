@@ -9,6 +9,13 @@ from profiler.profile_gen import generate_profiles
 from profiler.prompt_builder import build_prompt
 from profiler.text_parser import check_ollama, parse_brief
 
+# ── RAG import (graceful fallback if not installed yet) ──────────────────────
+try:
+    from rag.brief_rag import BriefRAG
+    _RAG_AVAILABLE = True
+except ImportError:
+    _RAG_AVAILABLE = False
+
 load_dotenv()
 
 @st.cache_resource
@@ -16,12 +23,21 @@ def load_config():
     with open("config.yaml") as f:
         return yaml.safe_load(f)
 
+@st.cache_resource
+def load_rag():
+    """Load RAG store once — cached so it persists across reruns."""
+    if _RAG_AVAILABLE:
+        return BriefRAG()
+    return None
+
 CFG      = load_config()
 REQUIRED = CFG["required_fields"]
 
 OLLAMA_CFG   = CFG.get("ollama", {})
 OLLAMA_HOST  = OLLAMA_CFG.get("host", "http://localhost:11434")
 OLLAMA_MODEL = OLLAMA_CFG.get("model", "phi3:mini")
+
+rag = load_rag()
 
 os.makedirs("outputs", exist_ok=True)
 
@@ -89,6 +105,22 @@ section[data-testid="stSidebar"] { background: #10121E !important; border-right:
     letter-spacing: 0.12em;
     color: #3A3D5C;
     margin: 1rem 0 0.35rem 0;
+}
+
+/* ── RAG badge ── */
+.af-rag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(179,136,255,0.08);
+    border: 1px solid rgba(179,136,255,0.2);
+    border-radius: 100px;
+    padding: 0.22rem 0.7rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #B388FF;
+    margin-bottom: 0.6rem;
 }
 
 /* ── Profile chip ── */
@@ -344,6 +376,8 @@ ss.setdefault("product_category_detected", None)
 ss.setdefault("original_brief", "")
 ss.setdefault("seed", 42)
 ss.setdefault("brand_name", "")
+ss.setdefault("rag_context", "")          # ← NEW: stores RAG context for current brief
+ss.setdefault("last_fidelity_score", None) # ← NEW: stores score to save back to RAG
 
 # ─────────────────────────────────────────────
 # SIDEBAR — controls
@@ -351,6 +385,14 @@ ss.setdefault("brand_name", "")
 with st.sidebar:
     st.markdown('<h2 class="af-wordmark">AdFidelity</h2>', unsafe_allow_html=True)
     st.markdown('<p class="af-sub">Ad Generation Studio</p>', unsafe_allow_html=True)
+
+    # RAG status badge
+    if _RAG_AVAILABLE and rag is not None:
+        count = rag.count()
+        st.markdown(
+            f'<div class="af-rag-badge">🧠 RAG · {count} past campaign{"s" if count != 1 else ""}</div>',
+            unsafe_allow_html=True
+        )
 
     # Step tracker
     steps   = [("Brief","collecting"),("Profile","pick_profile"),("Product","ask_product"),("Generate","ready")]
@@ -449,6 +491,8 @@ with st.sidebar:
         "stage":"collecting", "want_product":None,
         "original_brief":"", "product_category_detected":None,
         "brand_name":"",
+        "rag_context":"",
+        "last_fidelity_score": None,
         "messages": ss.messages[:1]
     }))
 
@@ -467,7 +511,9 @@ for m in ss.messages:
     with st.chat_message(m["role"]):
         st.markdown(m["content"])
 
-# Chat input
+# ─────────────────────────────────────────────
+# CHAT INPUT + LOGIC
+# ─────────────────────────────────────────────
 if user_input := st.chat_input("Describe your brand or ad..."):
     ss.messages.append({"role":"user","content":user_input})
     ss.original_brief = ss.get("original_brief","") + " " + user_input
@@ -532,14 +578,30 @@ if user_input := st.chat_input("Describe your brand or ad..."):
                     f"Got it — **{ss.profile['body_type']} {ss.profile['ethnicity']} woman in her {ss.profile['age']}**.\n\n" + PRODUCT_QUESTION})
 
         elif len(missing) == 3:
+            # ── RAG: retrieve context before generating profiles ──────────────
             ss.mode = "multi"
+            brief_text = ss.get("original_brief", user_input)
+
+            rag_context = ""
+            rag_note    = ""
+            if _RAG_AVAILABLE and rag is not None and rag.count() >= 2:
+                rag_context = rag.retrieve(brief_text)
+                ss.rag_context = rag_context
+                rag_note = "\n\n> 🧠 *Using similar past campaigns as context.*"
+
             with st.spinner("Generating profiles..."):
                 try:
-                    ss.profiles = generate_profiles(user_input, model=OLLAMA_MODEL, host=OLLAMA_HOST)
+                    ss.profiles = generate_profiles(
+                        user_input,
+                        model=OLLAMA_MODEL,
+                        host=OLLAMA_HOST,
+                        rag_context=rag_context      # ← RAG context passed here
+                    )
                     reply = "Generated **6 demographic profiles** for your brand:\n\n"
                     for i,p in enumerate(ss.profiles,1):
                         reply += f"**{i}.** {p['ethnicity']}, {p['body_type']}, {p['age']}\n"
                     reply += "\nWhich profile? Reply **1–6**, or describe a different demographic."
+                    reply += rag_note
                     ss.stage = "pick_profile"
                     ss.messages.append({"role":"assistant","content":reply})
                 except Exception as e:
@@ -590,9 +652,21 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
         out_path = f"outputs/output_seed{seed}.png"
         img.save(out_path)
 
-        # Show image — two columns if video will follow
+        # Show image
         c_img, c_vid = out.columns(2) if animate_enabled else (out, None)
         c_img.image(img, caption=f"{device.upper()} · {res[0]}×{res[1]} · seed {seed}", use_container_width=True)
+
+        # ── RAG: store this run after successful generation ───────────────────
+        # We store with a default score of 7.0 if no CLIP scorer is available.
+        # If your teammate runs clip_fidelity_scorer.py separately and gets a
+        # score, they can update the store manually or integrate the scorer here.
+        if _RAG_AVAILABLE and rag is not None:
+            fidelity_score = ss.get("last_fidelity_score") or 7.0
+            rag.store(
+                brief=ss.get("original_brief", ""),
+                profile=ss.profile,
+                fidelity_score=fidelity_score
+            )
 
         if animate_enabled:
             from modules.motion import animate_image
