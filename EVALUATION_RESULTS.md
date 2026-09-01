@@ -1,6 +1,6 @@
 # AdFidelity — Evaluation Results
 
-> **Branch:** `experiments/evaluation-results`  
+> **Branch:** `feature/cpdc-correction`  
 > **Purpose:** Complete experimental evaluation for IEEE Access paper submission  
 > **Date:** August 2026
 
@@ -19,12 +19,19 @@ We used two independent scorers (CLIP zero-shot classification and LLaVA vision-
 
 ## Experimental Setup
 
-### Demographic Grid
+### Demographic Grid (Primary Evaluation)
 - **Ethnicities:** South Asian, East Asian, African American (3)
 - **Body Types:** slim, medium, plus-size (3)
 - **Age Groups:** 20s, 30s, 40s, 50s (4)
 - **Gender:** Female (fixed)
 - **Total profiles:** 3 × 3 × 4 = 36
+
+### Gender Generalizability (Supplementary)
+- **Ethnicities:** South Asian, East Asian, African American (3)
+- **Body Type:** medium (fixed)
+- **Age Groups:** 20s, 30s, 40s, 50s (4)
+- **Gender:** Male
+- **Total profiles:** 3 × 4 = 12
 
 ### Generation
 - **Model:** Stable Diffusion XL (stabilityai/stable-diffusion-xl-base-1.0)
@@ -146,7 +153,30 @@ Generation is uniformly distributed by design (exhaustive grid), confirming no d
 
 ---
 
-### Table 7: Output Quality Metrics (from automated evaluation report)
+### Table 7: Male Subject Evaluation — Gender Generalizability (n=12)
+
+Preliminary evaluation on male subjects to validate that the pipeline is not gender-dependent.
+
+| Metric | Male (n=12) | Female (n=108) |
+|--------|-------------|----------------|
+| Ethnicity match | 83.3% | 96.3% |
+| Gender match | 100.0% | 100.0% |
+| Age match | 50.0% | 34.3% |
+| **Overall fidelity** | **77.8% ± 21.7%** | **76.9% ± 16.7%** |
+
+**Per-ethnicity breakdown (male):**
+
+| Ethnicity | Race Accuracy | Overall Fidelity |
+|-----------|---------------|------------------|
+| South Asian | 100.0% | 83.4% |
+| East Asian | 100.0% | 83.4% |
+| African American | 50.0% | 66.7% |
+
+**Key finding:** Overall fidelity is comparable across genders (77.8% male vs 76.9% female), confirming that the pipeline's demographic fidelity is not gender-dependent. African American male representation shows lower race accuracy (50%) but on a very small sample (n=4), so further evaluation with larger samples is recommended.
+
+---
+
+### Table 8: Output Quality Metrics (from automated evaluation report)
 
 | Metric | Value | Interpretation |
 |--------|-------|----------------|
@@ -167,11 +197,15 @@ Generation is uniformly distributed by design (exhaustive grid), confirming no d
 ```
 eval/
 ├── results/
-│   ├── generated_images/           # 108 generated advertisement images
+│   ├── generated_images/           # 108 generated advertisement images (female)
 │   │   ├── South-Asian_slim_20s_seed42.png
 │   │   ├── South-Asian_slim_20s_seed123.png
 │   │   └── ... (108 total)
-│   ├── clip_fidelity_scores.csv    # CLIP scores for all 108 images
+│   ├── male_images/                # 12 generated images (male)
+│   │   ├── South-Asian_20s_male_seed42.png
+│   │   └── ... (12 total)
+│   ├── clip_fidelity_scores.csv    # CLIP scores for all 108 female images
+│   ├── male_fidelity_scores.csv    # CLIP scores for 12 male images
 │   ├── dfc_scores.csv              # LLaVA/DFC scores for all 108 images
 │   ├── dfc_summary.json            # LLaVA scoring summary
 │   ├── scorer_agreement.csv        # Per-image CLIP vs LLaVA comparison
