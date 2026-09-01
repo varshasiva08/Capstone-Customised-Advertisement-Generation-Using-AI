@@ -1,11 +1,6 @@
 # AdFidelity — Evaluation Results
 
-feature/cpdc-correction
-> **Branch:** `feature/cpdc-correction`  
-> **Purpose:** Complete experimental evaluation for IEEE Access paper submission  
-> **Date:** August 2026
-=======
-> **Branch:** `main`
+> **Branch:** `main` (merged from `feature/cpdc-correction`)
 > **Purpose:** Complete experimental evaluation for IEEE Access paper submission
 > **Date:** September 2026
 
@@ -26,9 +21,6 @@ Two independent scorers (CLIP zero-shot classification and LLaVA vision-language
 
 ## Experimental Setup
 
-feature/cpdc-correction
-### Demographic Grid (Primary Evaluation)
-=======
 ### Demographic Grid (Main Evaluation)
 - **Ethnicities:** South Asian, East Asian, African American (3)
 - **Body Types:** slim, medium, plus-size (3)
@@ -164,32 +156,6 @@ Compares single-pass generation (no correction) vs CDVR iterative correction loo
 
 ---
 
-feature/cpdc-correction
-### Table 7: Male Subject Evaluation — Gender Generalizability (n=12)
-
-Preliminary evaluation on male subjects to validate that the pipeline is not gender-dependent.
-
-| Metric | Male (n=12) | Female (n=108) |
-|--------|-------------|----------------|
-| Ethnicity match | 83.3% | 96.3% |
-| Gender match | 100.0% | 100.0% |
-| Age match | 50.0% | 34.3% |
-| **Overall fidelity** | **77.8% ± 21.7%** | **76.9% ± 16.7%** |
-
-**Per-ethnicity breakdown (male):**
-
-| Ethnicity | Race Accuracy | Overall Fidelity |
-|-----------|---------------|------------------|
-| South Asian | 100.0% | 83.4% |
-| East Asian | 100.0% | 83.4% |
-| African American | 50.0% | 66.7% |
-
-**Key finding:** Overall fidelity is comparable across genders (77.8% male vs 76.9% female), confirming that the pipeline's demographic fidelity is not gender-dependent. African American male representation shows lower race accuracy (50%) but on a very small sample (n=4), so further evaluation with larger samples is recommended.
-
----
-
-### Table 8: Output Quality Metrics (from automated evaluation report)
-=======
 ## Table 7: CPDC vs Legacy CDVR
 
 Compares CPDC (confidence-proportional correction) against the legacy fixed mild→strong CDVR approach.
@@ -203,44 +169,33 @@ Compares CPDC (confidence-proportional correction) against the legacy fixed mild
 
 ---
 
+## Table 7a: Male Subject Evaluation — Gender Generalizability (n=12, supplementary)
+
+Preliminary evaluation on male subjects to validate that the pipeline is not gender-dependent. This is a smaller, earlier-stage supplementary check — see Table 9 for the larger combined gender fidelity evaluation (n=33).
+
+| Metric | Male (n=12) | Female (n=108) |
+|--------|-------------|----------------|
+| Ethnicity match | 83.3% | 96.3% |
+| Gender match | 100.0% | 100.0% |
+| Age match | 50.0% | 34.3% |
+| **Overall fidelity** | **77.8% ± 21.7%** | **76.9% ± 16.7%** |
+
+**Per-ethnicity breakdown (male):**
+
+| Ethnicity | Race Accuracy | Overall Fidelity |
+|-----------|---------------|-------------------|
+| South Asian | 100.0% | 83.4% |
+| East Asian | 100.0% | 83.4% |
+| African American | 50.0% | 66.7% |
+
+**Key finding:** Overall fidelity is comparable across genders (77.8% male vs 76.9% female), confirming that the pipeline's demographic fidelity is not gender-dependent. African American male representation shows lower race accuracy (50%) but on a very small sample (n=4), so further evaluation with larger samples is recommended — this is addressed at larger scale in Table 9.
+
+**Scored using:** CLIP zero-shot classification (`male_fidelity_scores.csv`, generated alongside the main evaluation run)
+
+---
+
 ## Table 8: Regional Prompt Ablation — South Indian Demographics (n=15 per config)
 
-feature/cpdc-correction
-```
-eval/
-├── results/
-│   ├── generated_images/           # 108 generated advertisement images (female)
-│   │   ├── South-Asian_slim_20s_seed42.png
-│   │   ├── South-Asian_slim_20s_seed123.png
-│   │   └── ... (108 total)
-│   ├── male_images/                # 12 generated images (male)
-│   │   ├── South-Asian_20s_male_seed42.png
-│   │   └── ... (12 total)
-│   ├── clip_fidelity_scores.csv    # CLIP scores for all 108 female images
-│   ├── male_fidelity_scores.csv    # CLIP scores for 12 male images
-│   ├── dfc_scores.csv              # LLaVA/DFC scores for all 108 images
-│   ├── dfc_summary.json            # LLaVA scoring summary
-│   ├── scorer_agreement.csv        # Per-image CLIP vs LLaVA comparison
-│   ├── full_analysis_summary.json  # Agreement + bias analysis
-│   ├── cdvr_ablation.csv           # CDVR on/off comparison (36 profiles)
-│   ├── cdvr_ablation_summary.json  # CDVR ablation summary
-│   └── cdvr_ablation_images/       # Before/after CDVR images
-│       ├── South-Asian_slim_20s_seed42_noCDVR.png
-│       ├── South-Asian_slim_20s_seed42_CDVR.png
-│       └── ... (72 total)
-├── clip_trainer/
-│   ├── train_clip_fidelity.py      # CLIP classifier training script
-│   ├── clip_fidelity_scorer.py     # CLIP scoring (fixed race mapping)
-│   └── validate_classifier.py     # Classifier validation on FairFace
-├── run_full_evaluation.py          # Master evaluation script
-├── run_llava_scoring.py            # LLaVA/DFC scoring script
-├── compute_agreement_and_bias.py   # Agreement + bias analysis
-├── fidelity_scorer.py              # Original DFC scorer
-clip_zeroshot_validation.json       # CLIP validation on FairFace (11k images)
-metrics_20260824_215800.json        # Output quality metrics
-EVALUATION_GUIDE.md                 # Step-by-step reproduction guide
-```
-=======
 Isolates the contribution of structured regional prompt synthesis for South Indian demographic generation.
 
 | Configuration | Race Accuracy | Mean SA Confidence | n |
@@ -252,7 +207,6 @@ Isolates the contribution of structured regional prompt synthesis for South Indi
 
 **Scored using:** Zero-shot CLIP ViT-B/32 (`eval/clip_zeroshot_score.py`)
 **Images generated using:** FLUX.1-schnell via HuggingFace Spaces (15 images per config)
-
 
 ---
 
@@ -310,13 +264,25 @@ Monitors demographic coverage across all generated outputs to detect systematic 
 ```
 eval/
 ├── results/
+│   ├── generated_images/             # 108 generated advertisement images (female)
+│   │   ├── South-Asian_slim_20s_seed42.png
+│   │   ├── South-Asian_slim_20s_seed123.png
+│   │   └── ... (108 total)
+│   ├── male_images/                  # 12 generated images (male) — Table 7a
+│   │   ├── South-Asian_20s_male_seed42.png
+│   │   └── ... (12 total)
 │   ├── clip_fidelity_scores.csv      # Table 2 raw scores
+│   ├── male_fidelity_scores.csv      # Table 7a raw scores
 │   ├── dfc_scores.csv                # Table 3 raw scores
 │   ├── dfc_summary.json              # Table 3 summary
 │   ├── scorer_agreement.csv          # Table 4 raw
 │   ├── full_analysis_summary.json    # Table 4 summary
 │   ├── cdvr_ablation.csv             # Table 5 raw
 │   ├── cdvr_ablation_summary.json    # Table 5 summary
+│   ├── cdvr_ablation_images/         # Before/after CDVR images
+│   │   ├── South-Asian_slim_20s_seed42_noCDVR.png
+│   │   ├── South-Asian_slim_20s_seed42_CDVR.png
+│   │   └── ... (72 total)
 │   ├── bootstrap_ci_summary.json     # Table 6 results
 │   ├── cpdc_vs_cdvr/
 │   │   ├── comparison_summary.json   # Table 7 results
@@ -325,6 +291,14 @@ eval/
 │   │   └── clip_zeroshot_scores.json # Table 8 results
 │   ├── bias_report.json              # Table 10 results
 │   └── bias_log.json                 # Table 10 raw log
+├── clip_trainer/
+│   ├── train_clip_fidelity.py        # CLIP classifier training script
+│   ├── clip_fidelity_scorer.py       # CLIP scoring (fixed race mapping)
+│   └── validate_classifier.py        # Table 1 validation
+├── run_full_evaluation.py            # Master evaluation script (Tables 2-5, 7a)
+├── run_llava_scoring.py              # LLaVA/DFC scoring script (Table 3)
+├── compute_agreement_and_bias.py     # Agreement + bias analysis (Table 4)
+├── fidelity_scorer.py                # Original DFC scorer
 ├── clip_zeroshot_score.py            # Table 8 scorer
 ├── gender_fidelity_score.py          # Table 9 scorer
 ├── generate_bias_report.py           # Table 10 generator
@@ -333,8 +307,9 @@ eval/
 ├── embedding_viz.py                  # Figure: embedding space
 ├── llm_judge.py                      # LLaVA-guided CPDC correction
 ├── generate_lora_study.py            # Table 8 image generation
-└── clip_trainer/
-    └── validate_classifier.py        # Table 1 validation
+clip_zeroshot_validation.json         # CLIP validation on FairFace (11k images) — Table 1
+metrics_20260824_215800.json          # Output quality metrics
+EVALUATION_GUIDE.md                   # Step-by-step reproduction guide
 ```
 
 ---
@@ -344,9 +319,24 @@ eval/
 | Table | Script | Runtime | Requirements |
 |-------|--------|---------|--------------|
 | Table 1 | `eval/clip_trainer/validate_classifier.py` | ~10 min | FairFace dataset |
-| Tables 2-5 | `eval/run_full_evaluation.py` | ~4 hours | GPU, Ollama+LLaVA |
+| Tables 2-5, 7a | `eval/run_full_evaluation.py` | ~4 hours | GPU, Ollama+LLaVA |
 | Table 6 | `eval/bootstrap_ci.py` | ~1 min | `cdvr_ablation.csv` |
 | Table 7 | `eval/run_cpdc_vs_cdvr.py` | ~1 min | `cdvr_ablation.csv` |
 | Table 8 | `eval/clip_zeroshot_score.py` | ~2 min | Generated images |
 | Table 9 | `eval/gender_fidelity_score.py` | ~2 min | Male/female images |
 | Table 10 | `eval/generate_bias_report.py` | ~1 min | `clip_fidelity_scores.csv` |
+
+See [EVALUATION_GUIDE.md](EVALUATION_GUIDE.md) for complete step-by-step instructions.
+
+---
+
+## Citation
+
+If you use this evaluation framework or results, please cite:
+
+```
+@article{adfidelity2026,
+  title={AdFidelity: Demographically Faithful AI Advertisement Generation with Closed-Loop Verification},
+  year={2026}
+}
+```
