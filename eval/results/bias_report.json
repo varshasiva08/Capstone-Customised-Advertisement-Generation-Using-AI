@@ -1,0 +1,59 @@
+{
+  "total_generated": 108,
+  "distribution": {
+    "ethnicity": {
+      "African American": {
+        "count": 36,
+        "pct": 33.3
+      },
+      "East Asian": {
+        "count": 36,
+        "pct": 33.3
+      },
+      "South Asian": {
+        "count": 36,
+        "pct": 33.3
+      }
+    },
+    "body_type": {
+      "medium": {
+        "count": 36,
+        "pct": 33.3
+      },
+      "plus-size": {
+        "count": 36,
+        "pct": 33.3
+      },
+      "slim": {
+        "count": 36,
+        "pct": 33.3
+      }
+    },
+    "age": {
+      "20s": {
+        "count": 27,
+        "pct": 25.0
+      },
+      "30s": {
+        "count": 27,
+        "pct": 25.0
+      },
+      "40s": {
+        "count": 27,
+        "pct": 25.0
+      },
+      "50s": {
+        "count": 27,
+        "pct": 25.0
+      }
+    }
+  },
+  "underrepresented": {},
+  "avg_fidelity": {
+    "age_score": 3.43,
+    "gender_score": 10.0,
+    "ethnicity_score": 9.63,
+    "overall": 7.69
+  },
+  "avg_cdvr_iterations": 0.0
+}

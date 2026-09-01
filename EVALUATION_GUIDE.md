@@ -317,5 +317,123 @@ clip_zeroshot_validation.json       # CLIP validation on FairFace
 **Kaggle session dies**
 → Generated images save to `/kaggle/working/` and survive kernel restarts. Re-run the cell and it skips existing images.
 
+feature/cpdc-correction
 **"Fine-tuned model not found" / missing .pt files**
 → You do not need these. We use zero-shot CLIP, not fine-tuned heads. See "What NOT to Do" above.
+=======
+**Generation takes too long**
+→ Reduce seeds: `--seeds 42` (36 profiles × 1 seed × 2 = 72 images instead of 216). Still statistically usable if you acknowledge reduced variance in the paper.
+
+## Phase 6: Statistical Validation, Legacy Ablation, Regional Prompt, Gender & Bias Reports
+
+### Note: folder rename
+`eval/results/lora_study/` was renamed to `eval/results/regional_prompt_study/`
+(LoRA was dropped from the final contribution set in favor of regional
+prompt synthesis — see Table 8). `STUDY_DIR` in `clip_zeroshot_score.py`
+points at the new folder name.
+
+### Table 6 — Bootstrap CI on CPDC gain
+
+Requires `eval/results/cdvr_ablation.csv` to already exist (Phase 3).
+No GPU, no Ollama, no HF token needed — pure statistics on existing data.
+
+```bash
+python eval/bootstrap_ci.py
+```
+
+To also include the CPDC-vs-legacy-CDVR comparison (Table 7 numbers),
+run after Table 7's data exists:
+
+```bash
+python eval/bootstrap_ci.py --legacy-csv eval/results/cpdc_vs_cdvr/legacy_ablation.csv
+```
+
+Output: `eval/results/bootstrap_ci_summary.json`
+
+### Table 7 — CPDC vs Legacy CDVR ablation
+
+Requires `config.yaml` to have `mild`/`strong` correction keys under
+both `STF` and `AF` (previously only BTF had these; STF/AF used the
+graduated `level_1`–`level_4` CPDC ladder). Confirm before running:
+
+```python
+import yaml
+cfg = yaml.safe_load(open("config.yaml"))
+print(cfg["corrections"]["STF"].keys())  # should include mild, strong
+print(cfg["corrections"]["AF"].keys())
+```
+
+Requires Ollama running locally with `llava` pulled, and `HF_TOKEN_1`
+(optionally `HF_TOKEN_2`/`HF_TOKEN_3` for rotation) for generation.
+
+```bash
+python eval/run_cpdc_vs_cdvr.py --seeds 42
+```
+
+Add `--skip-generation` to score existing images and skip (not attempt)
+any profile with no image on disk — useful if HF credits run out
+mid-run.
+
+Output: `eval/results/cpdc_vs_cdvr/legacy_ablation.csv`,
+`eval/results/cpdc_vs_cdvr/comparison_summary.json`
+
+**Known limitation:** our run only covers n=21 of the full 36-profile
+grid (HF Inference API credits ran out during collection), vs CPDC's
+full n=36. The 21 profiles were supplemented to cover every ethnicity ×
+body-type combination at least once, but not full age-range coverage.
+See Table 7 in EVALUATION_RESULTS.md.
+
+**Scale note:** `eval/fidelity_scorer.py`'s LLaVA scorer returns
+`overall` on a 0–10 scale; `cdvr_ablation.csv`'s `overall_fidelity`
+(CPDC) is 0–1. Both `run_cpdc_vs_cdvr.py` and `bootstrap_ci.py` divide
+the legacy score by 10 before comparing. If extending these scripts,
+apply the same normalization or comparisons will be off by 10x.
+
+### Table 8 — Regional Prompt Ablation
+
+Images generated via FLUX.1-schnell (HuggingFace Spaces), 15 per
+config (baseline vs + structured regional prompt), South Indian
+demographics. Score with:
+
+```bash
+python eval/clip_zeroshot_score.py
+```
+
+Output: `eval/results/regional_prompt_study/clip_zeroshot_scores.json`
+
+### Table 9 — Gender Fidelity
+
+Scores male + female generated profiles across all three ethnicities
+with CLIP zero-shot classification:
+
+```bash
+python eval/gender_fidelity_score.py
+```
+
+Requires the male/female profile images already generated (see
+`eval/results/male_images/`, `eval/results/female_images/`).
+
+### Table 10 — BiasTracker Distribution Report
+
+Aggregates `modules/bias_tracker.py`'s logged per-run fidelity scores
+into a distribution report:
+
+```bash
+python eval/generate_bias_report.py
+```
+
+Output: `eval/results/bias_report.json` (summary),
+`eval/results/bias_log.json` (raw per-run log)
+
+### embedding_viz.py (t-SNE/PCA figure) — still blocked
+
+Requires a `real_refs/` folder with real reference photos, one
+subfolder per ethnicity (`real_refs/South Asian/`, etc.) — not yet set
+up. Needs a small FairFace sample, similar to Phase 1's download.
+
+```bash
+python eval/embedding_viz.py \
+    --generated-dir eval/results/cpdc_vs_cdvr/generated_images \
+    --real-dir eval/real_refs \
+    --method both
+```main

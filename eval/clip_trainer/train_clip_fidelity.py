@@ -164,8 +164,7 @@ def train_one_head(
             labels       = batch[label_idx + 1].to(DEVICE)   # +1 because batch[0] is pixels
 
             with torch.no_grad():
-                out = clip_model.get_image_features(pixel_values=pixel_values)
-                embeddings = out.pooler_output if hasattr(out, "pooler_output") else out
+                embeddings = clip_model.get_image_features(pixel_values=pixel_values)
                 embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
 
             logits = head(embeddings)
