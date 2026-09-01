@@ -21,9 +21,9 @@ ollama:
   model: phi3:mini
   host: http://localhost:11434
 
-# LLaVA via Hugging Face Inference API - used for DFC verification (Module 3).
+# LLaVA via Hugging Face Inference API — used for DFC verification (Module 3).
 # Runs on HF's GPU servers. No local model needed. Uses your HF_TOKEN_1 from .env.
-# No ollama pull required. Fast (~3-5s per question).
+# No ollama pull required. Fast (~3–5s per question).
 hf_dfc:
   model_id: llava-hf/llava-1.5-7b-hf
 wan:
@@ -64,22 +64,11 @@ corrections:
     mild: "fuller figure, size 16,"
     strong: "size 18, wide hips, fuller waist, visibly heavier build,"
   STF:
-    level_1: "warm brown skin tone,"
-    level_2: "deep brown skin tone,"
-    level_3: "dark rich brown skin tone,"
-    level_4: "very dark rich brown skin, deep melanin-rich complexion,"
+    mild: "deep brown skin tone,"
+    strong: "very dark rich brown skin, deep melanin-rich complexion,"
   AF:
-    level_1: "slightly mature features,"
-    level_2: "mature woman,"
-    level_3: "clearly mature face, visible age lines,"
-    level_4: "visible age lines, mature face, silver streaks in hair, aged skin texture,"
-
-cpdc:
-  epsilon: 0.03
-  consecutive_stall_limit: 2
-  num_levels:
-    STF: 4
-    AF: 4
+    mild: "mature woman,"
+    strong: "visible age lines, mature face, silver streaks in hair,"
 
 # Advertisement-framed prompt. Leaves clear empty space so the
 # Module 4 (product/brand compositor) has room to place a product or logo.

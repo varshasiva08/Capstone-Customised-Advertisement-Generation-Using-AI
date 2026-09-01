@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-09-01T07:54:34.386447",
+  "legacy_cdvr": {
+    "overall_fidelity": {
+      "mean": 0.735,
+      "std": 0.238,
+      "n": 21
+    },
+    "iterations_used": {
+      "mean": null,
+      "n": 0
+    }
+  },
+  "cpdc": {
+    "overall_fidelity": {
+      "mean": 0.797,
+      "std": 0.162,
+      "n": 36
+    },
+    "iterations_used": {
+      "mean": 1.972,
+      "std": 1.364,
+      "n": 36
+    }
+  },
+  "note": "cpdc rows are pulled from eval/results/cdvr_ablation.csv (cdvr=True). If that file's schema differs from what's expected here, check the column names line up before trusting these numbers."
+}
