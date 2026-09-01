@@ -1,0 +1,27 @@
+# Core app
+streamlit
+pyyaml
+requests
+python-dotenv
+diffusers
+transformers
+accelerate
+sentencepiece
+protobuf
+huggingface_hub
+Pillow
+
+# Evaluation - CLIP study
+torch
+torchvision
+pandas
+scikit-learn
+numpy
+opencv-python-headless
+
+# Evaluation - LLaVA DFC
+ollama
+
+# Evaluation - metrics report
+imageio
+imageio-ffmpeg
