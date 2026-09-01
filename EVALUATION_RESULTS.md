@@ -47,7 +47,9 @@ Two independent scorers (CLIP zero-shot classification and LLaVA vision-language
 
 ---
 
-## Table 1: CLIP Classifier Validation on FairFace (n=10,954)
+## Results Summary
+
+### Table 1: CLIP Classifier Validation on FairFace (n=10,954)
 
 Validates CLIP as a reliable demographic classifier before using it to score generated images.
 
@@ -57,7 +59,7 @@ Validates CLIP as a reliable demographic classifier before using it to score gen
 | Race      | 63.0%    | 0.63     | 0.63        |
 | Age       | 36.0%    | 0.34     | 0.32        |
 
-**What this table shows:** Validates that CLIP is a reliable scorer for gender (94%) and race (63% — well above 14.3% random for 7 classes) before using it on generated images. Age classification is intentionally weak (36%) — this is a known CLIP limitation, not a generation flaw. All subsequent age accuracy results should be interpreted with this baseline in mind.
+**Key findings:** Gender classification is highly reliable (94%). Race classification performs well above chance (63% vs 14.3% random for 7 classes). Age classification is weakest (36%), consistent with known difficulty of age estimation from faces — this is a limitation acknowledged in the paper.
 
 **Per-class race performance:**
 
@@ -73,7 +75,7 @@ Validates CLIP as a reliable demographic classifier before using it to score gen
 
 ---
 
-## Table 2: Demographic Fidelity — CLIP Scorer (n=108)
+### Table 2: Demographic Fidelity — CLIP Scorer (n=108)
 
 Zero-shot CLIP classification on 108 generated advertisement images (36 profiles × 3 seeds).
 
@@ -92,11 +94,9 @@ Zero-shot CLIP classification on 108 generated advertisement images (36 profiles
 | East Asian | 88.9% | 78.7% |
 | African American | 100.0% | 75.0% |
 
-**What this table shows:** AdFidelity achieves high ethnicity match (96.3%) and perfect gender match (100%). Age match (34.3%) reflects the CLIP age limitation validated in Table 1, not a failure of generation. This table is the primary fidelity evidence for the paper's headline claim.
-
 ---
 
-## Table 3: Demographic Fidelity — LLaVA/DFC Scorer (n=108)
+### Table 3: Demographic Fidelity — LLaVA/DFC Scorer (n=108)
 
 LLaVA vision-language model scoring the same 108 images via open-ended demographic identification.
 
@@ -107,11 +107,9 @@ LLaVA vision-language model scoring the same 108 images via open-ended demograph
 | Age match | 95.4% |
 | **Mean DFC** | **95.1%** |
 
-**What this table shows:** LLaVA as a second independent scorer confirms the CLIP findings on ethnicity and gender. LLaVA's age accuracy (95.4%) is much higher than CLIP's (34.3%) because LLaVA uses open-ended reasoning with fuzzy matching (±10 year tolerance), while CLIP uses rigid zero-shot classification. This divergence is explained, not problematic.
-
 ---
 
-## Table 4: Scorer Agreement — CLIP vs LLaVA
+### Table 4: Scorer Agreement — CLIP vs LLaVA
 
 Cross-validation between two independent scorers on the same 108 images.
 
@@ -119,13 +117,13 @@ Cross-validation between two independent scorers on the same 108 images.
 |------|------|-------|-----------|
 | Ethnicity | 96.3% | 89.8% | Both strong; CLIP slightly higher |
 | Gender | 100.0% | 100.0% | Perfect agreement |
-| Age | 34.3% | 95.4% | Divergent — see note |
+| Age | 34.3% | 95.4% | Divergent — see note below |
 
-**What this table shows:** Both scorers strongly agree on the primary claims (ethnicity and gender). Age divergence is explained by scorer methodology differences, not generation quality. Having two independent scorers that agree on the headline metrics significantly strengthens the paper's credibility.
+**Note on age divergence:** CLIP's zero-shot age classification is inherently weak (validated at only 36% on FairFace), while LLaVA uses open-ended reasoning with fuzzy matching (±10 year tolerance). The divergence reflects scorer methodology, not generation quality. For ethnicity and gender — the primary claims of this paper — both scorers strongly agree.
 
 ---
 
-## Table 5: CDVR Ablation (n=36, seed=42)
+### Table 5: CDVR Ablation (n=36, seed=42)
 
 Compares single-pass generation (no correction) vs CDVR iterative correction loop (up to 3 iterations).
 
@@ -139,11 +137,65 @@ Compares single-pass generation (no correction) vs CDVR iterative correction loo
 - **Images needing correction:** 25/36 (69%)
 - **Average iterations used:** 2.0
 
-**What this table shows:** CDVR achieves 100% ethnicity accuracy (up from 88.9%), demonstrating the correction loop is essential. 69% of images requiring correction confirms single-pass generation is insufficient for reliable demographic representation. This is the primary evidence for the CDVR/CPDC contribution.
+**Key finding:** CDVR achieved **100% ethnicity accuracy** (up from 88.9%), demonstrating that the iterative correction loop is essential for reliable demographic representation. The 69% correction rate confirms that single-pass generation frequently fails to match intended demographics, validating CDVR's necessity.
 
 ---
 
-## Table 6: Bootstrap Confidence Intervals on CPDC Gain (n=36, 10,000 resamples)
+### Table 6: Bias Distribution
+
+Verifies that AdFidelity generates uniformly across all demographic groups (no underrepresentation).
+
+| Dimension | Groups | Count per Group | χ² (vs uniform) |
+|-----------|--------|-----------------|------------------|
+| Ethnicity | 3 | 36 each | 0.0 (perfectly uniform) |
+| Body Type | 3 | 36 each | 0.0 (perfectly uniform) |
+| Age | 4 | 27 each | 0.0 (perfectly uniform) |
+
+Generation is uniformly distributed by design (exhaustive grid), confirming no demographic group is underrepresented in the evaluation.
+
+---
+
+### Table 7: Male Subject Evaluation — Gender Generalizability (n=12)
+
+Preliminary evaluation on male subjects to validate that the pipeline is not gender-dependent.
+
+| Metric | Male (n=12) | Female (n=108) |
+|--------|-------------|----------------|
+| Ethnicity match | 83.3% | 96.3% |
+| Gender match | 100.0% | 100.0% |
+| Age match | 50.0% | 34.3% |
+| **Overall fidelity** | **77.8% ± 21.7%** | **76.9% ± 16.7%** |
+
+**Per-ethnicity breakdown (male):**
+
+| Ethnicity | Race Accuracy | Overall Fidelity |
+|-----------|---------------|------------------|
+| South Asian | 100.0% | 83.4% |
+| East Asian | 100.0% | 83.4% |
+| African American | 50.0% | 66.7% |
+
+**Key finding:** Overall fidelity is comparable across genders (77.8% male vs 76.9% female), confirming that the pipeline's demographic fidelity is not gender-dependent. African American male representation shows lower race accuracy (50%) but on a very small sample (n=4), so further evaluation with larger samples is recommended.
+
+---
+
+### Table 8: Output Quality Metrics (from automated evaluation report)
+
+| Metric | Value | Interpretation |
+|--------|-------|----------------|
+| Resolution | 1024 × 1024 px | High resolution |
+| Sharpness (Laplacian variance) | 621.59 | Sharp, well-focused |
+| Aesthetic Quality Proxy | 89.44 / 100 | High aesthetic quality |
+| NIQE | 7.04 | Good (lower is better) |
+| BRISQUE | 60.62 | Acceptable (lower is better) |
+| CLIP Prompt Adherence | 32.79 | Strong text-image alignment |
+| Scene Consistency (SSIM) | 0.78 | Stable across frames |
+| Temporal Flicker | 0.045 | Low flicker (video) |
+| Background Consistency | 0.87 | Stable background |
+
+---
+---
+
+## Table 9: Bootstrap Confidence Intervals on CPDC Gain (n=36, 10,000 resamples)
 
 | Metric | Baseline | CPDC | Difference | Significant? |
 |--------|----------|------|------------|--------------|
@@ -156,7 +208,7 @@ Compares single-pass generation (no correction) vs CDVR iterative correction loo
 
 ---
 
-## Table 7: CPDC vs Legacy CDVR
+## Table 10: CPDC vs Legacy CDVR
 
 Compares CPDC (confidence-proportional correction) against the legacy fixed mild→strong CDVR approach.
 
@@ -169,32 +221,7 @@ Compares CPDC (confidence-proportional correction) against the legacy fixed mild
 
 ---
 
-## Table 7a: Male Subject Evaluation — Gender Generalizability (n=12, supplementary)
-
-Preliminary evaluation on male subjects to validate that the pipeline is not gender-dependent. This is a smaller, earlier-stage supplementary check — see Table 9 for the larger combined gender fidelity evaluation (n=33).
-
-| Metric | Male (n=12) | Female (n=108) |
-|--------|-------------|----------------|
-| Ethnicity match | 83.3% | 96.3% |
-| Gender match | 100.0% | 100.0% |
-| Age match | 50.0% | 34.3% |
-| **Overall fidelity** | **77.8% ± 21.7%** | **76.9% ± 16.7%** |
-
-**Per-ethnicity breakdown (male):**
-
-| Ethnicity | Race Accuracy | Overall Fidelity |
-|-----------|---------------|-------------------|
-| South Asian | 100.0% | 83.4% |
-| East Asian | 100.0% | 83.4% |
-| African American | 50.0% | 66.7% |
-
-**Key finding:** Overall fidelity is comparable across genders (77.8% male vs 76.9% female), confirming that the pipeline's demographic fidelity is not gender-dependent. African American male representation shows lower race accuracy (50%) but on a very small sample (n=4), so further evaluation with larger samples is recommended — this is addressed at larger scale in Table 9.
-
-**Scored using:** CLIP zero-shot classification (`male_fidelity_scores.csv`, generated alongside the main evaluation run)
-
----
-
-## Table 8: Regional Prompt Ablation — South Indian Demographics (n=15 per config)
+## Table 11: Regional Prompt Ablation — South Indian Demographics (n=15 per config)
 
 Isolates the contribution of structured regional prompt synthesis for South Indian demographic generation.
 
@@ -210,7 +237,7 @@ Isolates the contribution of structured regional prompt synthesis for South Indi
 
 ---
 
-## Table 9: Gender Fidelity Across Ethnicities (n=33)
+## Table 12: Gender Fidelity Across Ethnicities (n=33)
 
 Evaluates gender classification accuracy for both male and female generated profiles.
 
@@ -234,7 +261,7 @@ Evaluates gender classification accuracy for both male and female generated prof
 
 ---
 
-## Table 10: BiasTracker Distribution Report (n=108)
+## Table 13: BiasTracker Distribution Report (n=108)
 
 Monitors demographic coverage across all generated outputs to detect systematic underrepresentation.
 
@@ -258,7 +285,6 @@ Monitors demographic coverage across all generated outputs to detect systematic 
 **Generated by:** `eval/generate_bias_report.py` using `modules/bias_tracker.py`
 
 ---
-
 ## File Structure
 
 ```
@@ -268,11 +294,11 @@ eval/
 │   │   ├── South-Asian_slim_20s_seed42.png
 │   │   ├── South-Asian_slim_20s_seed123.png
 │   │   └── ... (108 total)
-│   ├── male_images/                  # 12 generated images (male) — Table 7a
+│   ├── male_images/                  # 12 generated images (male) — Table 7
 │   │   ├── South-Asian_20s_male_seed42.png
 │   │   └── ... (12 total)
 │   ├── clip_fidelity_scores.csv      # Table 2 raw scores
-│   ├── male_fidelity_scores.csv      # Table 7a raw scores
+│   ├── male_fidelity_scores.csv      # Table 7 raw scores
 │   ├── dfc_scores.csv                # Table 3 raw scores
 │   ├── dfc_summary.json              # Table 3 summary
 │   ├── scorer_agreement.csv          # Table 4 raw
@@ -283,32 +309,32 @@ eval/
 │   │   ├── South-Asian_slim_20s_seed42_noCDVR.png
 │   │   ├── South-Asian_slim_20s_seed42_CDVR.png
 │   │   └── ... (72 total)
-│   ├── bootstrap_ci_summary.json     # Table 6 results
+│   ├── bootstrap_ci_summary.json     # Table 9 results
 │   ├── cpdc_vs_cdvr/
-│   │   ├── comparison_summary.json   # Table 7 results
-│   │   └── legacy_ablation.csv       # Table 7 raw
+│   │   ├── comparison_summary.json   # Table 10 results
+│   │   └── legacy_ablation.csv       # Table 10 raw
 │   ├── regional_prompt_study/
-│   │   └── clip_zeroshot_scores.json # Table 8 results
-│   ├── bias_report.json              # Table 10 results
-│   └── bias_log.json                 # Table 10 raw log
+│   │   └── clip_zeroshot_scores.json # Table 11 results
+│   ├── bias_report.json              # Table 13 results
+│   └── bias_log.json                 # Table 13 raw log
 ├── clip_trainer/
 │   ├── train_clip_fidelity.py        # CLIP classifier training script
 │   ├── clip_fidelity_scorer.py       # CLIP scoring (fixed race mapping)
 │   └── validate_classifier.py        # Table 1 validation
-├── run_full_evaluation.py            # Master evaluation script (Tables 2-5, 7a)
+├── run_full_evaluation.py            # Master evaluation script (Tables 2-5, 7)
 ├── run_llava_scoring.py              # LLaVA/DFC scoring script (Table 3)
 ├── compute_agreement_and_bias.py     # Agreement + bias analysis (Table 4)
 ├── fidelity_scorer.py                # Original DFC scorer
-├── clip_zeroshot_score.py            # Table 8 scorer
-├── gender_fidelity_score.py          # Table 9 scorer
-├── generate_bias_report.py           # Table 10 generator
-├── bootstrap_ci.py                   # Table 6 generator
-├── run_cpdc_vs_cdvr.py               # Table 7 generator
+├── clip_zeroshot_score.py            # Table 11 scorer
+├── gender_fidelity_score.py          # Table 12 scorer
+├── generate_bias_report.py           # Table 13 generator
+├── bootstrap_ci.py                   # Table 9 generator
+├── run_cpdc_vs_cdvr.py               # Table 10 generator
 ├── embedding_viz.py                  # Figure: embedding space
 ├── llm_judge.py                      # LLaVA-guided CPDC correction
-├── generate_lora_study.py            # Table 8 image generation
+├── generate_lora_study.py            # Table 11 image generation
 clip_zeroshot_validation.json         # CLIP validation on FairFace (11k images) — Table 1
-metrics_20260824_215800.json          # Output quality metrics
+metrics_20260824_215800.json          # Output quality metrics — Table 8
 EVALUATION_GUIDE.md                   # Step-by-step reproduction guide
 ```
 
@@ -319,12 +345,12 @@ EVALUATION_GUIDE.md                   # Step-by-step reproduction guide
 | Table | Script | Runtime | Requirements |
 |-------|--------|---------|--------------|
 | Table 1 | `eval/clip_trainer/validate_classifier.py` | ~10 min | FairFace dataset |
-| Tables 2-5, 7a | `eval/run_full_evaluation.py` | ~4 hours | GPU, Ollama+LLaVA |
-| Table 6 | `eval/bootstrap_ci.py` | ~1 min | `cdvr_ablation.csv` |
-| Table 7 | `eval/run_cpdc_vs_cdvr.py` | ~1 min | `cdvr_ablation.csv` |
-| Table 8 | `eval/clip_zeroshot_score.py` | ~2 min | Generated images |
-| Table 9 | `eval/gender_fidelity_score.py` | ~2 min | Male/female images |
-| Table 10 | `eval/generate_bias_report.py` | ~1 min | `clip_fidelity_scores.csv` |
+| Tables 2-5, 7 | `eval/run_full_evaluation.py` | ~4 hours | GPU, Ollama+LLaVA |
+| Table 9 | `eval/bootstrap_ci.py` | ~1 min | `cdvr_ablation.csv` |
+| Table 10 | `eval/run_cpdc_vs_cdvr.py` | ~1 min | `cdvr_ablation.csv` |
+| Table 11 | `eval/clip_zeroshot_score.py` | ~2 min | Generated images |
+| Table 12 | `eval/gender_fidelity_score.py` | ~2 min | Male/female images |
+| Table 13 | `eval/generate_bias_report.py` | ~1 min | `clip_fidelity_scores.csv` |
 
 See [EVALUATION_GUIDE.md](EVALUATION_GUIDE.md) for complete step-by-step instructions.
 
