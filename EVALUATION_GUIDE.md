@@ -6,15 +6,15 @@ Complete step-by-step instructions to run every experiment needed for the IEEE A
 
 ## Overview: What gets produced
 
-| Output | Paper section | Script |
+| Output | Paper section | Method |
 |--------|---------------|--------|
-| DFC fidelity scores (36 profiles × N seeds × CDVR on/off) | Table 1: Demographic Fidelity Results | `eval/run_full_evaluation.py` |
-| CDVR ablation (iteration 0 vs final, with/without correction) | Table 2: CDVR Effectiveness | same |
-| CLIP classifier validation (accuracy, F1, confusion matrices on FairFace val) | Section IV-B: CLIP Classifier Validation | `eval/clip_trainer/validate_classifier.py` |
-| CLIP fidelity scores on generated images | Table 3: CLIP-based Fidelity | `eval/run_full_evaluation.py` |
-| Scorer agreement (LLaVA vs CLIP correlation) | Section IV-C: Cross-Metric Validation | same |
-| Bias distribution report | Table 4: Demographic Distribution | same |
-| Per-group fidelity breakdown | Figure: Per-Group Fidelity Heatmap | same |
+| CLIP zero-shot validation on FairFace (11k images) | Experimental Setup: Scorer Validation | Zero-shot CLIP on FairFace val set |
+| CLIP fidelity scores on generated images (108 images) | Results: Table 1 | Zero-shot CLIP on generated ads |
+| LLaVA/DFC fidelity scores (108 images) | Results: Table 2 | Blind LLaVA scoring via Ollama |
+| CDVR ablation (with vs without correction loop) | Results: Table 3 | SDXL + CLIP in-loop scoring |
+| Scorer agreement (CLIP vs LLaVA) | Results: Table 4 | Cross-comparison of both scorers |
+| Bias distribution analysis | Results: Table 5 | Chi-square uniformity test |
+| Male subject evaluation (12 images) | Results: Gender generalizability | Zero-shot CLIP |
 
 ---
 
@@ -25,17 +25,8 @@ Complete step-by-step instructions to run every experiment needed for the IEEE A
 ```bash
 git clone https://github.com/varshasiva08/Capstone-Customised-Advertisement-Generation-Using-AI.git
 cd Capstone-Customised-Advertisement-Generation-Using-AI
-git checkout experiments/full-evaluation
+git checkout experiments/eval-results-v2
 ```
-
-If the branch doesn't exist on remote yet (you haven't pushed), create it locally:
-
-```bash
-git checkout main
-git checkout -b experiments/full-evaluation
-```
-
-Then copy the new files from this guide into the right locations.
 
 ### 0.2 — Install Python dependencies
 
@@ -77,23 +68,30 @@ Create a `.env` file in the project root:
 
 ```
 HF_TOKEN_1=hf_your_token_here
-HF_TOKEN_2=hf_optional_second_token
-HF_TOKEN_3=hf_optional_third_token
 ```
 
-Get tokens from https://huggingface.co/settings/tokens (free account works, but you'll need to accept the FLUX model terms at https://huggingface.co/black-forest-labs/FLUX.1-schnell).
+Get tokens from https://huggingface.co/settings/tokens (free account works).
 
 ---
 
 ## Phase 1: Download FairFace Dataset
 
-This is needed for the CLIP study. FairFace provides ~100k face images labeled with age, gender, and race.
+FairFace is used for two purposes:
+1. **LoRA fine-tuning** of the generator (train split) — handled separately
+2. **CLIP scorer validation** (val split) — benchmarks the scorer's reliability
 
 ### 1.1 — Download
 
-Go to the FairFace GitHub: https://github.com/joojs/fairface
+**Option A — From HuggingFace (recommended for Kaggle/Colab):**
 
-Download these files (from their Google Drive links on the README):
+```python
+from datasets import load_dataset
+ds = load_dataset("HuggingFaceM4/FairFace", "0.25")
+```
+
+**Option B — From GitHub (for local setup):**
+
+Go to https://github.com/joojs/fairface and download:
 - `fairface-img-margin025-trainval.zip` (~3.4 GB)
 - `fairface_label_train.csv`
 - `fairface_label_val.csv`
@@ -103,10 +101,8 @@ Download these files (from their Google Drive links on the README):
 ```bash
 mkdir -p eval/clip_trainer/fairface_data
 
-# Unzip the images
 unzip fairface-img-margin025-trainval.zip -d eval/clip_trainer/fairface_data/
 
-# Copy the CSVs
 cp fairface_label_train.csv eval/clip_trainer/fairface_data/
 cp fairface_label_val.csv eval/clip_trainer/fairface_data/
 ```
@@ -115,168 +111,192 @@ cp fairface_label_val.csv eval/clip_trainer/fairface_data/
 
 ```
 eval/clip_trainer/fairface_data/
-    train/
-        1.jpg, 2.jpg, ...    (~86k images)
-    val/
-        1.jpg, 2.jpg, ...    (~11k images)
+    train/          (~86k images — used for LoRA, NOT for CLIP)
+    val/            (~11k images — used for CLIP validation)
     fairface_label_train.csv
     fairface_label_val.csv
 ```
 
-Check the CSV columns — you need at minimum: `file`, `age`, `gender`, `race`.
+---
 
-Note: FairFace images may be in subdirectories like `train/1.jpg` — the CSV's `file` column contains the relative path. If your extracted structure has them at `fairface_data/train/1.jpg` then the paths should align. If not, check the CSV and adjust.
+## Phase 2: Validate Zero-Shot CLIP Classifier
+
+> **IMPORTANT:** We use **zero-shot CLIP classification** — NOT fine-tuned classifier heads.
+> An earlier approach fine-tuned MLP heads on FairFace embeddings but failed validation
+> (models predicted the same class for every image). That approach was abandoned.
+> **Do not** train or use the `.pt` classifier files (`age_classifier.pt`, etc.).
+
+### 2.1 — How zero-shot CLIP classification works
+
+For each demographic axis, text prompts are constructed:
+- Race: "a photo of a South Asian person", "a photo of an East Asian person", etc.
+- Gender: "a photo of a man", "a photo of a woman"
+- Age: "a photo of a person in their twenties", "a photo of a person in their thirties", etc.
+
+The generated image is compared against all prompts using CLIP's text-image similarity.
+The prompt with the highest similarity score determines the predicted class.
+No training is required — this uses off-the-shelf CLIP (openai/clip-vit-base-patch32).
+
+### 2.2 — Run validation on FairFace val set
+
+This benchmarks CLIP's reliability as a demographic classifier on ~11k real photos before using it to score generated images.
+
+Run on Kaggle/Colab (GPU recommended for speed):
+
+```python
+# See AdFidelity_Evaluation.ipynb, Step 4 for the full validation script
+# Key function:
+def classify_batch(images, prompt_dict):
+    labels = list(prompt_dict.keys())
+    texts = list(prompt_dict.values())
+    inputs = processor(text=texts, images=images, return_tensors="pt", padding=True).to("cuda")
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = outputs.logits_per_image.softmax(dim=-1).cpu()
+    preds = probs.argmax(dim=-1).tolist()
+    return [labels[p] for p in preds]
+```
+
+### 2.3 — Expected results
+
+| Attribute | Accuracy | Macro F1 |
+|-----------|----------|----------|
+| Gender    | 94.0%    | 0.94     |
+| Race      | 63.0%    | 0.63     |
+| Age       | 36.0%    | 0.34     |
+
+Results saved to `clip_zeroshot_validation.json`.
+
+These numbers establish the scorer's reliability. Gender and race classification are
+strong enough to support the paper's primary claims. Age classification is a known
+weakness of CLIP — acknowledged as a limitation in the paper.
 
 ---
 
-## Phase 2: Train CLIP Classifier Heads
+## Phase 3: Generate Advertisement Images
 
-### 2.1 — Run training
+### 3.1 — Generation setup
 
-```bash
-cd Capstone-Customised-Advertisement-Generation-Using-AI/
-python eval/clip_trainer/train_clip_fidelity.py
+Images are generated using Stable Diffusion XL (stabilityai/stable-diffusion-xl-base-1.0)
+on Kaggle with a T4 GPU.
+
+**Demographic grid:** 3 ethnicities × 3 body types × 4 ages × 3 seeds = 108 images
+
+Each prompt follows the format:
+```
+professional studio photograph of a real {body_type} {ethnicity} woman in her {age},
+wearing a white blazer suit, standing pose, looking at camera, warm beige background,
+commercial fashion photography, full body shot, highly detailed face, photorealistic
 ```
 
-This will:
-- Download CLIP ViT-B/32 (~600 MB, automatic, first run only)
-- Fine-tune 3 small MLP heads (age, gender, race) on frozen CLIP embeddings
-- Takes ~30–60 min on CPU, ~5–10 min on GPU
-- Progress prints every 10 batches
+### 3.2 — Run generation + CLIP scoring
 
-### 2.2 — Verify outputs
+See `AdFidelity_Evaluation.ipynb` (Kaggle notebook) for the full generation + scoring cell.
+Images are scored with zero-shot CLIP immediately after generation.
 
-```bash
-ls eval/clip_fidelity_model/
-```
+Output: `eval/results/clip_fidelity_scores.csv` (108 rows)
 
-You should see:
-```
-age_classifier.pt
-gender_classifier.pt
-race_classifier.pt
-label_maps.json
-```
+### 3.3 — Resumability
 
-### 2.3 — Validate the classifier (for the paper)
-
-```bash
-python eval/clip_trainer/validate_classifier.py
-```
-
-This scores the classifier on FairFace's own validation set and produces:
-- Per-class precision, recall, F1 for age/gender/race
-- Confusion matrices
-- Overall accuracy
-
-Results saved to `eval/clip_trainer/validation_results.json`.
-
-**These numbers go in your paper** — they establish how reliable your automated scorer is before you use it to score generated images.
+The script skips images that already exist on disk. If interrupted, re-run the same cell.
 
 ---
 
-## Phase 3: Generate Images + Score Everything
+## Phase 4: LLaVA/DFC Scoring
 
-### 3.1 — Run the full evaluation
+Scores the same 108 generated images using LLaVA via Ollama (runs locally).
 
-```bash
-python eval/run_full_evaluation.py --seeds 42 123 456
-```
+> **Key difference from CLIP:** LLaVA scoring is "blind" — the model is asked
+> "What ethnicity/age/gender do you see?" without being told the intended profile.
+> This avoids confirmation bias.
 
-This generates the full 36-profile × 3-seed × 2-condition (CDVR on/off) = **216 images**, then scores each with both LLaVA and CLIP.
-
-**Estimated time:**
-- Generation: ~45s per image × 216 = ~2.7 hours (HF API, depends on rate limits)
-- LLaVA scoring: ~10s per image × 216 = ~36 min
-- CLIP scoring: ~2s per image × 216 = ~7 min
-- **Total: ~3.5–4 hours**
-
-### 3.2 — If you get rate-limited or interrupted
-
-The script skips images that already exist on disk. Just re-run the same command:
+### 4.1 — Run scoring
 
 ```bash
-python eval/run_full_evaluation.py --seeds 42 123 456
+cd Capstone-Customised-Advertisement-Generation-Using-AI
+python eval/run_llava_scoring.py
 ```
 
-It will pick up where it left off.
+Requires: Ollama running with LLaVA model pulled.
+Saves progress every 5 images (crash-recoverable).
 
-### 3.3 — If you want to score without regenerating
-
-```bash
-python eval/run_full_evaluation.py --skip-generation --seeds 42 123 456
-```
-
-### 3.4 — If you haven't trained CLIP yet but want LLaVA scores
-
-```bash
-python eval/run_full_evaluation.py --skip-clip --seeds 42 123 456
-```
-
-### 3.5 — Verify outputs
-
-```bash
-ls eval/results/
-```
-
-You should see:
-```
-generated_images/       — 216 PNG files
-manifest.json           — generation metadata
-dfc_scores.csv          — LLaVA fidelity scores (216 rows)
-clip_scores.csv         — CLIP fidelity scores (216 rows)
-scorer_agreement.csv    — per-image LLaVA vs CLIP comparison
-summary.json            — aggregate stats ready for paper tables
-```
+Output: `eval/results/dfc_scores.csv` and `eval/results/dfc_summary.json`
 
 ---
 
-## Phase 4: Quick-Test a Single Image (Optional)
+## Phase 5: CDVR Ablation
 
-To score one image without running the full batch:
+Compares generation with and without the CDVR correction loop.
 
-### LLaVA scorer:
+For each of 36 profiles (1 seed):
+- **Without CDVR:** generate once, score, done
+- **With CDVR:** generate → CLIP check → if demographics wrong, strengthen prompt → regenerate (up to 3 iterations)
+
+### 5.1 — Run ablation
+
+See `AdFidelity_Evaluation.ipynb` (Kaggle notebook) for the CDVR ablation cell.
+Uses SDXL for generation and zero-shot CLIP as the in-loop scorer.
+
+Output: `eval/results/cdvr_ablation.csv` and `eval/results/cdvr_ablation_summary.json`
+
+---
+
+## Phase 6: Scorer Agreement & Bias Analysis
+
+Computes cross-validation between CLIP and LLaVA, plus demographic distribution analysis.
+
+### 6.1 — Run analysis
+
 ```bash
-python eval/fidelity_scorer.py
+python eval/compute_agreement_and_bias.py
 ```
-(Edit the `eval_profiles` list in the script first.)
 
-### CLIP scorer:
-```bash
-python eval/clip_trainer/clip_fidelity_scorer.py \
-    --image outputs/your_image.png \
-    --ethnicity "South Asian" \
-    --age "30s" \
-    --gender "Female"
+Output:
+- `eval/results/scorer_agreement.csv`
+- `eval/results/full_analysis_summary.json`
+
+---
+
+## Phase 7: Male Subject Evaluation (Optional)
+
+12 additional images (3 ethnicities × 4 ages, male) to validate gender generalizability.
+
+See `AdFidelity_Evaluation.ipynb` for the male generation cell.
+
+Output: `eval/results/male_fidelity_scores.csv`
+
+---
+
+## Summary of All Result Files
+
+```
+eval/results/
+├── generated_images/               # 108 generated advertisement images (female)
+├── cdvr_ablation_images/           # 72 before/after CDVR images
+├── male_images/                    # 12 male subject images
+├── clip_fidelity_scores.csv        # CLIP scores (108 images)
+├── dfc_scores.csv                  # LLaVA scores (108 images)
+├── dfc_summary.json                # LLaVA summary
+├── cdvr_ablation.csv               # CDVR on/off comparison
+├── cdvr_ablation_summary.json      # CDVR summary
+├── scorer_agreement.csv            # CLIP vs LLaVA per-image
+├── full_analysis_summary.json      # Agreement + bias analysis
+├── male_fidelity_scores.csv        # Male subject CLIP scores
+clip_zeroshot_validation.json       # CLIP validation on FairFace
 ```
 
 ---
 
-## Phase 5: Interpreting Results for the Paper
+## What NOT to Do
 
-### What goes where:
-
-**Table 1 — Demographic Fidelity (LLaVA DFC)**
-- From `dfc_scores.csv`: group by ethnicity/body_type/age, report mean ± std of `overall` score
-- Compare CDVR=True vs CDVR=False rows
-
-**Table 2 — CDVR Effectiveness**
-- From `summary.json` → `llava_fidelity.cdvr_on` vs `cdvr_off`
-- Report mean fidelity improvement and avg iterations needed
-
-**Table 3 — CLIP Classifier Validation**
-- From `eval/clip_trainer/validation_results.json`
-- Report per-class F1 and overall accuracy for age, gender, race
-
-**Table 4 — CLIP Fidelity on Generated Images**
-- From `clip_scores.csv`: same grouping as Table 1
-
-**Table 5 — Scorer Agreement**
-- From `scorer_agreement.csv`: report Pearson correlation between LLaVA and CLIP overall scores
-
-**Table 6 — Bias Distribution**
-- Count how many images per ethnicity/body_type/age group were successfully generated
-- Chi-square test against uniform distribution
+- **Do not** train CLIP classifier heads (`train_clip_fidelity.py`) — the fine-tuned
+  approach was tested and abandoned. All results use zero-shot CLIP.
+- **Do not** generate or use `.pt` model files (age_classifier.pt, etc.) — they
+  are not needed and the training produces unreliable results.
+- **Do not** use `clip_fidelity_scorer.py` for batch evaluation — it requires the
+  abandoned fine-tuned models. Use zero-shot classification instead.
+- **Do not** re-run evaluations that are already complete without coordinating
+  with the team — results must remain consistent across the paper.
 
 ---
 
@@ -288,15 +308,19 @@ python eval/clip_trainer/clip_fidelity_scorer.py \
 **"Cannot reach Ollama"**
 → Run `ollama serve` in a separate terminal.
 
-**"FairFace training CSV not found"**
-→ Download FairFace dataset (Phase 1) and extract to the correct folder.
-
-**"Fine-tuned model not found"**
-→ Run `train_clip_fidelity.py` first (Phase 2).
+**"FairFace data not found"**
+→ Download from HuggingFace: `load_dataset("HuggingFaceM4/FairFace", "0.25")`
 
 **HF rate limit (429 errors)**
-→ Add HF_TOKEN_2 and HF_TOKEN_3 to `.env` for rotation, or wait and re-run (existing images are skipped).
+→ Wait for credits to reset, or use local SDXL generation on Kaggle instead of the API.
 
+**Kaggle session dies**
+→ Generated images save to `/kaggle/working/` and survive kernel restarts. Re-run the cell and it skips existing images.
+
+feature/cpdc-correction
+**"Fine-tuned model not found" / missing .pt files**
+→ You do not need these. We use zero-shot CLIP, not fine-tuned heads. See "What NOT to Do" above.
+=======
 **Generation takes too long**
 → Reduce seeds: `--seeds 42` (36 profiles × 1 seed × 2 = 72 images instead of 216). Still statistically usable if you acknowledge reduced variance in the paper.
 
@@ -412,4 +436,4 @@ python eval/embedding_viz.py \
     --generated-dir eval/results/cpdc_vs_cdvr/generated_images \
     --real-dir eval/real_refs \
     --method both
-```
+```main
