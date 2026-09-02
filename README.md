@@ -123,7 +123,7 @@ Testing can be performed using different dynamically uploaded products such as:
 
 For robustness testing, the same product is used to generate multiple independent advertisements to evaluate product integration consistency.
 
-## Running the Tests
+## Running the Tests (5 Tests)
 
 Example:
 
