@@ -66,9 +66,37 @@ corrections:
   STF:
     mild: "deep brown skin tone,"
     strong: "very dark rich brown skin, deep melanin-rich complexion,"
+    # Graduated CPDC levels (modules/cpdc.py NUM_LEVELS = 4).
+    level_1: "deep brown skin tone,"
+    level_2: "rich deep brown skin tone,"
+    level_3: "very dark rich brown skin,"
+    level_4: "very dark rich brown skin, deep melanin-rich complexion,"
   AF:
     mild: "mature woman,"
     strong: "visible age lines, mature face, silver streaks in hair,"
+    level_1: "mature woman,"
+    level_2: "mature face, faint age lines,"
+    level_3: "visible age lines, mature face,"
+    level_4: "visible age lines, mature face, silver streaks in hair,"
+
+# Scene clause injected as {scene_clause} into prompt_template below.
+# This is the fallback when the user picks a plain colour background, and it
+# reproduces the original wording exactly (byte-identical prompts for every
+# existing caller - app.py, eval/, tests/).
+studio_scene: "studio photography, seamless {background} background, softbox lighting"
+
+# Scene / background-effect presets. Each value REPLACES the studio_scene
+# clause, so its own lighting is baked in and nothing studio-related
+# (softbox, seamless) fights it. Keep entries short: FLUX.1-schnell is a
+# 4-step distilled model and weights the front of the prompt most heavily.
+# Any custom scene text the user types goes through the same path.
+background_presets:
+  Luxury Hotel Lobby: "realistic luxury hotel lobby with cinematic warm lighting, polished marble floor, brass and velvet furnishings, glowing pendant lamps, shallow depth of field"
+  Golden Hour Rooftop: "rooftop terrace at golden hour, warm low sun, soft rim light, hazy city skyline bokeh behind"
+  Neon City Bokeh: "rain-slick city street at night, glowing neon signage, colourful bokeh highlights, cinematic contrast"
+  Marble Gallery: "bright contemporary art gallery, white marble walls, soft diffused daylight, minimal architecture"
+  Soft Studio Gradient: "seamless soft gradient backdrop, blush pink fading to warm beige, evenly lit, subtle vignette"
+  Misty Forest: "misty pine forest at dawn, soft cool light through the trees, atmospheric haze, muted green tones"
 
 # Advertisement-framed prompt. Leaves clear empty space so the
 # Module 4 (product/brand compositor) has room to place a product or logo.
@@ -80,6 +108,5 @@ prompt_template: >
   looking directly into camera, strictly front-facing view, no side profile,
   wearing {clothing}, modest outfit, high neckline, fully covered arms and legs,
   no bare skin, no revealing clothing, conservative modest fashion,
-  commercial fashion advertising, high fashion editorial, studio photography,
-  seamless {background} background, softbox lighting, sharp focus, 8k,
+  commercial fashion advertising, high fashion editorial, {scene_clause}, sharp focus, 8k,
   visible feet, empty space reserved for product placement and logo

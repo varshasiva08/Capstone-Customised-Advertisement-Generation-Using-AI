@@ -29,6 +29,8 @@ from dotenv import load_dotenv
 from PIL import Image
 from huggingface_hub import InferenceClient
 
+from profiler.prompt_builder import clean_scene
+
 load_dotenv()
 
 HF_TOKEN = os.getenv("HF_TOKEN_1")
@@ -49,7 +51,8 @@ def _load_config(config: dict = None) -> dict:
 # Demographically-aware motion prompt builder
 # ---------------------------------------------------------------------------
 
-def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "sway") -> str:
+def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "sway",
+                        scene: str = None) -> str:
     """
     Build a locked-down motion prompt for Wan2.1-I2V.
 
@@ -63,6 +66,10 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
         profile:      Demographic profile dict
         clothing:     Clothing description
         motion_style: "sway" or "walk"
+        scene:        Optional scene / background-effect text matching the
+                      image being animated. When set, it replaces the
+                      hardcoded "studio, seamless background" setting so the
+                      motion prompt does not contradict the frame.
 
     Returns:
         Motion prompt string.
@@ -71,10 +78,18 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
     age        = profile.get("age", "adult")
     clothing_l = clothing.lower() if clothing else ""
 
+    # Setting — a scene replaces the generic studio so Wan2.1 is not told
+    # the subject is on a seamless backdrop when the image shows a lobby.
+    scene = clean_scene(scene)
+    if scene:
+        setting = f"standing in {scene}, environment clearly visible"
+    else:
+        setting = "standing in a studio, seamless background"
+
     # Base identity anchor — keeps Wan2.1 from drifting
     identity = (
         f"{ethnicity} woman in her {age}, "
-        f"standing in a studio, seamless background, "
+        f"{setting}, "
         f"professional advertisement photography, "
         f"sharp focus, full body visible from head to toe, "
         f"front-facing, face clearly visible"
@@ -178,7 +193,7 @@ def _call_wan_api(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
 
 def animate_image(image: Image.Image, config: dict = None,
                   profile: dict = None, clothing: str = "",
-                  motion_style: str = "sway") -> str:
+                  motion_style: str = "sway", scene: str = None) -> str:
     """
     Animate the final advertisement image into a short video.
 
@@ -189,6 +204,9 @@ def animate_image(image: Image.Image, config: dict = None,
         clothing:     Clothing description from the user's brief.
         motion_style: "sway" (gentle turn, best for accessories/jewellery)
                       or "walk" (walks forward then poses, best for clothing).
+        scene:        Optional scene / background-effect text used to build
+                      the image, forwarded to build_motion_prompt() so the
+                      motion prompt matches the frame.
 
     Returns:
         File path to the generated video, saved under outputs/.
@@ -196,7 +214,7 @@ def animate_image(image: Image.Image, config: dict = None,
     cfg = _load_config(config)
 
     motion_prompt = build_motion_prompt(
-        profile or {}, clothing or "", motion_style
+        profile or {}, clothing or "", motion_style, scene=scene
     )
     print(f"[motion] Style: {motion_style} | Prompt: {motion_prompt}")
 

@@ -18,9 +18,41 @@ Correction token severity escalates across iterations:
     Iteration 1: mild correction tokens
     Iteration 2: strong correction tokens
     Iteration 3: strong + explicit negative framing (last attempt)
+
+Scene backgrounds / background effects:
+    `scene` (optional) replaces the studio scene clause — "studio
+    photography, seamless {background} background, softbox lighting" — with
+    a free-form scene description, e.g. "realistic luxury hotel lobby with
+    cinematic lighting". Each entry in config['background_presets'] carries
+    its own lighting, so nothing studio-related contradicts it.
+    scene=None keeps the original wording byte-for-byte.
 """
 
 import yaml
+
+
+# Fallback if config.yaml has no `studio_scene` key (older configs).
+DEFAULT_STUDIO_SCENE = "studio photography, seamless {background} background, softbox lighting"
+
+# Custom scene text is user-supplied: cap it so a pasted paragraph cannot
+# swamp the prompt, and flatten newlines so the prompt stays one line.
+MAX_SCENE_CHARS = 200
+
+
+def clean_scene(scene) -> str:
+    """Normalise user-supplied scene text. Returns "" if nothing usable.
+
+    Collapses all whitespace/newlines, strips stray punctuation at the
+    edges, and caps at MAX_SCENE_CHARS. Idempotent, so it is safe to call
+    in app.py before threading the value to other modules.
+    """
+    if not scene:
+        return ""
+    text = " ".join(str(scene).split())
+    text = text.strip(" ,.;:-")
+    if len(text) > MAX_SCENE_CHARS:
+        text = text[:MAX_SCENE_CHARS].rstrip(" ,.;:-")
+    return text
 
 
 def load_config(path: str = "config.yaml") -> dict:
@@ -33,7 +65,9 @@ def build_prompt(profile: dict, clothing: str, background: str,
                  correction_keys: list[str] = None,
                  iteration: int = 0,
                  product_description: str = None,
-                 product_category: str = "handbag") -> str:
+                 product_category: str = "handbag",
+                 correction_levels: dict = None,
+                 scene: str = None) -> str:
     """
     Build the full advertisement image prompt.
 
@@ -41,6 +75,7 @@ def build_prompt(profile: dict, clothing: str, background: str,
         profile:         dict with 'ethnicity', 'body_type', 'age'.
         clothing:        Selected clothing style (from config options).
         background:      Selected background colour (from config options).
+                         Ignored when `scene` is provided.
         config:          Loaded config.yaml dict. Loaded from disk if None.
         correction_keys: List of correction keys to apply, e.g. ['BTF', 'STF'].
                          Empty or None means no correction (first generation).
@@ -56,6 +91,19 @@ def build_prompt(profile: dict, clothing: str, background: str,
                          shoulder), "sunglasses" (worn on face), "jewelry"
                          (worn - necklace/earrings), or "other" (generic
                          hand-held). Picks the matching phrasing template.
+        correction_levels: Graduated CPDC levels as {axis: level}, e.g.
+                         {'STF': 3}. Reads `level_N` tokens from
+                         config['corrections'][axis] (falling back to
+                         mild/strong). Takes precedence over the
+                         iteration-based mild/strong pick when provided;
+                         `correction_keys` can still be combined with it
+                         for the binary axes (e.g. BTF).
+        scene:           Optional free-form scene / background-effect text
+                         (e.g. "realistic luxury hotel lobby with cinematic
+                         lighting", or a key's value from
+                         config['background_presets']). Replaces the studio
+                         scene clause. None/empty keeps the original
+                         studio wording exactly.
 
     Returns:
         The complete prompt string. Never shown in the UI.
@@ -65,14 +113,31 @@ def build_prompt(profile: dict, clothing: str, background: str,
 
     body_type_extras = config["body_type_extras"].get(profile["body_type"], "")
 
-    base_prompt = config["prompt_template"].format(
+    # --- Scene clause ---------------------------------------------------
+    scene = clean_scene(scene)
+    studio_text = (config.get("studio_scene") or DEFAULT_STUDIO_SCENE) \
+        .format(background=background)
+    template = config["prompt_template"]
+    has_scene_placeholder = "{scene_clause}" in template
+
+    # User scene text is inserted as a format *value*, never run through
+    # .format() itself, so braces in custom input can't break rendering.
+    scene_clause = scene if (scene and has_scene_placeholder) else studio_text
+
+    base_prompt = template.format(
         body_type=profile["body_type"],
         ethnicity=profile["ethnicity"],
         age=profile["age"],
         body_type_extras=body_type_extras,
         clothing=clothing,
         background=background,
+        scene_clause=scene_clause,
     ).strip()
+
+    if scene and not has_scene_placeholder:
+        # Legacy template without {scene_clause}: swap the studio text out
+        # after formatting so the scene is never silently dropped.
+        base_prompt = base_prompt.replace(studio_text, scene, 1)
 
     if product_description:
         clause_templates = {
@@ -116,21 +181,35 @@ def build_prompt(profile: dict, clothing: str, background: str,
         else:
             base_prompt = base_prompt.rstrip(", ") + product_clause
 
-    # No corrections needed on first attempt or if all axes passed
-    if not correction_keys or iteration == 0:
+    # No corrections needed on first attempt or if all axes passed.
+    # `correction_levels` (graduated CPDC) can be supplied without
+    # `correction_keys`; the legacy binary path still requires iteration > 0.
+    if not correction_keys and not correction_levels:
         return base_prompt
-
-    # Determine severity based on iteration number
-    severity = "mild" if iteration == 1 else "strong"
+    if iteration == 0 and not correction_levels:
+        return base_prompt
 
     correction_tokens = []
     corrections_cfg = config.get("corrections", {})
 
-    for key in correction_keys:
-        if key in corrections_cfg:
-            token = corrections_cfg[key].get(severity, "")
-            if token:
-                correction_tokens.append(token.strip().rstrip(","))
+    # Graduated CPDC levels take precedence when provided (axis -> level).
+    # Reads level_N tokens from config, falling back to mild/strong so an
+    # axis without level_N entries (e.g. BTF) still corrects sensibly.
+    for key, level in (correction_levels or {}).items():
+        axis_cfg = corrections_cfg.get(key, {})
+        token = axis_cfg.get(f"level_{level}") \
+            or axis_cfg.get("mild" if level <= 1 else "strong", "")
+        if token:
+            correction_tokens.append(token.strip().rstrip(","))
+
+    # Legacy binary path: severity picked from the iteration number.
+    if not correction_levels:
+        severity = "mild" if iteration == 1 else "strong"
+        for key in correction_keys or []:
+            if key in corrections_cfg:
+                token = corrections_cfg[key].get(severity, "")
+                if token:
+                    correction_tokens.append(token.strip().rstrip(","))
 
     if not correction_tokens:
         return base_prompt
@@ -169,3 +248,17 @@ if __name__ == "__main__":
     print("\n=== Iteration 2 (strong correction on BTF + STF) ===")
     print(build_prompt(profile, "White Blazer Suit", "Pure White",
                        correction_keys=["BTF", "STF"], iteration=2))
+
+    print("\n=== Graduated CPDC correction_levels (STF=3, AF=1) ===")
+    print(build_prompt(profile, "White Blazer Suit", "Pure White",
+                       correction_levels={"STF": 3, "AF": 1}, iteration=1))
+
+    print("\n=== Scene background (free-form) ===")
+    print(build_prompt(profile, "White Blazer Suit", "Pure White",
+                       scene="realistic luxury hotel lobby with cinematic lighting"))
+
+    print("\n=== Scene background (config preset) ===")
+    cfg = load_config()
+    preset = cfg["background_presets"]["Neon City Bokeh"]
+    print(build_prompt(profile, "White Blazer Suit", "Pure White", cfg,
+                       scene=preset))

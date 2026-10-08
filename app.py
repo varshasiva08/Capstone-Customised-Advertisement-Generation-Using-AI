@@ -6,7 +6,7 @@ import yaml
 from dotenv import load_dotenv
 
 from profiler.profile_gen import generate_profiles
-from profiler.prompt_builder import build_prompt
+from profiler.prompt_builder import build_prompt, clean_scene
 from profiler.text_parser import check_ollama, parse_brief
 
 load_dotenv()
@@ -389,7 +389,28 @@ with st.sidebar:
             clothing = "professional outfit"
 
         st.markdown('<p class="af-label">Background</p>', unsafe_allow_html=True)
-        background = st.selectbox("Background", CFG["options"]["background"], label_visibility="collapsed")
+        # Colour = flat studio backdrop (original behaviour).
+        # Scene   = curated background-effect preset (config: background_presets).
+        # Custom  = free-form scene text, e.g. "realistic luxury hotel lobby
+        #           with cinematic lighting".
+        bg_mode = st.radio("BgMode", ["Colour", "Scene", "Custom"], horizontal=True,
+                           label_visibility="collapsed",
+                           help="Colour = studio backdrop · Scene = preset environment · Custom = type your own")
+        if bg_mode == "Scene":
+            background = CFG["defaults"]["background"]
+            preset = st.selectbox("Scene", list(CFG.get("background_presets", {})),
+                                  label_visibility="collapsed")
+            # selectbox yields the label — resolve it to the scene clause
+            scene = CFG.get("background_presets", {}).get(preset, "")
+        elif bg_mode == "Custom":
+            background = CFG["defaults"]["background"]
+            scene = st.text_area("Custom scene",
+                                 placeholder="realistic luxury hotel lobby with cinematic lighting",
+                                 label_visibility="collapsed", max_chars=200)
+        else:
+            background = st.selectbox("Background", CFG["options"]["background"], label_visibility="collapsed")
+            scene = None
+        scene = clean_scene(scene) or None
 
         st.markdown('<p class="af-label">Seed</p>', unsafe_allow_html=True)
         seed = st.number_input("Seed", 0, 999999, ss.seed, label_visibility="collapsed",
@@ -434,6 +455,7 @@ with st.sidebar:
         # Placeholders so variables exist
         clothing = "professional outfit"
         background = CFG["options"]["background"][0] if CFG["options"]["background"] else "white"
+        scene = None
         seed = ss.seed
         product_file = None
         product_category = "handbag"
@@ -581,7 +603,8 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
             prompt = build_prompt(
                 ss.profile, clothing, background, CFG,
                 product_description=product_description,
-                product_category=product_category
+                product_category=product_category,
+                scene=scene,
             )
             status.write("⚙️ Calling FLUX.1-schnell...")
             img, device, res, steps_used = generate_image(prompt, int(seed), CFG)
@@ -605,7 +628,8 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                         img, config=CFG,
                         profile=ss.profile,
                         clothing=clothing,
-                        motion_style=motion_style
+                        motion_style=motion_style,
+                        scene=scene,
                     )
                     vs.update(label="Animation ready ✓", state="complete")
 
