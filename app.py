@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import time
 import streamlit as st
@@ -6,6 +7,10 @@ import yaml
 from dotenv import load_dotenv
 
 from profiler.profile_gen import generate_profiles
+from profiler.product_category import (
+    infer_category_and_keyword,
+    infer_category_from_text,
+)
 from profiler.prompt_builder import build_prompt, clean_scene
 from profiler.text_parser import check_ollama, parse_brief
 
@@ -295,24 +300,13 @@ PRODUCT_QUESTION = "Would you like to add a **product** to this ad? Reply **yes*
 YES_WORDS = {"yes","yeah","yep","yup","y","sure","ok","okay"}
 NO_WORDS  = {"no","nope","nah","n","skip","none"}
 
-PRODUCT_KEYWORDS = {
-    "handbag":    ["handbag","bag","purse","tote","clutch","satchel"],
-    "sunglasses": ["sunglasses","glasses","eyewear","shades"],
-    "jewelry":    ["jewellery","jewelry","necklace","earrings","bracelet",
-                   "ring","pendant","chain","anklet","bangles","bangle"],
-    "clothing":   ["saree","sari","kurta","kurti","lehenga","salwar",
-                   "dress","outfit","suit","gown","top","shirt","blouse"],
-    "other":      ["watch","scarf","belt","shoes","heels","sandals",
-                   "cap","hat","accessory","accessories"],
-}
-
 def detect_product_in_brief(text):
-    lower = text.lower()
-    for cat, kws in PRODUCT_KEYWORDS.items():
-        for kw in kws:
-            if kw in lower:
-                return cat, kw
-    return None, None
+    """Return (category, matched_keyword) for the earliest product mention.
+
+    Vocabulary lives in profiler/product_category.py so the brief path and
+    the image-description path (used at generation time) stay in sync.
+    """
+    return infer_category_and_keyword(text)
 
 def missing_fields(profile):
     return [f for f in REQUIRED if not profile.get(f)]
@@ -342,7 +336,6 @@ ss.setdefault("stage",    "collecting")
 ss.setdefault("want_product", None)
 ss.setdefault("product_category_detected", None)
 ss.setdefault("original_brief", "")
-ss.setdefault("seed", 42)
 ss.setdefault("brand_name", "")
 
 # ─────────────────────────────────────────────
@@ -412,14 +405,17 @@ with st.sidebar:
             scene = None
         scene = clean_scene(scene) or None
 
-        st.markdown('<p class="af-label">Seed</p>', unsafe_allow_html=True)
-        seed = st.number_input("Seed", 0, 999999, ss.seed, label_visibility="collapsed",
-                               help="Fixed seed for reproducible outputs.")
-        ss.seed = seed
+        # Seed control intentionally removed: the free Cloudflare
+        # FLUX.1-schnell REST endpoint rejects the `seed` parameter (HTTP 400),
+        # so outputs are not reproducible there. An internal seed is still
+        # threaded through the existing pipeline — it names the output file,
+        # labels the caption, and is honoured by the Hugging Face fallback —
+        # it is simply rolled per generation instead of user-controlled.
+        seed = random.randint(0, 999999)
 
         # Product
         product_file     = None
-        product_category = ss.get("product_category_detected") or "handbag"
+        product_category = ss.get("product_category_detected") or "other"
         if ss.want_product:
             st.markdown('<p class="af-label">Product image</p>', unsafe_allow_html=True)
             product_file = st.file_uploader("Product", type=["png","jpg"], label_visibility="collapsed")
@@ -432,7 +428,7 @@ with st.sidebar:
         st.divider()
         st.markdown('<p class="af-label">Animation</p>', unsafe_allow_html=True)
         animate_enabled = st.toggle("Generate video", value=False,
-                                    help="Animates via Wan2.1-I2V — uses HF credits.")
+                                    help="Animates via Wan2.2-I2V (free public Space).")
         if animate_enabled:
             motion_style = st.radio("Motion", ["sway","walk"],
                                     format_func=lambda x: "↔ Sway & turn" if x=="sway" else "→ Walk & pose")
@@ -456,9 +452,9 @@ with st.sidebar:
         clothing = "professional outfit"
         background = CFG["options"]["background"][0] if CFG["options"]["background"] else "white"
         scene = None
-        seed = ss.seed
+        seed = 42
         product_file = None
-        product_category = "handbag"
+        product_category = "other"
         custom_tagline = ""
         animate_enabled = False
         motion_style = "sway"
@@ -600,6 +596,17 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                 product_description = describe_product(product_img)
                 status.write(f"🛍️ *{product_description}*")
 
+            if product_description:
+                # Pick the pose phrasing from the *actual photo* first (image-
+                # aware), then the brief, then a neutral default — never a
+                # blind "handbag" for every unrecognised product.
+                product_category = (
+                    infer_category_from_text(product_description)
+                    or ss.get("product_category_detected")
+                    or "other"
+                )
+                status.write(f"🧩 Product type: *{product_category}*")
+
             prompt = build_prompt(
                 ss.profile, clothing, background, CFG,
                 product_description=product_description,
@@ -621,9 +628,9 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
             from modules.motion import animate_image
             from modules.ad_compositor import apply_ad_overlay, generate_tagline
             try:
-                with out.status("Animating via Wan2.1-I2V...", expanded=True) as vs:
+                with out.status("Animating via Wan2.2-I2V...", expanded=True) as vs:
                     vs.write(f"🎬 Style: {'Sway & turn' if motion_style=='sway' else 'Walk & pose'}")
-                    vs.write("🚀 Calling Wan2.1-I2V — ~60–120 s...")
+                    vs.write("🚀 Calling Wan2.2-I2V (free Space) — queue can take several minutes...")
                     video_path = animate_image(
                         img, config=CFG,
                         profile=ss.profile,

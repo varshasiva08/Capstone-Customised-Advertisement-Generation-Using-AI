@@ -5,7 +5,14 @@ requests
 python-dotenv
 
 # HuggingFace
-huggingface_hub
+# Pinned <1.0: transformers/diffusers in the wider environment require it.
+huggingface_hub>=0.34,<1.0
+
+# Free video generation via the public Wan2.1 Hugging Face Space
+# gradio_client 1.x and 2.x are both supported (the code adapts to the
+# token kwarg name and the result shapes). 2.x is required by the .venv
+# used to run the app.
+gradio_client>=1.3
 
 # Image processing
 Pillow

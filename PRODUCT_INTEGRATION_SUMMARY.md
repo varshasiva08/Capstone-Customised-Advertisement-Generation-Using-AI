@@ -9,7 +9,7 @@ Adds a product (handbag, sunglasses, jewellery, etc.) to the generated advertise
 ```
 User uploads product photo
         ↓
-[product_describe.py] Vision model (via HF Inference API)
+[product_describe.py] Local vision model (Ollama llava; HF Gemma-3 fallback)
   → Describes the product in words
   e.g. "burgundy structured leather handbag with gold hardware"
         ↓
@@ -27,11 +27,14 @@ FLUX.1-schnell generates model already wearing/carrying the product
 
 Product integration is description-based rather than compositing-based. This means the product is generated as part of the scene with correct lighting, shadow, and occlusion — not pasted on afterward as a separate layer. The prompt category system ensures pose phrasing is contextually appropriate per product type.
 
+The category is inferred **from the vision description of the actual uploaded photo first** (falling back to the brief, then a neutral default) — so a necklace or sunglasses is no longer phrased as a handbag. Each category's clause then states the physical cues the model otherwise misses: an explicit scale anchor, a visible grip/wearing point, a contact shadow, and partial occlusion by the hand or body.
+
 ## Files
 
 | File | Role |
 |---|---|
-| `modules/product_describe.py` | Sends uploaded photo to vision model, returns text description |
+| `modules/product_describe.py` | Sends uploaded photo to the local vision model (Ollama llava), returns text description |
+| `profiler/product_category.py` | Shared product vocabulary + inference (brief keywords and photo description) |
 | `profiler/prompt_builder.py` | Injects product clause into prompt with category-matched pose phrasing |
 | `modules/product_overlay.py` | GrabCut-based static compositing (fallback, available but not primary) |
 

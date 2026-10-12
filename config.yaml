@@ -26,9 +26,40 @@ ollama:
 # No ollama pull required. Fast (~3–5s per question).
 hf_dfc:
   model_id: llava-hf/llava-1.5-7b-hf
+
+# Product-photo description (Module 3: turns an uploaded product photo into a
+# short phrase injected into the FLUX prompt). Runs fully locally via Ollama,
+# so it is free and offline - no HF credits involved.
+#   provider: ollama (default, free) | hf (Gemma-3 vision fallback)
+# Pull the vision model once:  ollama pull llava
+product_describe:
+  provider: ollama
+  model: llava
+  host: http://localhost:11434
+
 wan:
-  model: Wan-AI/Wan2.1-I2V-14B-720P
-  provider: fal-ai
+  model: Wan-AI/Wan2.1-I2V-14B-720P   # only used by the paid HF path
+  # Video provider:
+  #   space  -> FREE public Hugging Face Space via gradio_client. Costs
+  #             nothing. Uses a Wan 2.2 I2V Lightning (4-8 step distilled)
+  #             model, so a clip finishes in a couple of minutes instead
+  #             of the ~40-60 min taken by the full 14B Wan Space.
+  #   fal-ai -> Hugging Face Inference API (needs paid HF credits).
+  provider: space
+  space_id: Saravutw/WAN2.2_I2V_LIGHTNING_4-8step_custom
+  space_timeout: 900            # seconds to wait in the free queue
+  # Free-Space (Lightning distilled) generation params. Output resolution
+  # follows the input image, so no height/width are needed here.
+  steps: 4
+  duration_seconds: 3.5
+  guidance_scale: 1.0
+  guidance_scale_2: 1.0
+  scheduler: UniPCMultistep
+  flow_shift: 3.0
+  quality: 5
+  frame_multiplier: 16          # must be an int in [16, 32, 64, 128]
+  safe_mode: false
+  negative_prompt: "blurry, low quality, worst quality, distorted face, deformed hands, extra fingers, fused fingers, watermark, text, signature, static, jump cut, messy background"
 
 keywords:
   ethnicity:
@@ -52,6 +83,12 @@ body_type_extras:
 
 generation:
   model_id: black-forest-labs/FLUX.1-schnell
+  # Image provider:
+  #   cloudflare -> Cloudflare Workers AI (FREE: 10,000 Neurons/day, no card).
+  #                 Needs CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN in .env.
+  #   hf         -> Hugging Face Inference API (needs paid HF credits).
+  provider: cloudflare
+  cloudflare_model: "@cf/black-forest-labs/flux-1-schnell"
   resolution: [768, 1280]       # used on GPU
   num_inference_steps: 4         # used on GPU
   cpu_resolution: [512, 512]     # used on CPU (faster testing)

@@ -140,38 +140,88 @@ def build_prompt(profile: dict, clothing: str, background: str,
         base_prompt = base_prompt.replace(studio_text, scene, 1)
 
     if product_description:
+        # Phrasing per product category, written to give FLUX the physical
+        # cues it otherwise misses: explicit scale anchors, visible grip,
+        # contact shadows and partial occlusion by the body/hands.
         clause_templates = {
             "handbag": (
-                ", body and shoulders facing the camera, one hand on hip, a "
-                "medium-sized {desc} sized proportionally to her body, roughly "
-                "torso-height, not oversized, hanging from her other shoulder "
-                "and resting at her side, carried naturally like a real "
-                "handbag, still facing forward toward camera, face clearly "
-                "visible, product clearly visible and in focus, realistic "
-                "contact shadow where the bag meets her arm"
+                ", body and shoulders facing the camera, one arm relaxed at "
+                "her side with the elbow slightly bent and her hand holding a "
+                "{desc} at hip level, the bag is sized proportionally to her "
+                "body — about the width of her torso, not oversized and not "
+                "tiny — her fingers visibly wrap around the handle, if it has "
+                "a strap the strap rests on her shoulder with realistic "
+                "tension and a slight indentation in the fabric, the lower "
+                "edge of the bag reaches her hip, her forearm partly occludes "
+                "the bag, still facing forward toward the camera, face clearly "
+                "visible, the product clearly visible and in sharp focus, "
+                "realistic contact shadow where the bag meets her body"
             ),
             "sunglasses": (
-                ", body facing the camera, head turned slightly toward camera, "
-                "wearing {desc} on her face, sunglasses fitted naturally and "
-                "correctly sized to her face, resting on the bridge of her "
-                "nose, temples over her ears, clearly visible, sharp focus on "
-                "the eyewear, realistic reflections and shadow on the lenses"
+                ", body facing the camera, head turned slightly toward the "
+                "camera, wearing {desc} on her face, the sunglasses are "
+                "correctly sized to her face and rest on the bridge of her "
+                "nose with the temples passing over and behind her ears, the "
+                "lenses align with her eyes, slight occlusion of her eyebrows "
+                "and cheeks, clearly visible, sharp focus on the eyewear, "
+                "realistic reflections in the lenses and a soft shadow from "
+                "the frame on her face"
             ),
             "jewelry": (
-                ", body and shoulders facing the camera, face clearly visible, "
-                "wearing {desc}, fitted naturally, clearly visible, sharp "
-                "focus, realistic scale relative to her features"
+                ", body and shoulders facing the camera, face clearly "
+                "visible, wearing {desc} on her bare skin, the piece sits "
+                "naturally with the correct scale relative to her features — "
+                "a necklace resting on her collarbone or just below the "
+                "neckline, earrings sitting on her earlobes, a bracelet "
+                "wrapping around her wrist or a ring around her finger — the "
+                "lobe, wrist or finger partly occludes it, the metal catches "
+                "the light realistically, clearly visible, sharp focus, "
+                "realistic contact shadow where it meets the skin"
+            ),
+            "watch": (
+                ", body and shoulders facing the camera, one wrist angled "
+                "toward the camera, wearing {desc} on her wrist, the band "
+                "wraps snugly around the wrist with the clasp hidden, the "
+                "watch face is about the width of her wrist (not oversized), "
+                "her other hand may rest near it, clearly visible, sharp "
+                "focus, realistic contact shadow under the watch"
+            ),
+            "clothing": (
+                ", full body facing the camera, wearing {desc} that fits her "
+                "body correctly and drapes naturally over her shoulders, "
+                "waist and hips with realistic folds and wrinkles, the "
+                "garment follows her posture, fabric texture, seams and "
+                "hemline visible, the outfit is the right length for her "
+                "body, nothing oversized or ill-fitting, still facing forward "
+                "toward the camera, face clearly visible, sharp focus on the "
+                "clothing"
+            ),
+            "footwear": (
+                ", full body visible from head to toe, wearing {desc} on her "
+                "feet, the shoes fit correctly and are the right proportion "
+                "to her legs, both feet planted naturally on the ground, the "
+                "shoes show realistic contact with the floor and a soft cast "
+                "shadow, visible feet, sharp focus on the footwear"
+            ),
+            "headwear": (
+                ", body facing the camera, wearing {desc} on her head, the "
+                "piece sits naturally with its edge following the curve of "
+                "her head, correctly sized and not oversized, her hair sits "
+                "naturally around it, a soft shadow falls from it onto her "
+                "face, clearly visible, sharp focus"
             ),
             "other": (
-                ", body and shoulders facing the camera, one hand on hip, "
-                "other hand holding a medium-sized {desc} sized proportionally "
-                "to her body, not oversized, held naturally at waist level, "
-                "still facing forward toward camera, face clearly visible, "
-                "product clearly visible and in focus, realistic grip and "
-                "shadow"
+                ", body and shoulders facing the camera, holding a {desc} "
+                "sized proportionally to her body in one hand at about waist "
+                "or chest level, her fingers curl naturally around it, fully "
+                "visible and not occluded by her body, still facing forward "
+                "toward the camera, face clearly visible, the product clearly "
+                "visible and in sharp focus, realistic grip and contact shadow"
             ),
         }
-        template = clause_templates.get(product_category, clause_templates["handbag"])
+        # Neutral fallback (was "handbag", which forced a bag onto every
+        # unrecognised product).
+        template = clause_templates.get(product_category, clause_templates["other"])
         product_clause = template.format(desc=product_description)
         # Insert right after the pose/clothing description, before the
         # lighting/background tail, so it reads as part of the main subject.
