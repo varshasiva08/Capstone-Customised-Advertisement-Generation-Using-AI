@@ -677,3 +677,53 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
         import traceback
         out.error(f"Generation failed: {type(e).__name__}: {e}")
         out.code(traceback.format_exc())
+
+# ─────────────────────────────────────────────
+# STORYBOARD MODE — 20s context-aware narrative ad
+# ─────────────────────────────────────────────
+if ss.stage == "ready" and not missing_fields(ss.profile):
+    st.divider()
+    st.markdown('<h3 class="af-section-title">🎬 Storyboard ad (20s)</h3>',
+                unsafe_allow_html=True)
+    st.caption("Type any setting — coffee shop, beach, office, mall, street… "
+               "AdFidelity plans a 3-shot timeline, then renders ONE verified "
+               "hero image (llava-checked) that is reused for every shot, so "
+               "the person, outfit and location stay identical throughout. "
+               "Product + voiceover + brand card. All free.")
+    sb_cols = st.columns([3, 1])
+    with sb_cols[0]:
+        sb_context = st.text_input(
+            "Context / setting",
+            placeholder="e.g. busy coffee shop, sunset beach, corporate office, shopping mall, city street...",
+        )
+    with sb_cols[1]:
+        st.write("")
+        st.write("")
+        sb_clicked = st.button("Generate 20s ad", type="primary")
+
+    if sb_clicked:
+        out_sb = st.container()
+        ad_path = None
+        with out_sb.status("Building storyboard ad...", expanded=True) as sts:
+            try:
+                from modules.narrative import run_storyboard
+                ad_path = run_storyboard(
+                    ss.profile,
+                    clothing,
+                    ss.get("brand_name", "Brand"),
+                    context=sb_context.strip() or None,
+                    cfg=CFG,
+                    product_file=product_file,
+                    brief=ss.get("original_brief", ""),
+                    target_duration=20,
+                    log=sts.write,
+                )
+                sts.update(label="Storyboard ad ready ✓", state="complete")
+            except Exception as e:
+                import traceback
+                sts.update(label="Storyboard failed")
+                out_sb.error(f"Storyboard failed: {type(e).__name__}: {e}")
+                out_sb.code(traceback.format_exc())
+        if ad_path and os.path.exists(ad_path):
+            out_sb.video(ad_path)
+            out_sb.caption(f"📽️ {ad_path}")

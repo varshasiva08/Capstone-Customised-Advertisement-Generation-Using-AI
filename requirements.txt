@@ -24,3 +24,6 @@ imageio-ffmpeg
 
 # Ollama (local LLM — phi3:mini for parsing, llava for DFC)
 ollama
+
+# Free voiceover for the storyboard ad (no key; Microsoft Edge TTS)
+edge-tts

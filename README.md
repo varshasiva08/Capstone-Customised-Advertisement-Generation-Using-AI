@@ -6,6 +6,8 @@ AdFidelity is an end-to-end AI pipeline that generates customised advertisement 
 
 A brand describes their target audience in plain English ("plus-size South Asian woman in her 40s for a jewellery campaign"). AdFidelity parses that brief, builds a demographically-faithful prompt, generates a studio-quality advertisement image via FLUX.1-schnell, optionally composites a product, animates the figure using Wan2.2-I2V, and appends a branded end card — all in one pipeline.
 
+A **Storyboard mode** turns any free-form setting ("busy coffee shop", "sunset beach", "corporate office", "shopping mall"…) into a ~20-second narrative ad: Ollama writes a 3-shot plan (enter → pose → reveal), one FLUX hero image is llava-verified against the brief and re-rolled up to 3×, the product is composited onto it so it appears in every shot, and the SAME hero is animated (Wan2.2-I2V walk + sway, free Space) with a cinematic push-in for the reveal — person, outfit and location stay identical frame-to-frame. An edge-tts voiceover says "Only {brand}, check your nearest showroom right now.", ending as a brand card fades in, and the clips are re-timed to a common fps and dissolved into a strict 20s timeline — every stage free.
+
 ## System Architecture
 
 ```
@@ -64,10 +66,18 @@ optional paid fallbacks:
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 CLOUDFLARE_API_TOKEN=your_token
 
-# --- Optional paid fallback (HF Inference API) ---
+# --- Free video Space accounts (each = one HF account = one ZeroGPU quota) ---
 HF_TOKEN_1=hf_your_token_here
 HF_TOKEN_2=hf_second_token   # optional, for rotation
 HF_TOKEN_3=hf_third_token    # optional, for rotation
+```
+
+> ⚡ **ZeroGPU quota rotation** — the free Wan Space's daily quota is **per HF
+> account**. The pipeline automatically retries across `HF_TOKEN_1/2/3` (plus
+> an anonymous attempt) when one account hits its quota/auth limit, so adding a
+> few free HF accounts multiplies your free AI-animation time. Each token must
+> belong to a different account. When every account is exhausted, storyboard
+> mode gracefully falls back to cinematic Ken Burns zoom (no AI motion).
 ```
 
 ### Provider switches
@@ -100,6 +110,10 @@ streamlit run app.py
 │   └── profile_gen.py        # 6-profile generator for vague briefs
 ├── modules/
 │   ├── motion.py             # Wan2.2-I2V animation + motion prompt builder
+│   ├── narrative.py          # 🎬 Storyboard mode — context-aware 20s narrative ad
+│   │                         #   (Ollama 3-shot plan → ONE llava-verified FLUX hero
+│   │                         #   → product composite → Wan2.2 clips + Ken Burns reveal
+│   │                         #   → edge-tts voiceover → common-fps dissolve assembly)
 │   ├── ad_compositor.py      # Brand card, tagline, forward-loop video
 │   ├── product_describe.py   # Vision-based product description
 │   ├── product_overlay.py    # GrabCut-based product compositing (static)

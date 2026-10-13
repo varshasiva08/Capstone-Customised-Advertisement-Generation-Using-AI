@@ -35,7 +35,20 @@ from profiler.prompt_builder import clean_scene
 
 load_dotenv()
 
-HF_TOKEN = os.getenv("HF_TOKEN_1")
+# Free ZeroGPU quota is per HF account, so the Wan Space retries across up to
+# three accounts (HF_TOKEN_1/2/3 — each must belong to a DIFFERENT HF account)
+# plus a generic HF_TOKEN before giving up. HF_TOKEN stays the primary account
+# (first token) used for downloads and the optional paid Inference API path.
+def _collect_hf_tokens():
+    tokens = []
+    for key in ("HF_TOKEN_1", "HF_TOKEN_2", "HF_TOKEN_3", "HF_TOKEN"):
+        value = os.getenv(key)
+        if value and value not in tokens:
+            tokens.append(value)
+    return tokens
+
+HF_TOKENS = _collect_hf_tokens()
+HF_TOKEN  = HF_TOKENS[0] if HF_TOKENS else None
 
 # Short negative prompt for the fast free Wan Space (used when the config
 # does not supply wan.negative_prompt).
@@ -137,6 +150,25 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
 
 
 # ---------------------------------------------------------------------------
+# Token-rotation helpers (quota is per HF account)
+# ---------------------------------------------------------------------------
+
+def _is_token_scoped(exc: Exception) -> bool:
+    """True when the error is scoped to the HF account being used, so another
+    account's token may succeed. Covers daily ZeroGPU quota exhaustion, auth
+    failures and file-permission denials."""
+    m = str(exc).lower()
+    words = ("zerogpu", "quota", "unauthorized", "authentication",
+             "not authorized", "401", "403", "permission denied",
+             "access denied", "forbidden")
+    return any(w in m for w in words)
+
+
+def _short_err(exc: Exception) -> str:
+    return str(exc)[:160]
+
+
+# ---------------------------------------------------------------------------
 # Video generation providers
 # ---------------------------------------------------------------------------
 
@@ -194,68 +226,95 @@ def _call_wan_space(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
         tmp_path = tmp.name
 
     try:
-        print(f"[motion] Connecting to free HF Space '{space_id}'...")
-        # gradio_client 1.x forwards httpx_kwargs to every internal httpx
-        # call (config fetch, file upload, SSE upload/download). 2.x keeps the
-        # same option. The free Space can sit in a queue and the result
-        # download can be slow, so use a generous connect + read timeout
-        # instead of the library's short defaults (which caused SSL handshake
-        # timeouts on download).
-        token_kwargs = {}
-        if HF_TOKEN:
-            # gradio_client <2.x used `hf_token`; 2.x renamed it to `token`.
-            params = inspect.signature(Client.__init__).parameters
-            token_kwargs["token" if "token" in params else "hf_token"] = HF_TOKEN
-        client = Client(
-            space_id,
-            verbose=False,
-            # Return the result URL instead of letting gradio_client perform
-            # its own short-timeout download. _read_video() fetches it with a
-            # generous connect/read timeout, which avoids the SSL handshake
-            # timeouts seen on the free Space's file endpoint.
-            download_files=False,
-            httpx_kwargs={
-                "timeout": httpx.Timeout(
-                    connect=60,
-                    read=float(timeout),   # wait while the Space queues/runs
-                    write=120,
-                    pool=60,
+        # Free ZeroGPU quota is per HF account, so rotate across the accounts
+        # in .env (HF_TOKEN_1/2/3, HF_TOKEN); a final anonymous attempt is
+        # appended as a last resort. Only account-scoped failures (quota/auth)
+        # trigger a retry — genuine Space errors still raise immediately.
+        attempts = list(HF_TOKENS) if HF_TOKENS else []
+        if attempts and None not in attempts:
+            attempts.append(None)
+
+        last_err = None
+        for idx, token in enumerate(attempts):
+            who = "anonymous" if not token else f"token {idx + 1}"
+            try:
+                print(f"[motion] Attempt {idx + 1}/{len(attempts)} ({who}) -> Space '{space_id}'...")
+                # gradio_client 1.x forwards httpx_kwargs to every internal httpx
+                # call (config fetch, file upload, SSE upload/download). 2.x keeps
+                # the same option. The free Space can sit in a queue and the
+                # result download can be slow, so use a generous connect + read
+                # timeout instead of the library's short defaults (which caused
+                # SSL handshake timeouts on download).
+                token_kwargs = {}
+                if token:
+                    # gradio_client <2.x used `hf_token`; 2.x renamed it to `token`.
+                    params = inspect.signature(Client.__init__).parameters
+                    token_kwargs["token" if "token" in params else "hf_token"] = token
+                client = Client(
+                    space_id,
+                    verbose=False,
+                    # Return the result URL instead of letting gradio_client
+                    # perform its own short-timeout download. _read_video()
+                    # fetches it with a generous connect/read timeout, which
+                    # avoids the SSL handshake timeouts seen on the free
+                    # Space's file endpoint.
+                    download_files=False,
+                    httpx_kwargs={
+                        "timeout": httpx.Timeout(
+                            connect=60,
+                            read=float(timeout),   # wait while the Space queues/runs
+                            write=120,
+                            pool=60,
+                        )
+                    },
+                    **token_kwargs,
                 )
-            },
-            **token_kwargs,
-        )
 
-        print(
-            f"[motion] Generating {duration:g}s clip "
-            f"({steps} steps, {scheduler}, free Space)..."
-        )
-        generated, _download, seed = client.predict(
-            handle_file(tmp_path),   # input_image
-            None,                    # last_image (no explicit end frame)
-            motion_prompt,           # prompt
-            steps,                   # steps
-            negative,                # negative_prompt
-            duration,                # duration_seconds
-            guidance,                # guidance_scale
-            guidance_2,              # guidance_scale_2
-            0,                       # seed (>= 0; ignored when randomize_seed=True)
-            True,                    # randomize_seed
-            quality,                 # quality
-            scheduler,               # scheduler
-            flow_shift,              # flow_shift
-            frame_mult,              # frame_multiplier (int)
-            safe_mode,               # safe_mode
-            True,                    # video_component
-            api_name="/generate_video",
-        )
-        print(f"[motion] Space returned clip (seed={seed}).")
+                print(
+                    f"[motion] Generating {duration:g}s clip "
+                    f"({steps} steps, {scheduler}, free Space)..."
+                )
+                generated, _download, seed = client.predict(
+                    handle_file(tmp_path),   # input_image
+                    None,                    # last_image (no explicit end frame)
+                    motion_prompt,           # prompt
+                    steps,                   # steps
+                    negative,                # negative_prompt
+                    duration,                # duration_seconds
+                    guidance,                # guidance_scale
+                    guidance_2,              # guidance_scale_2
+                    0,                       # seed (>= 0; ignored when randomize_seed=True)
+                    True,                    # randomize_seed
+                    quality,                 # quality
+                    scheduler,               # scheduler
+                    flow_shift,              # flow_shift
+                    frame_mult,              # frame_multiplier (int)
+                    safe_mode,               # safe_mode
+                    True,                    # video_component
+                    api_name="/generate_video",
+                )
+                print(f"[motion] Space returned clip (seed={seed}).")
 
-        result = _extract_video(generated)
-        if not result:
-            raise RuntimeError(
-                f"Wan Space returned no video (got {type(generated).__name__})."
-            )
-        return _read_video(result)
+                result = _extract_video(generated)
+                if not result:
+                    raise RuntimeError(
+                        f"Wan Space returned no video (got {type(generated).__name__})."
+                    )
+                return _read_video(result, token=token)
+            except Exception as e:
+                if not _is_token_scoped(e):
+                    raise
+                last_err = e
+                print(
+                    f"[motion] {who} not usable ({_short_err(e)}) — "
+                    "trying the next account..."
+                )
+        raise RuntimeError(
+            f"All {len(attempts)} HF account(s) exhausted for the free Wan "
+            f"Space (quota or auth). Last error: {_short_err(last_err)}. "
+            "Quota resets daily; or add fresh HF_TOKEN_1/2/3 (one per HF "
+            "account) to .env."
+        )
     finally:
         try:
             os.unlink(tmp_path)
@@ -307,10 +366,14 @@ def _file_attr(value, name, default=None):
     return getattr(value, name, default)
 
 
-def _read_video(video) -> bytes:
-    """Read a local video path or download an http(s) video URL."""
+def _read_video(video, token=None) -> bytes:
+    """Read a local video path or download an http(s) video URL.
+
+    token: the HF account used for the generation — its auth may be required
+    to fetch the result file. Downloads without headers when token is None.
+    """
     if isinstance(video, str) and video.startswith("http"):
-        headers = {"Authorization": f"Bearer {HF_TOKEN}"} if HF_TOKEN else None
+        headers = {"Authorization": f"Bearer {token}"} if token else None
         # Generous connect timeout: the free Space's file endpoint can be slow
         # to complete the TLS handshake right after a generation.
         resp = requests.get(video, headers=headers, timeout=(60, 300))
@@ -429,5 +492,5 @@ def animate_image(image: Image.Image, config: dict = None,
     with open(out_path, "wb") as f:
         f.write(video_bytes)
 
-    print(f"[motion] Saved → {out_path}")
+    print(f"[motion] Saved -> {out_path}")
     return out_path
