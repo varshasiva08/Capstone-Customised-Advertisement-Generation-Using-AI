@@ -6,9 +6,9 @@ office", "shopping mall", "city street...") into a short TV-style ad built
 from ONE verified hero image so the person, outfit and location are
 identical in every frame and every shot:
 
-  Shot 1  (enter)      hero image            -> Wan 2.2 clip (walk)
-  Shot 2  (pose)       SAME hero image       -> Wan 2.2 clip (sway)
-  Shot 3  (product)    SAME hero image       -> cinematic push-in reveal
+  Shot 1  (aspiration) hero image            -> Wan 2.2 clip (walk)
+  Shot 2  (lifestyle)  SAME hero image       -> Wan 2.2 clip (sway)
+  Shot 3  (product)    uploaded product      -> real-product beauty close-up
   Brand card           existing ad_compositor card, faded in
   Voiceover            edge-tts (free): an aspiration line ("Step out of the
                        ordinary.") over the open, then a benefit CTA
@@ -18,10 +18,14 @@ identical in every frame and every shot:
                        (no hard looping: a longer slot becomes a slow push-in),
                        short dissolves, brand card, imageio/libx264 + ffmpeg audio
 
-The hero is checked by local llava against the brief (demographic + clothing)
-and re-rolled up to 3x; if a product is uploaded it is composited onto the
-hero BEFORE animating, so it is visible in every clip. If the Wan Space's
-free ZeroGPU quota is exhausted, shots 1-2 degrade to a Ken Burns zoom clip.
+The hero is checked by local llava against the brief (demographic + clothing,
+plus the product when one is described) and re-rolled up to 3x; if a product
+is uploaded it is drawn INTO the hero prompt, so the model is holding/wearing
+it in every clip (identity stays consistent). Shot 3 is then a real-product
+beauty close-up of the uploaded photo. The brand card owns the remainder of
+the timeline (~4-5s), so the finished ad is exactly the target duration. Every
+configured HF account is tried for Wan; if all fail, shots 1-2 degrade to a
+Ken Burns zoom clip so the ad still completes.
 
 Everything is free: Cloudflare FLUX, the public Wan2.2 I2V Space, Ollama
 (shot script + tagline + llava verification), and edge-tts (TTS).
@@ -40,7 +44,7 @@ import imageio
 import numpy as np
 import requests
 import yaml
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from profiler.prompt_builder import build_prompt, clean_scene
 
@@ -219,30 +223,58 @@ def _fallback_shots(context):
 
 
 def _normalize_durations(shots, budget=SHOT_BUDGET_SEC):
-    """Clamp each duration to 4-7s and scale the total down to `budget`."""
+    """Clamp each duration to 4-7s and scale the total down to `budget`.
+
+    The 4.0s floor can push the scaled total back over the budget, so any
+    residual overflow is shaved off the longest shots afterwards. The result
+    is guaranteed to sum to <= budget.
+    """
     shots = [
         {**s, "duration": max(4.0, min(7.0, float(s["duration"])))}
         for s in shots
     ]
+    if not shots:
+        return shots
     total = sum(s["duration"] for s in shots)
     if total > budget:
         scale = budget / total
         shots = [
-            {**s, "duration": round(max(4.0, min(7.0, s["duration"] * scale)), 1)}
+            {**s, "duration": max(4.0, min(7.0, s["duration"] * scale))}
             for s in shots
         ]
-    return shots
+        # Shave overflow (created by the 4.0 floor) off the longest shot,
+        # 0.1s at a time, until the plan fits the budget.
+        for _ in range(80):
+            total = sum(s["duration"] for s in shots)
+            if total <= budget + 1e-6:
+                break
+            idx = max(range(len(shots)), key=lambda i: shots[i]["duration"])
+            if shots[idx]["duration"] - 4.0 <= 1e-6:
+                break  # everything is already at the floor
+            shots[idx]["duration"] = max(
+                4.0, round(shots[idx]["duration"] - min(0.1, total - budget), 1)
+            )
+    return [{**s, "duration": round(s["duration"], 1)} for s in shots]
 
 
 def _generate_shots(profile, clothing, brand, context, product_desc, cfg):
-    """Produce the 3-shot plan: Ollama first, fallback templates second."""
+    """Produce a 3-shot plan: Ollama first, fallback templates second.
+
+    Always returns EXACTLY 3 shots. If the LLM yields fewer (or a shot is
+    malformed), the tail is topped up from the deterministic fallback, so the
+    storyboard can never crash on a short plan. Durations are normalised once
+    later, where the real budget is known.
+    """
     try:
         shots = _ask_ollama_shots(profile, clothing, brand, context, product_desc, cfg)
     except Exception:
         shots = None
     if not shots:
         shots = _fallback_shots(context)
-    shots = _normalize_durations(shots)
+    shots = list(shots)
+    if len(shots) < 3:
+        filler = _fallback_shots(context)
+        shots = shots + filler[len(shots):3]
     return shots[:3]
 
 
@@ -267,19 +299,13 @@ def tts_voiceover(text: str, out_path: str, voice: str = "en-US-JennyNeural") ->
     return None
 
 
-def _is_quota_error(exc: Exception) -> bool:
-    """True for HF ZeroGPU quota-exhaustion errors (account-level daily cap,
-    shared across ALL ZeroGPU Spaces — switching Spaces does not help)."""
-    msg = str(exc).lower()
-    return "zerogpu" in msg or "quota" in msg
-
-
 def _ken_burns_clip(img, out_path, duration, fps, zoom_in=True):
     """Render a smooth cinematic zoom on a still image into an mp4.
 
-    Free fallback when the Wan2.2 Space's ZeroGPU quota is exhausted:
-    zoom-in for the entering/posing shots, a gentle zoom-out dolly for the
-    product close-up. Returns out_path, or None on failure.
+    Free fallback whenever Wan motion is unavailable (all HF accounts failed)
+    and for the product-reveal shot: zoom-in for the entering/posing shots, a
+    gentle zoom-out dolly for the product close-up. Returns out_path, or None
+    on failure.
     """
     try:
         arr = np.asarray(img.convert("RGB"))
@@ -309,59 +335,45 @@ def _ken_burns_clip(img, out_path, duration, fps, zoom_in=True):
     return None
 
 
-def _product_box(model_size, product_size, position="Bottom Right"):
-    """Exact pixel box of the product after composite_product places it.
+def _product_beauty(hero, product_img, out_path, duration, fps=30.0):
+    """Shot 3 as a real-product beauty close-up: the uploaded product, its
+    background removed and grounded with a soft shadow, centred on a soft
+    backdrop colour-matched to the hero, then a slow Ken Burns push-in.
 
-    Mirrors product_overlay's placement math read-only (same POSITIONS dict,
-    MARGIN_FRAC and PRODUCT_WIDTH_FRAC), so the macro crop and the actual
-    composite always agree.
+    Reuses product_overlay's GrabCut / resize / lighting / shadow helpers so
+    the result matches the app's other compositing. Saves the composed still
+    for inspection. Returns out_path, or a hero push-in on failure.
     """
-    from modules.product_overlay import POSITIONS, PRODUCT_WIDTH_FRAC, MARGIN_FRAC
-    mw, mh = int(model_size[0]), int(model_size[1])
-    pw_in, ph_in = int(product_size[0]), int(product_size[1])
-    target_w = max(1, int(mw * PRODUCT_WIDTH_FRAC))
-    scale = target_w / max(1, pw_in)
-    pw, ph = target_w, max(1, int(round(ph_in * scale)))
-    margin = int(min(mw, mh) * MARGIN_FRAC)
-    key = POSITIONS.get(position, "bottom_right")
-    if key == "top_left":
-        x, y = margin, margin
-    elif key == "top_right":
-        x, y = mw - pw - margin, margin
-    elif key == "bottom_left":
-        x, y = margin, mh - ph - margin
-    else:  # bottom_right default
-        x, y = mw - pw - margin, mh - ph - margin
-    return x, y, x + pw, y + ph
-
-
-def _macro_crop(img, product_box, pad=0.4, min_side=320):
-    """Crop the composited image to ~1.4x the product box (the intimate
-    product shot), clamped to the frame edges so the product stays in view.
-    Returns (crop_image, box) or raises if the geometry is degenerate."""
-    W, H = img.size
-    bx0, by0, bx1, by1 = product_box
-    span = max(bx1 - bx0, by1 - by0)
-    if span < 8:
-        raise ValueError("product box too small")
-    cx = (bx0 + bx1) / 2.0
-    cy = (by0 + by1) / 2.0
-    side = max(min_side, int(span * (1.0 + pad)))
-    side = min(side, min(W, H))
-    x0 = max(0, min(int(cx - side / 2), W - side))
-    y0 = max(0, min(int(cy - side / 2), H - side))
-    box = (x0, y0, x0 + side, y0 + side)
-    return img.crop(box), box
-
-
-def _macro_push_in(hero, product_box, out_path, duration, fps=30.0):
-    """Shot 3 as an intimate product reveal: crop the hero to the product
-    macro and push in on it (Ken Burns). Saves the crop next to the clip for
-    inspection. Falls back to a full-hero push-in on any geometry error."""
     try:
-        crop, box = _macro_crop(hero, product_box)
-        crop.save(os.path.join(os.path.dirname(out_path), "story_shot3_macro.png"))
-        return _ken_burns_clip(crop, out_path, duration, fps, zoom_in=True)
+        from modules.product_overlay import (
+            remove_background, resize_product, match_lighting,
+            feather_alpha, make_shadow,
+        )
+        W, H = hero.size
+        # Soft studio backdrop derived from the hero (blur + darken).
+        bg = hero.convert("RGB").filter(
+            ImageFilter.GaussianBlur(radius=max(6, W // 40)))
+        bg = Image.blend(bg, Image.new("RGB", (W, H), (18, 18, 18)), 0.45)
+
+        prod = remove_background(product_img)
+        prod = resize_product(prod, bg, width_frac=0.62)
+        if prod.height > int(0.92 * H) or prod.width > int(0.92 * W):
+            prod.thumbnail((int(0.92 * W), int(0.92 * H)), Image.LANCZOS)
+        x = (W - prod.width) // 2
+        y = (H - prod.height) // 2
+        prod = match_lighting(prod, bg, (x, y, x + prod.width, y + prod.height))
+        prod = feather_alpha(prod, radius=1.5)
+
+        shadow = make_shadow(prod, blur_radius=max(10, W // 60),
+                             opacity=110, y_offset=max(6, H // 80))
+        pad = (shadow.width - prod.width) // 2
+        canvas = bg.convert("RGBA")
+        canvas.alpha_composite(shadow, (max(0, x - pad), max(0, y - pad)))
+        canvas.alpha_composite(prod, (x, y))
+        still = canvas.convert("RGB")
+        still.save(os.path.join(os.path.dirname(out_path),
+                                "story_shot3_product.png"))
+        return _ken_burns_clip(still, out_path, duration, fps, zoom_in=True)
     except Exception:
         return _ken_burns_clip(hero, out_path, duration, fps, zoom_in=True)
 
@@ -370,10 +382,10 @@ def _macro_push_in(hero, product_box, out_path, duration, fps=30.0):
 # Hero verification (local llava — free, offline)
 # ---------------------------------------------------------------------------
 
-def _hero_matches_profile(img, profile, clothing, cfg):
+def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
     """Ask local Ollama llava whether the generated hero matches the brief
-    (demographic + clothing). Returns True on failure so verification never
-    blocks the ad."""
+    (demographic + clothing, plus the product when one is described). Returns
+    True on failure so verification never blocks the ad."""
 
     pro = ((cfg or {}).get("product_describe") or {})
     host = (pro.get("host") or "http://localhost:11434").rstrip("/")
@@ -392,6 +404,7 @@ def _hero_matches_profile(img, profile, clothing, cfg):
     attire   = clean_scene(clothing) or "the specified outfit"
     body_txt = f", {body} build" if body else ""
     age_txt  = f", in her {age}" if age else ""
+    prod_txt = (f", and holding or wearing {product_desc}" if product_desc else "")
 
     payload = {
         "model": model,
@@ -399,7 +412,7 @@ def _hero_matches_profile(img, profile, clothing, cfg):
             "role": "user",
             "content": (
                 f"Does this advertisement photo show a {eth} woman{body_txt}"
-                f"{age_txt}, wearing {attire}? "
+                f"{age_txt}, wearing {attire}{prod_txt}? "
                 "Reply with exactly 'Yes' or 'No'."
             ),
             "images": [b64],
@@ -484,11 +497,14 @@ def _blend_bridge(prev_frames, next_frames, n):
     """Crossfade the last n frames of prev into the first n frames of next."""
     if n <= 0 or len(prev_frames) < n or len(next_frames) < n:
         return prev_frames + next_frames
-    out = prev_frames[:-n]
+    out = list(prev_frames[:-n])
     for i in range(n):
-        a = i / n
-        f1 = prev_frames[-n + i].astype(float)
-        f2 = next_frames[i].astype(float)
+        # Eased (smoothstep) dissolve that reaches the next frame fully at
+        # i = n-1, so there is no 1-frame pop at the cut.
+        a = (i + 1) / n
+        a = a * a * (3 - 2 * a)
+        f1 = prev_frames[-n + i].astype(np.float32)
+        f2 = next_frames[i].astype(np.float32)
         out.append((f1 * (1 - a) + f2 * a).astype(np.uint8))
     out.extend(next_frames[n:])
     return out
@@ -512,7 +528,10 @@ def _mux_audio(video_path, vo_items, out_path):
                     f"aformat=channel_layouts=stereo,"
                     f"adelay={delay}|{delay}[a{i}]")
     mix = "".join(f"[a{i}]" for i in range(len(items)))
-    fc = ";".join(segs) + f";{mix}amix=inputs={len(items)}:normalize=1[a]"
+    # dropout_transition=0 stops amix ramping the remaining VO when one
+    # segment ends (keeps the second beat at full level under the first).
+    fc = (";".join(segs)
+          + f";{mix}amix=inputs={len(items)}:normalize=1:dropout_transition=0[a]")
     cmd += [
         "-filter_complex", fc,
         "-map", "0:v",
@@ -549,11 +568,12 @@ def assemble_storyboard(
 
     - every clip re-timed to the first clip's fps (no hard looping; a longer
       slot becomes a slow push-in on the clip's last frame)
-    - short dissolves between shots (same scene, so cuts read smoothly)
-    - fade to the brand card, which holds ~CARD_BUDGET_SEC and is never
-      trimmed away
-    - voiceover segments [(path, offset_sec), ...] mixed in so the CTA ends
-      as the card appears
+    - short eased dissolves between shots (same scene, so cuts read smoothly)
+    - the brand card owns the remainder of the timeline (~4-5s: a 0.5s fade
+      plus a hold), so the finished ad is exactly `target_duration` seconds
+    - voiceover segments [(path, offset_sec_or_None), ...]; an offset of None
+      is resolved here to end 0.2s into the REAL (frame-accurate) card start,
+      so the CTA always lands on the card
     """
     from modules.ad_compositor import _build_brand_card
 
@@ -564,7 +584,7 @@ def assemble_storyboard(
     W, H = first_frames[0].shape[1], first_frames[0].shape[0]
 
     total_frames = int(target_duration * fps)
-    fade_n = int(0.5 * fps)
+    fade_n = max(1, int(0.5 * fps))
 
     # --- Re-time each clip onto its slot, all at the common fps ---
     shot_lists = []
@@ -572,11 +592,15 @@ def assemble_storyboard(
         frames, src_fps = _read_clip(path, fps, W, H)
         shot_lists.append(_slot_frames(frames, src_fps, fps, dur))
 
-    # --- Join with short dissolves ---
+    # --- Join with short, eased dissolves (smooth, no pop) ---
     joined = shot_lists[0]
     for i in range(1, len(shot_lists)):
         bridge = min(int(0.35 * fps), len(joined) // 4, len(shot_lists[i]) // 4)
         joined = _blend_bridge(joined, shot_lists[i], bridge)
+
+    # Shots end here; the brand card owns the rest of the timeline. This is
+    # the frame-accurate card start (dissolves already accounted for).
+    card_start_sec = len(joined) / fps
 
     # --- Brand card (colour sampled from the last frame's corners) ---
     last = joined[-1]
@@ -584,18 +608,32 @@ def assemble_storyboard(
     bg = tuple(int(v) for v in corners.mean(axis=0))
     if sum(bg) < 300:
         bg = (245, 245, 245)
-    card = _build_brand_card(W, H, brand_name, tagline, product_img, bg_color=bg)
+    # Cut the product out for the card too, so it reads as a clean product
+    # (not a pasted rectangle) — same treatment as the shot-3 still.
+    card_product = product_img
+    if product_img is not None:
+        try:
+            from modules.product_overlay import remove_background
+            card_product = remove_background(product_img)
+        except Exception:
+            card_product = product_img
+    card = _build_brand_card(W, H, brand_name, tagline, card_product, bg_color=bg)
 
+    # Eased fade from the last shot into the card, then hold the card to the
+    # end. Card = remainder, so the ad is exactly target_duration seconds.
     for i in range(fade_n):
-        a = i / fade_n
+        a = (i + 1) / fade_n
         joined.append((last * (1 - a) + card * a).astype(np.uint8))
-    joined.extend([card] * max(0, int(CARD_BUDGET_SEC * fps) - fade_n))
-
-    # Fit exactly to the target: pad with the card. Shots end at <= 16s, so
-    # the card always stays on screen for its full budget (never trimmed).
     if len(joined) < total_frames:
         joined.extend([card] * (total_frames - len(joined)))
     joined = joined[:total_frames]
+
+    # Resolve VO offsets: None -> end 0.2s into the real card start.
+    resolved = []
+    for p, off in (vo_items or []):
+        if off is None:
+            off = max(0.0, card_start_sec - _audio_duration(p) + 0.2)
+        resolved.append((p, off))
 
     tmp_video = out_path + ".novo.mp4"
     writer = imageio.get_writer(
@@ -605,9 +643,9 @@ def assemble_storyboard(
         writer.append_data(f)
     writer.close()
 
-    if vo_items:
+    if resolved:
         try:
-            _mux_audio(tmp_video, vo_items, out_path)
+            _mux_audio(tmp_video, resolved, out_path)
             log("[narrative] Voiceover mixed in.")
         except Exception as e:
             log(f"[narrative] Audio mix failed ({e}) — keeping silent video.")
@@ -631,34 +669,50 @@ def run_storyboard(
     """Hero-anchored storyboard: ONE verified FLUX hero drives EVERY shot.
 
     Pipeline: context -> Ollama shot script (durations/motions only) -> one
-    llava-verified hero image (re-rolled up to 3x) -> product composited onto
-    the hero -> shot 1 (walk) + shot 2 (sway) animate the SAME hero with Wan
-    -> shot 3 is a deterministic push-in on the hero (product reveal, no new
-    person) -> voiceover (ends as the brand card appears) -> strict 20s mp4.
-    Same person, same outfit, same location in every frame — by construction.
+    llava-verified hero image (re-rolled up to 3x), with the uploaded product
+    drawn INTO the prompt so the model holds/wears it -> shot 1 (aspiration)
+    + shot 2 (lifestyle) animate the SAME hero with Wan -> shot 3 is a
+    real-product beauty close-up of the uploaded photo -> voiceover (CTA ends
+    as the brand card appears) -> strict `target_duration` mp4. Same person,
+    same outfit, same location, product in hand — by construction.
+
+    Wan is resilient: every configured HF account is tried, and if all fail
+    for a shot it degrades to a cinematic Ken Burns zoom rather than failing.
     """
     cfg = _load_config(cfg)
+    os.makedirs("outputs", exist_ok=True)
+    run_id = int(time.time())
     from generator.flux_pipeline import generate_image
     from modules.motion import animate_image
     from modules.product_describe import describe_product
-    from modules.product_overlay import composite_product
     from modules.ad_compositor import generate_tagline
+    from profiler.product_category import infer_category_from_text
 
-    # --- Product (description + the pixels for compositing) ---
+    # --- Product: described so FLUX draws her HOLDING/WEARING it, and kept
+    #     for the real-product beauty close-up in shot 3 ---
     product_img_pil = None
     product_desc = None
+    product_category = "other"
     if product_file is not None:
         product_img_pil = Image.open(product_file).convert("RGB")
         log("👁️ Identifying product...")
         product_desc = describe_product(product_img_pil)
+        product_category = (
+            infer_category_from_text(product_desc)
+            or infer_category_from_text(brief)
+            or "other"
+        )
         log(f"🛍️ Product: {product_desc}")
+        log(f"🧩 Product type: {product_category}")
 
     # --- Shot script: durations + motions only (scene text drives the hero) ---
     log("🎬 Writing shot script (Ollama)...")
     shots = _generate_shots(profile, clothing, brand_name, context, product_desc, cfg)
-    shots = _normalize_durations(shots, max(10.0, target_duration - CARD_BUDGET_SEC))
-    if not shots:
-        raise RuntimeError("Could not produce a shot script for this context.")
+    shots = _normalize_durations(
+        shots, max(10.0, target_duration - CARD_BUDGET_SEC)
+    )
+    if not shots or len(shots) < 3:
+        raise RuntimeError("Could not produce a 3-shot script for this context.")
     for i, s in enumerate(shots, 1):
         log(f"   Shot {i} [{s['motion']}] {s['duration']}s")
 
@@ -668,26 +722,27 @@ def run_storyboard(
     hero_img = None
     for attempt in range(1, 4):
         log(f"🖼️ Hero image attempt {attempt}/3 (FLUX): {hero_scene[:70]}...")
-        prompt = build_prompt(profile, clothing, "Pure White", cfg, scene=hero_scene)
+        prompt = build_prompt(
+            profile, clothing, "Pure White", cfg,
+            product_description=product_desc,
+            product_category=product_category,
+            scene=hero_scene,
+        )
         seed = random.randint(0, 999999)
         hero_img, provider, res, steps_used = generate_image(prompt, seed, cfg)
-        hero_img.save("outputs/story_hero.png")
-        if _hero_matches_profile(hero_img, profile, clothing, cfg):
+        hero_img.save(f"outputs/story_{run_id}_hero.png")
+        if _hero_matches_profile(hero_img, profile, clothing, cfg,
+                                 product_desc=product_desc):
             log("✅ Hero verified against the brief (llava).")
             break
         log("⚠️ Hero doesn't match the brief — generating again...")
     else:
         log("⚠️ Keeping last hero (brief could not be verified after 3 tries).")
 
-    # --- Product composited ONCE onto the hero -> visible in every clip ---
-    position = ((cfg.get("product_overlay") or {}).get("position")
-                or "Bottom Right")
-    if product_img_pil is not None:
-        log(f"🎒 Compositing product onto the hero ({position})...")
-        hero_img = composite_product(hero_img, product_img_pil, position=position)
-        hero_img.save("outputs/story_hero_with_product.png")
+    # --- The product was drawn INTO the hero prompt above, so the model is
+    #     holding/wearing it in every animated clip (no floating cutout). ---
 
-    # --- Clips: shots 1-2 animate the SAME hero; shot 3 = push-in on it ---
+    # --- Clips: shots 1-2 animate the SAME hero with Wan; shot 3 = beauty ---
     clips = []
     used_fallback = []
     for i in (1, 2):
@@ -699,67 +754,68 @@ def run_storyboard(
                 clothing=clothing, motion_style=s["motion"], scene=hero_scene,
             )
         except Exception as e:
-            if not _is_quota_error(e):
-                raise
-            log(f"⚠️ Wan free quota exhausted — shot {i} uses cinematic zoom instead.")
+            # animate_image tries every configured HF account; if all fail
+            # (quota, auth, Space/network), degrade this shot to a cinematic
+            # Ken Burns zoom instead of killing the whole ad.
+            log(f"⚠️ Wan failed for shot {i} ({type(e).__name__}) — "
+                "using cinematic zoom for this shot.")
             clip = _ken_burns_clip(
                 hero_img,
-                f"outputs/story_shot{i}_kb.mp4",
+                f"outputs/story_{run_id}_shot{i}_kb.mp4",
                 duration=s["duration"],
                 fps=30.0,
                 zoom_in=(i == 1),
             )
             if not clip:
                 raise RuntimeError(
-                    "Wan free quota exhausted and the fallback clip could not be created."
+                    "Wan failed and the cinematic-zoom fallback could not "
+                    "be created."
                 )
             used_fallback.append(i)
         clips.append(clip)
     if used_fallback:
         log("ℹ️ " + ", ".join(f"shot {i}" for i in used_fallback)
-            + " used cinematic zoom (Wan free quota exhausted).")
+            + " used cinematic zoom (Wan unavailable).")
 
     if product_img_pil is not None:
-        pb = _product_box(hero_img.size, product_img_pil.size, position)
-        log(f"🎯 Shot 3: intimate product macro "
-            f"(box x={pb[0]}, y={pb[1]} -> {pb[2]},{pb[3]})...")
-        clip3 = _macro_push_in(
-            hero_img, pb, "outputs/story_shot3_kb.mp4",
+        log("🎯 Shot 3: real-product beauty close-up (uploaded product).")
+        clip3 = _product_beauty(
+            hero_img, product_img_pil, f"outputs/story_{run_id}_shot3.mp4",
             duration=shots[2]["duration"], fps=30.0,
         )
     else:
         log("🎞️ Shot 3: cinematic push-in on the hero (no product uploaded).")
         clip3 = _ken_burns_clip(
-            hero_img, "outputs/story_shot3_kb.mp4",
+            hero_img, f"outputs/story_{run_id}_shot3_kb.mp4",
             duration=shots[2]["duration"], fps=30.0, zoom_in=True,
         )
     if not clip3:
         raise RuntimeError("Could not build the product-reveal clip.")
     clips.append(clip3)
 
-    # --- Voiceover: two beats, the CTA lands exactly as the card appears ---
+    # --- Voiceover: two beats. The CTA offset is None = "end 0.2s into the
+    #     card", resolved frame-accurately inside assemble_storyboard. ---
     log("🔊 Generating voiceover (edge-tts)...")
     vo_items = []
     v1 = tts_voiceover("Step out of the ordinary.",
-                       "outputs/storyboard_vo_1.mp3")
+                       f"outputs/storyboard_vo_{run_id}_1.mp3")
     if v1:
         vo_items.append((v1, 0.7))
     v2 = tts_voiceover(
         f"{brand_name} — own the moment. Find your nearest showroom.",
-        "outputs/storyboard_vo_2.mp3",
+        f"outputs/storyboard_vo_{run_id}_2.mp3",
     )
     if v2:
-        card_start = sum(s["duration"] for s in shots[:2])
-        vo_items.append((v2, max(0.0, card_start - _audio_duration(v2) + 0.2)))
+        vo_items.append((v2, None))
     if vo_items:
         log(f"🔊 Voiceover: {len(vo_items)} segment(s), CTA lands on the card.")
 
     # --- Tagline from the real brief + product context ---
     brief_for_tag = " ".join(part for part in (brief, product_desc) if part)
-    tagline = generate_tagline(brief_for_tag, profile, brand_name)
+    tagline = generate_tagline(brief_for_tag, profile, brand_name, cfg=cfg)
 
-    # --- Assemble the strict-20s ad ---
-    out_path = f"outputs/storyboard_{int(time.time())}.mp4"
+    # --- Assemble the strict-`target_duration` ad ---
+    out_path = f"outputs/storyboard_{run_id}.mp4"
     log("🎬 Assembling 20s timeline (dissolves + brand card + VO)...")
     assemble_storyboard(
         clips, [s["duration"] for s in shots], brand_name, tagline, out_path,

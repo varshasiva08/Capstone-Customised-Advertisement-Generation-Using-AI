@@ -647,7 +647,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                         cs.write(f"💬 Tagline: *{tagline}*")
                     else:
                         cs.write("✍️ Generating tagline...")
-                        tagline = generate_tagline(ss.get("original_brief",""), ss.profile, brand_name)
+                        tagline = generate_tagline(ss.get("original_brief",""), ss.profile, brand_name, cfg=CFG)
                         cs.write(f"💬 *{tagline}*")
 
                     cs.write("🎨 Compositing brand card...")
@@ -686,10 +686,11 @@ if ss.stage == "ready" and not missing_fields(ss.profile):
     st.markdown('<h3 class="af-section-title">🎬 Storyboard ad (20s)</h3>',
                 unsafe_allow_html=True)
     st.caption("Type any setting — coffee shop, beach, office, mall, street… "
-               "AdFidelity plans a 3-shot timeline, then renders ONE verified "
-               "hero image (llava-checked) that is reused for every shot, so "
-               "the person, outfit and location stay identical throughout. "
-               "Product + voiceover + brand card. All free.")
+               "AdFidelity plans a 3-shot timeline and renders ONE verified "
+               "hero image (llava-checked) reused for every shot, so the "
+               "person, outfit and location stay identical. An uploaded "
+               "product is drawn into the scene (held or worn) — shot 3 is a "
+               "real-product beauty close-up. Voiceover + brand card. All free.")
     sb_cols = st.columns([3, 1])
     with sb_cols[0]:
         sb_context = st.text_input(

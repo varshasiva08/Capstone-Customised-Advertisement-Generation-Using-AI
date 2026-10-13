@@ -228,8 +228,9 @@ def _call_wan_space(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
     try:
         # Free ZeroGPU quota is per HF account, so rotate across the accounts
         # in .env (HF_TOKEN_1/2/3, HF_TOKEN); a final anonymous attempt is
-        # appended as a last resort. Only account-scoped failures (quota/auth)
-        # trigger a retry — genuine Space errors still raise immediately.
+        # appended as a last resort. EVERY account is tried before giving up,
+        # so a single bad/expired account (or a quota hiccup) never kills the
+        # run — the caller degrades to a cinematic zoom only if all fail.
         attempts = list(HF_TOKENS) if HF_TOKENS else []
         if attempts and None not in attempts:
             attempts.append(None)
@@ -302,16 +303,18 @@ def _call_wan_space(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
                     )
                 return _read_video(result, token=token)
             except Exception as e:
-                if not _is_token_scoped(e):
-                    raise
+                # Try EVERY configured HF account, then give up. A transient
+                # hiccup on one account (or a token-scoped quota/auth error)
+                # must not kill the run: the caller falls back to a cinematic
+                # zoom only after all accounts have genuinely failed.
                 last_err = e
                 print(
-                    f"[motion] {who} not usable ({_short_err(e)}) — "
+                    f"[motion] {who} failed ({_short_err(e)}) — "
                     "trying the next account..."
                 )
         raise RuntimeError(
             f"All {len(attempts)} HF account(s) exhausted for the free Wan "
-            f"Space (quota or auth). Last error: {_short_err(last_err)}. "
+            f"Space. Last error: {_short_err(last_err)}. "
             "Quota resets daily; or add fresh HF_TOKEN_1/2/3 (one per HF "
             "account) to .env."
         )

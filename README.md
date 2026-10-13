@@ -6,7 +6,7 @@ AdFidelity is an end-to-end AI pipeline that generates customised advertisement 
 
 A brand describes their target audience in plain English ("plus-size South Asian woman in her 40s for a jewellery campaign"). AdFidelity parses that brief, builds a demographically-faithful prompt, generates a studio-quality advertisement image via FLUX.1-schnell, optionally composites a product, animates the figure using Wan2.2-I2V, and appends a branded end card — all in one pipeline.
 
-A **Storyboard mode** turns any free-form setting ("busy coffee shop", "sunset beach", "corporate office", "shopping mall"…) into a ~20-second narrative ad: Ollama writes a 3-shot plan (enter → pose → reveal), one FLUX hero image is llava-verified against the brief and re-rolled up to 3×, the product is composited onto it so it appears in every shot, and the SAME hero is animated (Wan2.2-I2V walk + sway, free Space) with a cinematic push-in for the reveal — person, outfit and location stay identical frame-to-frame. An edge-tts voiceover says "Only {brand}, check your nearest showroom right now.", ending as a brand card fades in, and the clips are re-timed to a common fps and dissolved into a strict 20s timeline — every stage free.
+A **Storyboard mode** turns any free-form setting ("busy coffee shop", "sunset beach", "corporate office", "shopping mall"…) into a ~20-second narrative ad: Ollama writes a 3-shot plan (aspiration → lifestyle → intimacy), one FLUX hero image is llava-verified against the brief and re-rolled up to 3×, and any uploaded product is **drawn into the hero prompt** so the model is holding/wearing it in every shot (no floating cutout). The SAME hero is then animated (Wan2.2-I2V aspiration + lifestyle, free Space) while shot 3 is a **real-product beauty close-up** of the uploaded photo. An edge-tts voiceover ("Step out of the ordinary." → "…own the moment. Find your nearest showroom.") lands as a brand card fades in, and the clips are re-timed to a common fps and dissolved into a strict 20s timeline — every stage free.
 
 ## System Architecture
 
@@ -112,8 +112,8 @@ streamlit run app.py
 │   ├── motion.py             # Wan2.2-I2V animation + motion prompt builder
 │   ├── narrative.py          # 🎬 Storyboard mode — context-aware 20s narrative ad
 │   │                         #   (Ollama 3-shot plan → ONE llava-verified FLUX hero
-│   │                         #   → product composite → Wan2.2 clips + Ken Burns reveal
-│   │                         #   → edge-tts voiceover → common-fps dissolve assembly)
+│   │                         #   → product held/worn in the hero → Wan2.2 clips
+│   │                         #   → real-product beauty close-up → edge-tts VO)
 │   ├── ad_compositor.py      # Brand card, tagline, forward-loop video
 │   ├── product_describe.py   # Vision-based product description
 │   ├── product_overlay.py    # GrabCut-based product compositing (static)

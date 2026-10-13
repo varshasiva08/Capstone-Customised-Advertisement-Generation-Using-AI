@@ -147,13 +147,20 @@ def _build_brand_card(
 # Tagline generator
 # ---------------------------------------------------------------------------
 
-def generate_tagline(brief: str, profile: dict, brand_name: str) -> str:
+def generate_tagline(brief: str, profile: dict, brand_name: str,
+                     cfg: dict = None) -> str:
     """
     Generate a short ad tagline using Ollama.
-    Falls back to a generic tagline if Ollama is unavailable.
+
+    Uses the configured Ollama model/host when `cfg` is given (falling back to
+    phi3:mini on localhost). Falls back to a generic tagline if Ollama is
+    unavailable.
     """
     try:
         import ollama
+        oc = ((cfg or {}).get("ollama") or {})
+        model = oc.get("model") or "phi3:mini"
+        host = oc.get("host")
         ethnicity = profile.get("ethnicity", "")
         age       = profile.get("age", "")
         prompt = (
@@ -162,8 +169,9 @@ def generate_tagline(brief: str, profile: dict, brand_name: str) -> str:
             f"Brand brief: {brief}. "
             f"Reply with only the tagline, no quotes, no explanation."
         )
-        resp = ollama.chat(
-            model="phi3:mini",
+        client = ollama.Client(host=host) if host else ollama
+        resp = client.chat(
+            model=model,
             messages=[{"role": "user", "content": prompt}]
         )
         tagline = resp["message"]["content"].strip().strip('"').strip("'")
