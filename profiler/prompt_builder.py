@@ -67,7 +67,8 @@ def build_prompt(profile: dict, clothing: str, background: str,
                  product_description: str = None,
                  product_category: str = "handbag",
                  correction_levels: dict = None,
-                 scene: str = None) -> str:
+                 scene: str = None,
+                 background_focus: str = "Auto") -> str:
     """
     Build the full advertisement image prompt.
 
@@ -104,6 +105,8 @@ def build_prompt(profile: dict, clothing: str, background: str,
                          config['background_presets']). Replaces the studio
                          scene clause. None/empty keeps the original
                          studio wording exactly.
+        background_focus: Depth-of-field preference applied to every scene
+                          type: "Auto", "Blurred", or "Sharp".
 
     Returns:
         The complete prompt string. Never shown in the UI.
@@ -123,6 +126,18 @@ def build_prompt(profile: dict, clothing: str, background: str,
     # User scene text is inserted as a format *value*, never run through
     # .format() itself, so braces in custom input can't break rendering.
     scene_clause = scene if (scene and has_scene_placeholder) else studio_text
+    focus_clauses = {
+        "auto": "natural depth of field with the subject and background balanced",
+        "blurred": "softly blurred background, shallow depth of field, subject in sharp focus",
+        "sharp": "sharp detailed background, deep depth of field, subject and environment in focus",
+    }
+    focus_clause = focus_clauses.get(str(background_focus).strip().lower())
+    if focus_clause is None:
+        raise ValueError(
+            f"Unknown background_focus '{background_focus}' "
+            "(expected 'Auto', 'Blurred', or 'Sharp')"
+        )
+    scene_clause = f"{scene_clause}, {focus_clause}"
 
     base_prompt = template.format(
         body_type=profile["body_type"],
@@ -137,7 +152,7 @@ def build_prompt(profile: dict, clothing: str, background: str,
     if scene and not has_scene_placeholder:
         # Legacy template without {scene_clause}: swap the studio text out
         # after formatting so the scene is never silently dropped.
-        base_prompt = base_prompt.replace(studio_text, scene, 1)
+        base_prompt = base_prompt.replace(studio_text, scene_clause, 1)
 
     if product_description:
         # Phrasing per product category, written to give FLUX the physical

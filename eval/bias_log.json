@@ -1,0 +1,1838 @@
+[
+  {
+    "timestamp": "2026-09-01T14:32:50.136354",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.137357",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.138357",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.139361",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_30s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_30s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_slim_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_30s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_30s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.140464",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_medium_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_30s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_30s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.156151",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "South Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "South-Asian_plus-size_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.172154",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_30s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_30s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_30s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.188223",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_slim_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_30s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.204184",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_30s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.220275",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.220275",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.224953",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.224953",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.224953",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.224953",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_medium_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 0.0,
+      "overall": 3.33
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_30s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 0.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_30s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.236051",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_30s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.252089",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 0.0,
+      "overall": 3.33
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.252089",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.252089",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.252089",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 0.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.252089",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "East Asian",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "East-Asian_plus-size_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_30s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.267806",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.283689",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_30s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.283689",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.283689",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.283689",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.283689",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.300192",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.300192",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "slim",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_slim_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.308230",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.311308",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.314311",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.318310",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_30s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.321311",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.322692",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_30s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.322692",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.322692",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.322692",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.322692",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.339003",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.339003",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "medium",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_medium_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.339003",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_20s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.339003",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_20s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.354084",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "20s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_20s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.354084",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_30s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.354084",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_30s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.354084",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "30s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_30s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.369790",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_40s_seed42",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.369790",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_40s_seed123",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.369790",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "40s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_40s_seed456",
+    "fidelity": {
+      "age_score": 0.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 6.67
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.369790",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_50s_seed42",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.385411",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_50s_seed123",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  },
+  {
+    "timestamp": "2026-09-01T14:32:50.385411",
+    "profile": {
+      "ethnicity": "African American",
+      "body_type": "plus-size",
+      "age": "50s",
+      "gender": "Female"
+    },
+    "image_path": "African-American_plus-size_50s_seed456",
+    "fidelity": {
+      "age_score": 10.0,
+      "gender_score": 10.0,
+      "ethnicity_score": 10.0,
+      "overall": 10.0
+    },
+    "cdvr_iterations": 0
+  }
+]

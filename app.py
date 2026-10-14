@@ -405,6 +405,14 @@ with st.sidebar:
             scene = None
         scene = clean_scene(scene) or None
 
+        background_focus = st.selectbox(
+            "Background focus",
+            ["Auto", "Blurred", "Sharp"],
+            index=0,
+            label_visibility="visible",
+            help="Choose the depth of field for every background type.",
+        )
+
         # Seed control intentionally removed: the free Cloudflare
         # FLUX.1-schnell REST endpoint rejects the `seed` parameter (HTTP 400),
         # so outputs are not reproducible there. An internal seed is still
@@ -452,6 +460,7 @@ with st.sidebar:
         clothing = "professional outfit"
         background = CFG["options"]["background"][0] if CFG["options"]["background"] else "white"
         scene = None
+        background_focus = "Auto"
         seed = 42
         product_file = None
         product_category = "other"
@@ -583,7 +592,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
     st.divider()
     out = st.container()
 
-    from generator.flux_pipeline import generate_image
+    from eval.generator.flux_pipeline import generate_image
     from modules.product_describe import describe_product
 
     try:
@@ -612,6 +621,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                 product_description=product_description,
                 product_category=product_category,
                 scene=scene,
+                background_focus=background_focus,
             )
             status.write("⚙️ Calling FLUX.1-schnell...")
             img, device, res, steps_used = generate_image(prompt, int(seed), CFG)

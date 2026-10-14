@@ -1,0 +1,16 @@
+{
+  "without_cdvr": {
+    "ethnicity": 0.889,
+    "age": 0.361,
+    "gender": 1.0,
+    "overall": 0.75
+  },
+  "with_cdvr": {
+    "ethnicity": 1.0,
+    "age": 0.389,
+    "gender": 1.0,
+    "overall": 0.797
+  },
+  "avg_iterations": 1.97,
+  "pct_needing_correction": 0.694
+}

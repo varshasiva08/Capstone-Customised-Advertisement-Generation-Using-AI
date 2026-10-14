@@ -49,7 +49,7 @@ def check_env(cfg: dict) -> bool:
 
 def test_image(cfg: dict) -> Image.Image:
     print("\n[1/3] Image generation (FLUX.1-schnell)...")
-    from generator.flux_pipeline import generate_image
+    from eval.generator.flux_pipeline import generate_image
 
     img, device, res, steps = generate_image(
         "a red ceramic teapot on a white table, clean studio product photo", 42, cfg

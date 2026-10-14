@@ -1,0 +1,14 @@
+{
+  "config_a_baseline": {
+    "label": "Baseline FLUX (generic Indian prompt)",
+    "race_accuracy": 1.0,
+    "mean_sa_confidence": 0.802,
+    "n": 15
+  },
+  "config_b_prompt": {
+    "label": "FLUX + Regional South Indian Prompt",
+    "race_accuracy": 1.0,
+    "mean_sa_confidence": 0.872,
+    "n": 15
+  }
+}

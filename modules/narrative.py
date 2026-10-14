@@ -682,7 +682,7 @@ def run_storyboard(
     cfg = _load_config(cfg)
     os.makedirs("outputs", exist_ok=True)
     run_id = int(time.time())
-    from generator.flux_pipeline import generate_image
+    from eval.generator.flux_pipeline import generate_image
     from modules.motion import animate_image
     from modules.product_describe import describe_product
     from modules.ad_compositor import generate_tagline

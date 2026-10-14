@@ -1,0 +1,13 @@
+image,target_ethnicity,target_age,target_gender,pred_ethnicity,ethnicity_match,pred_gender,gender_match,pred_age,age_match,overall_fidelity
+South-Asian_20s_male_seed42,South Asian,20s,Male,South Asian,True,Male,True,30s,False,0.667
+South-Asian_30s_male_seed42,South Asian,30s,Male,South Asian,True,Male,True,30s,True,1.0
+South-Asian_40s_male_seed42,South Asian,40s,Male,South Asian,True,Male,True,50s,False,0.667
+South-Asian_50s_male_seed42,South Asian,50s,Male,South Asian,True,Male,True,50s,True,1.0
+East-Asian_20s_male_seed42,East Asian,20s,Male,East Asian,True,Male,True,30s,False,0.667
+East-Asian_30s_male_seed42,East Asian,30s,Male,East Asian,True,Male,True,30s,True,1.0
+East-Asian_40s_male_seed42,East Asian,40s,Male,East Asian,True,Male,True,30s,False,0.667
+East-Asian_50s_male_seed42,East Asian,50s,Male,East Asian,True,Male,True,50s,True,1.0
+African-American_20s_male_seed42,African American,20s,Male,South Asian,False,Male,True,30s,False,0.333
+African-American_30s_male_seed42,African American,30s,Male,South Asian,False,Male,True,30s,True,0.667
+African-American_40s_male_seed42,African American,40s,Male,African American,True,Male,True,50s,False,0.667
+African-American_50s_male_seed42,African American,50s,Male,African American,True,Male,True,50s,True,1.0
