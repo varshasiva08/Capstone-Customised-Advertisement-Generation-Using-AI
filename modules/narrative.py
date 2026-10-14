@@ -141,7 +141,11 @@ def _ask_ollama_shots(profile, clothing, brand, context, product_desc, cfg):
         "You are a TV commercial storyboard writer for a premium fashion ad. "
         "One model appears throughout and ONE location is used for every shot, "
         "so the ad feels cinematic and consistent.\n"
-        f"Context / setting: {context or 'a stylish venue'}. "
+        f"User's complete setting description: {context or 'a stylish venue'}. "
+        "Preserve every meaningful environmental detail from it in the shot "
+        "scenes, including weather, time of day, indoor/outdoor location, "
+        "and atmosphere. Do not replace details such as 'rain outside' with "
+        "a generic venue description. "
         f"Model: {body} {eth} woman in her {age}, wearing {clothing}. "
         f"Product for the ad: {prod}. Brand: {brand}. "
         "Write exactly 3 shots for a 20-second advertisement built around "
@@ -155,7 +159,8 @@ def _ask_ollama_shots(profile, clothing, brand, context, product_desc, cfg):
         "  Shot 3 (intimacy): an emotional close-up on the product — describe "
         "it so the viewer desires it (texture, finish, detail, warm light).\n"
         "Return ONLY valid JSON and nothing else:\n"
-        '{"shots":[{"scene":"<scene, 6-15 words>","action":"<action, 6-15 words>",'
+        '{"shots":[{"scene":"<scene, 10-30 words, preserving all important '
+        'user setting details>","action":"<action, 6-15 words>",'
         '"motion":"walk|sway","duration":5.0}]}'
     )
     resp = ollama.Client(host=host).chat(
@@ -276,6 +281,19 @@ def _generate_shots(profile, clothing, brand, context, product_desc, cfg):
         filler = _fallback_shots(context)
         shots = shots + filler[len(shots):3]
     return shots[:3]
+
+
+def _hero_scene_from_context(context, shot_scene):
+    """Keep the user's full setting description in the image-generation prompt."""
+    user_context = clean_scene(context)
+    planned_scene = clean_scene(shot_scene)
+    if not user_context:
+        return planned_scene or "a stylish venue"
+    if not planned_scene:
+        return user_context
+    if planned_scene.lower() in user_context.lower():
+        return user_context
+    return clean_scene(f"{user_context}; {planned_scene}")
 
 
 # ---------------------------------------------------------------------------
@@ -716,7 +734,9 @@ def run_storyboard(
     for i, s in enumerate(shots, 1):
         log(f"   Shot {i} [{s['motion']}] {s['duration']}s")
 
-    hero_scene = shots[0]["scene"] or (context or "a stylish venue")
+    hero_scene = _hero_scene_from_context(
+        context, shots[0]["scene"] or "a stylish venue"
+    )
 
     # --- ONE hero image; llava-verified, re-rolled up to 3x ---
     hero_img = None

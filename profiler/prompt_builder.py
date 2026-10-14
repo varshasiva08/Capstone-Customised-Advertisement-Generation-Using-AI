@@ -34,9 +34,9 @@ import yaml
 # Fallback if config.yaml has no `studio_scene` key (older configs).
 DEFAULT_STUDIO_SCENE = "studio photography, seamless {background} background, softbox lighting"
 
-# Custom scene text is user-supplied: cap it so a pasted paragraph cannot
-# swamp the prompt, and flatten newlines so the prompt stays one line.
-MAX_SCENE_CHARS = 200
+# Custom and Storyboard scene text is user-supplied: cap it so a pasted
+# paragraph cannot swamp the prompt, while preserving a useful description.
+MAX_SCENE_CHARS = 400
 
 
 def clean_scene(scene) -> str:
