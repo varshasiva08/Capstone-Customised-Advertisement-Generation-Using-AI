@@ -60,6 +60,8 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from transformers import CLIPModel, CLIPProcessor
 
+from clip_fidelity_scorer import CLIPClassifierHead
+
 # ── Config ───────────────────────────────────────────────────────────────────
 
 DATA_DIR    = os.path.join(os.path.dirname(__file__), "fairface_data")
@@ -104,26 +106,6 @@ class FairFaceDataset(Dataset):
         race_label   = self.label_maps["race"].get(str(row[RACE_COL]), 0)
 
         return pixel_values, age_label, gender_label, race_label
-
-
-# ── Classifier head ───────────────────────────────────────────────────────────
-
-class CLIPClassifierHead(nn.Module):
-    """
-    Small MLP head on top of frozen CLIP image embeddings.
-    CLIP produces 512-dim embeddings. We add 2 linear layers.
-    """
-    def __init__(self, num_classes: int, embed_dim: int = 512):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(embed_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, num_classes)
-        )
-
-    def forward(self, x):
-        return self.net(x)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

@@ -27,7 +27,6 @@ below, and the CDVR loop's flat threshold check
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 # ---------------------------------------------------------------------------
@@ -43,11 +42,33 @@ NUM_LEVELS = {
     # for body type, so it stays on the original binary rule.
 }
 
-# Minimum confidence improvement between rounds for a correction to be
-# considered "working". Below this for CONSECUTIVE_STALL_LIMIT rounds in a
-# row, CPDC stops trying rather than burning the remaining iteration budget.
+
+def _load_cpdc_config(config: dict = None) -> dict:
+    """Read CPDC tuning values from config.yaml with sensible defaults.
+
+    Keeps the module importable even when no config is passed (defaults
+    match the historical hard-coded values).
+    """
+    cfg = config or {}
+    cpdc_cfg = cfg.get("cpdc", {}) or {}
+    return {
+        "epsilon": float(cpdc_cfg.get("epsilon", 0.03)),
+        "consecutive_stall_limit": int(cpdc_cfg.get("consecutive_stall_limit", 2)),
+    }
+
+
+# Module-level tuning values, populated from config.yaml when available.
+# eval/run_full_evaluation.py passes its loaded cfg in via set_cpdc_config().
 EPSILON = 0.03
 CONSECUTIVE_STALL_LIMIT = 2
+
+
+def set_cpdc_config(config: dict) -> None:
+    """Apply CPDC tuning values from a loaded config.yaml dict."""
+    global EPSILON, CONSECUTIVE_STALL_LIMIT
+    values = _load_cpdc_config(config)
+    EPSILON = values["epsilon"]
+    CONSECUTIVE_STALL_LIMIT = values["consecutive_stall_limit"]
 
 
 # ---------------------------------------------------------------------------

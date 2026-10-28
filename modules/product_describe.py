@@ -30,11 +30,9 @@ load_dotenv()
 
 DFC_MODEL_ID = "google/gemma-3-27b-it"  # HF fallback only
 
-HF_TOKENS = [t for t in (
-    os.getenv("HF_TOKEN_1"),
-    os.getenv("HF_TOKEN_2"),
-    os.getenv("HF_TOKEN_3"),
-) if t]
+from modules.hf_tokens import collect_hf_tokens
+
+HF_TOKENS = collect_hf_tokens()
 
 DESCRIBE_INSTRUCTION = (
     "You are looking at a single product photo for an advertisement. "

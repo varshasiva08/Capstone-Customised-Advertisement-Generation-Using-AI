@@ -32,23 +32,15 @@ from PIL import Image
 from huggingface_hub import InferenceClient
 
 from profiler.prompt_builder import clean_scene
+from modules.hf_tokens import collect_hf_tokens, primary_hf_token
 
 load_dotenv()
 
 # Free ZeroGPU quota is per HF account, so the Wan Space retries across up to
 # three accounts (HF_TOKEN_1/2/3 — each must belong to a DIFFERENT HF account)
-# plus a generic HF_TOKEN before giving up. HF_TOKEN stays the primary account
-# (first token) used for downloads and the optional paid Inference API path.
-def _collect_hf_tokens():
-    tokens = []
-    for key in ("HF_TOKEN_1", "HF_TOKEN_2", "HF_TOKEN_3", "HF_TOKEN"):
-        value = os.getenv(key)
-        if value and value not in tokens:
-            tokens.append(value)
-    return tokens
-
-HF_TOKENS = _collect_hf_tokens()
-HF_TOKEN  = HF_TOKENS[0] if HF_TOKENS else None
+# before giving up.
+HF_TOKENS = collect_hf_tokens()
+HF_TOKEN  = primary_hf_token()
 
 # Short negative prompt for the fast free Wan Space (used when the config
 # does not supply wan.negative_prompt).
@@ -75,7 +67,8 @@ def _load_config(config: dict = None) -> dict:
 # ---------------------------------------------------------------------------
 
 def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "sway",
-                        scene: str = None) -> str:
+                        scene: str = None, product_category: str = "other",
+                        product_description: str = None) -> str:
     """
     Build a locked-down motion prompt for Wan I2V.
 
@@ -86,13 +79,16 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
                 Best for clothing, sarees, suits.
 
     Args:
-        profile:      Demographic profile dict
-        clothing:     Clothing description
-        motion_style: "sway" or "walk"
-        scene:        Optional scene / background-effect text matching the
-                      image being animated. When set, it replaces the
-                      hardcoded "studio, seamless background" setting so the
-                      motion prompt does not contradict the frame.
+        profile:           Demographic profile dict
+        clothing:          Clothing description
+        motion_style:      "sway" or "walk"
+        scene:             Optional scene / background-effect text matching the
+                           image being animated. When set, it replaces the
+                           hardcoded "studio, seamless background" setting so
+                           the motion prompt does not contradict the frame.
+        product_category:  Product category (handbag, sunglasses, jewelry,
+                           watch, clothing, footwear, headwear, other)
+        product_description: Short text description of the product
 
     Returns:
         Motion prompt string.
@@ -100,6 +96,8 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
     ethnicity  = profile.get("ethnicity", "woman")
     age        = profile.get("age", "adult")
     clothing_l = clothing.lower() if clothing else ""
+    prod_cat   = (product_category or "other").strip().lower()
+    prod_desc  = (product_description or "").strip()
 
     # Setting — a scene replaces the generic studio so Wan2.1 is not told
     # the subject is on a seamless backdrop when the image shows a lobby.
@@ -130,7 +128,6 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
             "takes three slow confident steps forward toward camera, "
             "then stops and stands still in a natural relaxed pose, "
             "slight weight shift to one side, "
-            "arms relaxed at sides"
         )
     else:  # sway
         motion = (
@@ -139,6 +136,46 @@ def build_motion_prompt(profile: dict, clothing: str = "", motion_style: str = "
             "stays in the same spot throughout, "
             "minimal natural movement, like a model holding a pose"
         )
+
+    # Product-aware hand movement — keep the product visible and handled
+    # naturally, no random flailing.
+    if prod_cat == "handbag":
+        if motion_style == "walk":
+            motion += (
+                "carrying the handbag at hip level, the handbag swings "
+                "naturally but stays in frame, one hand on the strap, "
+                "arms relaxed otherwise"
+            )
+        else:
+            motion += (
+                "one hand holding the handbag strap or chain at hip level, "
+                "the bag stays clearly visible throughout, subtle hand "
+                "adjustment on the strap, arms relaxed otherwise"
+            )
+    elif prod_cat in ("sunglasses", "jewelry", "watch"):
+        if motion_style == "walk":
+            motion += (
+                "holding the product in one hand, product stays visible and "
+                "centered, arms relaxed otherwise"
+            )
+        else:
+            motion += (
+                "one hand gently touching or presenting the product, "
+                "product remains clearly visible, deliberate slow hand "
+                "movement"
+            )
+    else:
+        if motion_style == "walk":
+            motion += (
+                "carrying the product in one hand at hip level, product stays "
+                "visible, arms relaxed otherwise"
+            )
+        else:
+            motion += (
+                "both arms relaxed at sides, hands naturally positioned "
+                "holding the product, product clearly visible, deliberate "
+                "slow hand movement"
+            )
 
     # Clothing-aware refinement
     if any(w in clothing_l for w in ["saree", "sari", "lehenga"]):
@@ -232,6 +269,12 @@ def _call_wan_space(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
         # so a single bad/expired account (or a quota hiccup) never kills the
         # run — the caller degrades to a cinematic zoom only if all fail.
         attempts = list(HF_TOKENS) if HF_TOKENS else []
+        if not attempts:
+            raise RuntimeError(
+                "No HF tokens configured for the free Wan Space. "
+                "Add HF_TOKEN_1 (and optionally HF_TOKEN_2, HF_TOKEN_3, one "
+                "per HF account) to .env, or use a local video fallback."
+            )
         if attempts and None not in attempts:
             attempts.append(None)
 
@@ -463,20 +506,25 @@ def _call_wan_api(image: Image.Image, motion_prompt: str, cfg: dict) -> bytes:
 
 def animate_image(image: Image.Image, config: dict = None,
                   profile: dict = None, clothing: str = "",
-                  motion_style: str = "sway", scene: str = None) -> str:
+                  motion_style: str = "sway", scene: str = None,
+                  product_category: str = "other",
+                  product_description: str = None) -> str:
     """
     Animate the final advertisement image into a short video.
 
     Args:
-        image:        The final advertisement image (PIL Image).
-        config:       Loaded config.yaml dict.
-        profile:      Demographic profile dict.
-        clothing:     Clothing description from the user's brief.
-        motion_style: "sway" (gentle turn, best for accessories/jewellery)
-                      or "walk" (walks forward then poses, best for clothing).
-        scene:        Optional scene / background-effect text used to build
-                      the image, forwarded to build_motion_prompt() so the
-                      motion prompt matches the frame.
+        image:             The final advertisement image (PIL Image).
+        config:            Loaded config.yaml dict.
+        profile:           Demographic profile dict.
+        clothing:          Clothing description from the user's brief.
+        motion_style:      "sway" (gentle turn, best for accessories/jewellery)
+                           or "walk" (walks forward then poses, best for clothing).
+        scene:             Optional scene / background-effect text used to build
+                           the image, forwarded to build_motion_prompt() so the
+                           motion prompt matches the frame.
+        product_category:  Product category (handbag, sunglasses, jewelry,
+                           watch, clothing, footwear, headwear, other)
+        product_description: Short text description of the product
 
     Returns:
         File path to the generated video, saved under outputs/.
@@ -484,7 +532,9 @@ def animate_image(image: Image.Image, config: dict = None,
     cfg = _load_config(config)
 
     motion_prompt = build_motion_prompt(
-        profile or {}, clothing or "", motion_style, scene=scene
+        profile or {}, clothing or "", motion_style, scene=scene,
+        product_category=product_category,
+        product_description=product_description,
     )
     print(f"[motion] Style: {motion_style} | Prompt: {motion_prompt}")
 

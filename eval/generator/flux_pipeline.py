@@ -24,7 +24,6 @@ import os
 from io import BytesIO
 
 import requests
-import streamlit as st
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 from huggingface_hub.utils import HfHubHTTPError
@@ -35,30 +34,20 @@ load_dotenv()
 MODEL_ID = "black-forest-labs/FLUX.1-schnell"
 CF_MODEL_ID = "@cf/black-forest-labs/flux-1-schnell"
 
-HF_TOKENS = [t for t in (
-    os.getenv("HF_TOKEN_1"),
-    os.getenv("HF_TOKEN_2"),
-    os.getenv("HF_TOKEN_3"),
-) if t]
+from modules.hf_tokens import collect_hf_tokens
 
-_fallback_token_idx = 0
+HF_TOKENS = collect_hf_tokens()
+
+_token_idx = 0
 
 
 def _get_token_idx():
-    try:
-        if "hf_token_idx" not in st.session_state:
-            st.session_state.hf_token_idx = 0
-        return st.session_state.hf_token_idx
-    except Exception:
-        return _fallback_token_idx
+    return _token_idx
 
 
 def _set_token_idx(idx):
-    global _fallback_token_idx
-    try:
-        st.session_state.hf_token_idx = idx
-    except Exception:
-        _fallback_token_idx = idx
+    global _token_idx
+    _token_idx = idx
 
 
 def _generate_cloudflare(prompt: str, seed: int, config: dict):

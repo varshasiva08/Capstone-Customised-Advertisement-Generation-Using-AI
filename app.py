@@ -413,6 +413,14 @@ with st.sidebar:
             help="Choose the depth of field for every background type.",
         )
 
+        brand_tone = st.selectbox(
+            "Brand tone",
+            ["Auto", "Luxury", "Casual", "Bold", "Minimal"],
+            index=0,
+            label_visibility="visible",
+            help="Brand aesthetic injected into the image prompt.",
+        )
+
         # Seed control intentionally removed: the free Cloudflare
         # FLUX.1-schnell REST endpoint rejects the `seed` parameter (HTTP 400),
         # so outputs are not reproducible there. An internal seed is still
@@ -461,6 +469,7 @@ with st.sidebar:
         background = CFG["options"]["background"][0] if CFG["options"]["background"] else "white"
         scene = None
         background_focus = "Auto"
+        brand_tone = "Auto"
         seed = 42
         product_file = None
         product_category = "other"
@@ -622,6 +631,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                 product_category=product_category,
                 scene=scene,
                 background_focus=background_focus,
+                brand_tone=brand_tone,
             )
             status.write("⚙️ Calling FLUX.1-schnell...")
             img, device, res, steps_used = generate_image(prompt, int(seed), CFG)
@@ -637,6 +647,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
         if animate_enabled:
             from modules.motion import animate_image
             from modules.ad_compositor import apply_ad_overlay, generate_tagline
+            from modules.narrative import tts_voiceover
             try:
                 with out.status("Animating via Wan2.2-I2V...", expanded=True) as vs:
                     vs.write(f"🎬 Style: {'Sway & turn' if motion_style=='sway' else 'Walk & pose'}")
@@ -647,6 +658,8 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                         clothing=clothing,
                         motion_style=motion_style,
                         scene=scene,
+                        product_category=product_category,
+                        product_description=product_description,
                     )
                     vs.update(label="Animation ready ✓", state="complete")
 
@@ -667,6 +680,16 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                         prod_img_pil = PILImage.open(product_file)
 
                     ad_path = video_path.replace(".mp4","_ad.mp4")
+                    audio_path = f"outputs/voiceover_{seed}.mp3"
+                    voiceover = tts_voiceover(
+                        f"{brand_name}. {tagline}",
+                        audio_path,
+                    )
+                    if not voiceover:
+                        raise RuntimeError(
+                            "Voiceover generation failed; the ad was not "
+                            "created without audio."
+                        )
                     apply_ad_overlay(
                         video_path=video_path,
                         brand_name=brand_name,
@@ -674,6 +697,7 @@ if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
                         out_path=ad_path,
                         product_img=prod_img_pil,
                         target_duration_sec=ad_duration,
+                        audio_path=voiceover,
                     )
                     cs.update(label="Ad ready ✓", state="complete")
 
@@ -727,6 +751,8 @@ if ss.stage == "ready" and not missing_fields(ss.profile):
                     product_file=product_file,
                     brief=ss.get("original_brief", ""),
                     target_duration=20,
+                    background_focus=background_focus,
+                    brand_tone=brand_tone,
                     log=sts.write,
                 )
                 sts.update(label="Storyboard ad ready ✓", state="complete")

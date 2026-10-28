@@ -68,7 +68,8 @@ def build_prompt(profile: dict, clothing: str, background: str,
                  product_category: str = "handbag",
                  correction_levels: dict = None,
                  scene: str = None,
-                 background_focus: str = "Auto") -> str:
+                 background_focus: str = "Auto",
+                 brand_tone: str = None) -> str:
     """
     Build the full advertisement image prompt.
 
@@ -107,6 +108,11 @@ def build_prompt(profile: dict, clothing: str, background: str,
                          studio wording exactly.
         background_focus: Depth-of-field preference applied to every scene
                           type: "Auto", "Blurred", or "Sharp".
+        brand_tone:      Optional brand tone key (e.g. "luxury", "casual",
+                         "bold", "minimal"). Looks up
+                         config['brand_tones'][brand_tone] and appends the
+                         phrase to the scene clause. None/"Auto" means no
+                         extra tone keywords.
 
     Returns:
         The complete prompt string. Never shown in the UI.
@@ -127,17 +133,26 @@ def build_prompt(profile: dict, clothing: str, background: str,
     # .format() itself, so braces in custom input can't break rendering.
     scene_clause = scene if (scene and has_scene_placeholder) else studio_text
     focus_clauses = {
-        "auto": "natural depth of field with the subject and background balanced",
         "blurred": "softly blurred background, shallow depth of field, subject in sharp focus",
         "sharp": "sharp detailed background, deep depth of field, subject and environment in focus",
     }
-    focus_clause = focus_clauses.get(str(background_focus).strip().lower())
-    if focus_clause is None:
+    focus_key = str(background_focus).strip().lower()
+    if focus_key not in ("auto", "", "blurred", "sharp"):
         raise ValueError(
             f"Unknown background_focus '{background_focus}' "
             "(expected 'Auto', 'Blurred', or 'Sharp')"
         )
-    scene_clause = f"{scene_clause}, {focus_clause}"
+    if focus_key in focus_clauses:
+        scene_clause = f"{scene_clause}, {focus_clauses[focus_key]}"
+
+    # Brand tone keywords — injected into the scene clause so they read as
+    # part of the setting/mood, not as demographic corrections.
+    if brand_tone and str(brand_tone).strip().lower() not in ("", "auto", "none"):
+        tone_key = str(brand_tone).strip().lower()
+        tone_cfg = config.get("brand_tones", {}) or {}
+        tone_phrase = tone_cfg.get(tone_key)
+        if tone_phrase:
+            scene_clause = f"{scene_clause}, {tone_phrase.strip()}"
 
     base_prompt = template.format(
         body_type=profile["body_type"],
@@ -268,13 +283,17 @@ def build_prompt(profile: dict, clothing: str, background: str,
             correction_tokens.append(token.strip().rstrip(","))
 
     # Legacy binary path: severity picked from the iteration number.
-    if not correction_levels:
-        severity = "mild" if iteration == 1 else "strong"
-        for key in correction_keys or []:
-            if key in corrections_cfg:
-                token = corrections_cfg[key].get(severity, "")
-                if token:
-                    correction_tokens.append(token.strip().rstrip(","))
+    # Apply correction_keys for axes NOT already covered by correction_levels
+    # so BTF can be combined with graduated STF/AF CPDC levels.
+    severity = "mild" if iteration <= 1 else "strong"
+    level_axes = set((correction_levels or {}).keys())
+    for key in correction_keys or []:
+        if key in level_axes:
+            continue  # already handled by graduated CPDC level
+        if key in corrections_cfg:
+            token = corrections_cfg[key].get(severity, "")
+            if token:
+                correction_tokens.append(token.strip().rstrip(","))
 
     if not correction_tokens:
         return base_prompt

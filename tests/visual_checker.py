@@ -38,11 +38,9 @@ load_dotenv()
 
 JUDGE_MODEL_ID = "google/gemma-3-27b-it"  # same model as modules/product_describe.py
 
-HF_TOKENS = [t for t in (
-    os.getenv("HF_TOKEN_1"),
-    os.getenv("HF_TOKEN_2"),
-    os.getenv("HF_TOKEN_3"),
-) if t]
+from modules.hf_tokens import collect_hf_tokens
+
+HF_TOKENS = collect_hf_tokens()
 
 JUDGE_INSTRUCTION = (
     "You are QA-checking an AI-generated fashion advertisement photo. "

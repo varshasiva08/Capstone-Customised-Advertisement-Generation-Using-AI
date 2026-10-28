@@ -58,25 +58,16 @@ import json
 import os
 import sys
 from datetime import datetime
-from itertools import product as itertools_product
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
 load_dotenv()
 
-ETHNICITIES = ["South Asian", "East Asian", "African American"]
-BODY_TYPES = ["slim", "medium", "plus-size"]
-AGES = ["20s", "30s", "40s", "50s"]
+from eval.common import build_profile_grid
+
 CLOTHING = "White Blazer Suit"
 BACKGROUND = "Warm Beige"
-
-
-def build_profile_grid():
-    grid = []
-    for eth, bt, age in itertools_product(ETHNICITIES, BODY_TYPES, AGES):
-        grid.append({"ethnicity": eth, "body_type": bt, "age": age, "gender": "Female"})
-    return grid
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +88,7 @@ def run_legacy_cdvr(profile, seed, clothing, background, cfg, out_path, max_iter
     for iteration in range(1, max_iter + 1):
         img.save(out_path)
         try:
-            scores = score_fidelity(out_path, profile)
+            scores = score_fidelity(out_path, profile, cfg=cfg)
         except Exception:
             break
         last_scores = scores
@@ -144,7 +135,7 @@ def generate_and_score_legacy(profiles, seeds, output_dir, cfg, skip_generation)
             print(f"[{count}/{total}] {label}")
 
             if os.path.exists(out_path):
-                scores = score_fidelity(out_path, profile)
+                scores = score_fidelity(out_path, profile, cfg=cfg)
                 iterations_used = None  # unknown when reusing images
             elif skip_generation:
                 # --skip-generation now means exactly that: don't attempt

@@ -1,7 +1,7 @@
 required_fields: [ethnicity, body_type, age]
 
 options:
-  ethnicity: [South Asian, East Asian, African American]
+  ethnicity: [South Asian, East Asian, African American, White, Latino Hispanic]
   body_type: [slim, medium, plus-size]
   age: [20s, 30s, 40s, 50s]
   clothing: [White Blazer Suit, Black Blazer Suit, Navy Blue Suit,
@@ -37,6 +37,16 @@ product_describe:
   model: llava
   host: http://localhost:11434
 
+# Text-to-speech (edge-tts, free) voice mapping by brand tone.
+tts:
+  default_voice: en-US-JennyNeural
+  speech_rate: "+0%"
+  voices:
+    luxury: en-US-AriaNeural
+    casual: en-US-GuyNeural
+    bold: en-US-AndrewNeural
+    minimal: en-US-JennyNeural
+
 wan:
   model: Wan-AI/Wan2.1-I2V-14B-720P   # only used by the paid HF path
   # Video provider:
@@ -66,6 +76,8 @@ keywords:
     South Asian: [indian, south asian, desi, pakistani]
     East Asian: [east asian, chinese, japanese, korean]
     African American: [african american, black, african]
+    White: [white, caucasian, european, white american]
+    Latino Hispanic: [latino, hispanic, latina, latinx]
   body_type:
     slim: [slim, thin, lean, petite]
     medium: [medium, average, regular]
@@ -116,6 +128,13 @@ corrections:
     level_3: "visible age lines, mature face,"
     level_4: "visible age lines, mature face, silver streaks in hair,"
 
+# Confidence-Proportional Demographic Correction (modules/cpdc.py).
+# Controls the graduated-correction loop used by eval CDVR scripts.
+cpdc:
+  enabled: true
+  epsilon: 0.03          # min confidence improvement per round to avoid stalling
+  consecutive_stall_limit: 2   # rounds of non-improvement before stopping an axis
+
 # Scene clause injected as {scene_clause} into prompt_template below.
 # This is the fallback when the user picks a plain colour background, and it
 # reproduces the original wording exactly (byte-identical prompts for every
@@ -137,13 +156,23 @@ background_presets:
 
 # Advertisement-framed prompt. Leaves clear empty space so the
 # Module 4 (product/brand compositor) has room to place a product or logo.
+# Front-loaded for FLUX.1-schnell which weights the start of the prompt most.
 prompt_template: >
-  professional advertisement photograph for a clothing brand campaign,
+  cinematic commercial advertisement photograph, professional fashion campaign lighting,
   full body shot of a {body_type} {ethnicity} woman in her {age},
   {body_type_extras} head to toe, standing pose, body squarely facing camera,
   feet pointing forward, shoulders square to camera, face clearly visible,
   looking directly into camera, strictly front-facing view, no side profile,
   wearing {clothing}, modest outfit, high neckline, fully covered arms and legs,
   no bare skin, no revealing clothing, conservative modest fashion,
-  commercial fashion advertising, high fashion editorial, {scene_clause}, sharp focus, 8k,
-  visible feet, empty space reserved for product placement and logo
+  {scene_clause}, sharp focus on subject and product, 8k, commercial photography,
+  studio lighting, softbox fill, realistic depth, visible feet,
+  empty space reserved for product placement and logo
+
+# Brand tone keywords injected into the prompt when brand_tone is specified.
+# Used by profiler/prompt_builder.py build_prompt(brand_tone=...).
+brand_tones:
+  luxury: "luxury, premium, high-end, elegant, sophisticated, Vogue editorial"
+  casual: "casual, approachable, everyday, relaxed, natural lighting"
+  bold: "bold, vibrant, eye-catching, street style, high contrast"
+  minimal: "minimal, clean, modern, neutral, whitespace"

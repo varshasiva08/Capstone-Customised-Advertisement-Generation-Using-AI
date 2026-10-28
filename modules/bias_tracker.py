@@ -67,7 +67,8 @@ class BiasTracker:
             "cdvr_iterations":    cdvr_iterations,
         }
         self.entries.append(entry)
-        self._persist()
+        # Persist on save() rather than every log() to avoid O(n²) file rewrites.
+        # Call flush() if you need the log durably written before save().
 
     # ------------------------------------------------------------------ #
     # Distribution analysis
@@ -163,12 +164,17 @@ class BiasTracker:
     # Persistence
     # ------------------------------------------------------------------ #
 
+    def flush(self) -> None:
+        """Durably write the in-memory log to disk."""
+        self._persist()
+
     def _persist(self) -> None:
         with open(self.log_path, "w") as f:
             json.dump(self.entries, f, indent=2)
 
     def save(self, report_path: str = None) -> None:
-        """Save the full report (not just the raw log) to a JSON file."""
+        """Save the full report (and raw log) to JSON files."""
+        self._persist()
         path = report_path or self.log_path.replace("log", "report")
         with open(path, "w") as f:
             json.dump(self.report(), f, indent=2)

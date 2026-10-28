@@ -24,7 +24,7 @@ from datetime import datetime
 # Single image scorer
 # ---------------------------------------------------------------------------
 
-def score_fidelity(image_path: str, demographic_profile: dict) -> dict:
+def score_fidelity(image_path: str, demographic_profile: dict, cfg: dict = None) -> dict:
     """
     Score a generated image against its intended demographic profile
     using LLaVA via Ollama.
@@ -32,16 +32,26 @@ def score_fidelity(image_path: str, demographic_profile: dict) -> dict:
     Args:
         image_path:          Absolute or relative path to the image file.
         demographic_profile: Dict with keys: ethnicity, body_type, age.
+        cfg:                 Optional loaded config.yaml dict (reads
+                             model/host from product_describe/ollama sections).
 
     Returns:
         Dict with keys: age_score, gender_score, ethnicity_score,
-        overall, notes. All scores are 0–10.
+        overall, age_confidence, ethnicity_confidence, notes.
+        Scores are 0–10; confidences are 0.0–1.0.
         Returns a zero-score dict on parse failure rather than raising.
     """
     try:
         import ollama
     except ImportError:
         raise RuntimeError("ollama package not installed. Run: pip install ollama")
+
+    if cfg is None:
+        cfg = {}
+    pd_cfg = (cfg.get("product_describe") or {})
+    ollama_cfg = (cfg.get("ollama") or {})
+    model = pd_cfg.get("model") or ollama_cfg.get("model") or "llava"
+    host = pd_cfg.get("host") or ollama_cfg.get("host") or "http://localhost:11434"
 
     if not os.path.exists(image_path):
         return _zero_scores(f"image not found: {image_path}")
@@ -53,14 +63,18 @@ def score_fidelity(image_path: str, demographic_profile: dict) -> dict:
         f"1. Age match — does the model appear to be in their {demographic_profile.get('age','?')}?\n"
         f"2. Gender match — is this a woman?\n"
         f"3. Ethnicity/skin tone match — does the appearance match {demographic_profile.get('ethnicity','?')}?\n"
-        f"4. Overall demographic fidelity — how well does the image match the full profile?\n\n"
+        f"4. Overall demographic fidelity — how well does the image match the full profile?\n"
+        f"5. Age confidence — how confident are you in the age score (0.0-1.0)?\n"
+        f"6. Ethnicity confidence — how confident are you in the ethnicity score (0.0-1.0)?\n\n"
         f"Respond in JSON only, no extra text:\n"
-        f'{{\"age_score\": X, \"gender_score\": X, \"ethnicity_score\": X, \"overall\": X, \"notes\": \"...\"}}'
+        f'{{\"age_score\": X, \"gender_score\": X, \"ethnicity_score\": X, \"overall\": X, '
+        f'\"age_confidence\": X, \"ethnicity_confidence\": X, \"notes\": \"...\"}}'
     )
 
     try:
-        response = ollama.chat(
-            model="llava",
+        client = ollama.Client(host=host) if host else ollama
+        response = client.chat(
+            model=model,
             messages=[{
                 "role":    "user",
                 "content": prompt,
@@ -98,11 +112,13 @@ def _parse_json(raw: str) -> dict:
 
 def _zero_scores(notes: str) -> dict:
     return {
-        "age_score":       0,
-        "gender_score":    0,
-        "ethnicity_score": 0,
-        "overall":         0,
-        "notes":           notes,
+        "age_score":          0,
+        "gender_score":       0,
+        "ethnicity_score":    0,
+        "overall":            0,
+        "age_confidence":     0.0,
+        "ethnicity_confidence": 0.0,
+        "notes":              notes,
     }
 
 

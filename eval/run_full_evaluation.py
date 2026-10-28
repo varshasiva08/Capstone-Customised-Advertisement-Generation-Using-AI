@@ -43,33 +43,18 @@ import os
 import sys
 import time
 from datetime import datetime
-from itertools import product as itertools_product
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
 load_dotenv()
 
+from eval.common import build_profile_grid
 
 # -- Demographic grid ---------------------------------------------------------
 
-ETHNICITIES = ["South Asian", "East Asian", "African American"]
-BODY_TYPES  = ["slim", "medium", "plus-size"]
-AGES        = ["20s", "30s", "40s", "50s"]
 CLOTHINGS   = ["White Blazer Suit"]  # fix clothing for controlled comparison
 BACKGROUNDS = ["Warm Beige"]         # fix background for controlled comparison
-
-def build_profile_grid():
-    """Returns list of 36 demographic profile dicts."""
-    grid = []
-    for eth, bt, age in itertools_product(ETHNICITIES, BODY_TYPES, AGES):
-        grid.append({
-            "ethnicity": eth,
-            "body_type": bt,
-            "age": age,
-            "gender": "Female",
-        })
-    return grid
 
 
 # -- Step 1: Generate images ---------------------------------------------------
@@ -78,9 +63,10 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
     """Generate images for every profile x seed, with and without CDVR."""
     from profiler.prompt_builder import build_prompt, load_config
     from generator.flux_pipeline import generate_image
-    from modules.cpdc import AxisTracker
+    from modules.cpdc import AxisTracker, set_cpdc_config
     from eval.fidelity_scorer import score_fidelity
     cfg = load_config()
+    set_cpdc_config(cfg)
     os.makedirs(output_dir, exist_ok=True)
 
     manifest = []  # tracks what was generated and where
@@ -124,7 +110,7 @@ def generate_all(profiles, seeds, output_dir, clothing, background):
                             img.save(out_path)
 
                             try:
-                                llava_scores = score_fidelity(out_path, profile)
+                                llava_scores = score_fidelity(out_path, profile, cfg=cfg)
                             except Exception:
                                 break
 

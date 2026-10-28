@@ -44,7 +44,7 @@ import imageio
 import numpy as np
 import requests
 import yaml
-from PIL import Image, ImageFilter
+from PIL import Image
 
 from profiler.prompt_builder import build_prompt, clean_scene
 
@@ -111,7 +111,9 @@ def _validate_shots(data) -> list | None:
         if not scene:
             continue
         action = str(s.get("action") or "").strip()[:160]
-        motion = "walk" if str(s.get("motion") or "").strip().lower() == "walk" else "sway"
+        raw_motion = str(s.get("motion") or "").strip().lower()
+        # Accept common walk variants so the LLM doesn't need to be exact.
+        motion = "walk" if raw_motion in ("walk", "walks", "walking", "enter", "entering") else "sway"
         try:
             dur = float(s.get("duration") or 6)
         except (TypeError, ValueError):
@@ -300,12 +302,13 @@ def _hero_scene_from_context(context, shot_scene):
 # Voiceover (edge-tts, free)
 # ---------------------------------------------------------------------------
 
-def tts_voiceover(text: str, out_path: str, voice: str = "en-US-JennyNeural") -> str | None:
+def tts_voiceover(text: str, out_path: str, voice: str = "en-US-JennyNeural",
+                  rate: str = "+0%") -> str | None:
     """Synthesise a voiceover mp3 with edge-tts. Returns None on failure."""
     try:
         import asyncio
         import edge_tts
-        comm = edge_tts.Communicate(text, voice)
+        comm = edge_tts.Communicate(text, voice, rate=rate)
         if hasattr(comm, "save_sync"):
             comm.save_sync(out_path)
         else:
@@ -317,19 +320,28 @@ def tts_voiceover(text: str, out_path: str, voice: str = "en-US-JennyNeural") ->
     return None
 
 
-def _ken_burns_clip(img, out_path, duration, fps, zoom_in=True):
+def _ken_burns_clip(img, out_path, duration, fps, zoom_in=True, zoom_factor=1.12):
     """Render a smooth cinematic zoom on a still image into an mp4.
 
     Free fallback whenever Wan motion is unavailable (all HF accounts failed)
     and for the product-reveal shot: zoom-in for the entering/posing shots, a
     gentle zoom-out dolly for the product close-up. Returns out_path, or None
     on failure.
+
+    Args:
+        img:          PIL Image source.
+        out_path:     Output mp4 path.
+        duration:     Clip duration in seconds.
+        fps:          Frames per second.
+        zoom_in:      True = push in, False = pull out.
+        zoom_factor:  End zoom multiplier (1.0 = no change). Lower values
+                      (e.g. 1.05) reduce interpolation blur / pixelation.
     """
     try:
         arr = np.asarray(img.convert("RGB"))
         H, W = arr.shape[:2]
         n = max(1, int(round(duration * fps)))
-        s0, s1 = (1.0, 1.12) if zoom_in else (1.12, 1.0)
+        s0, s1 = (1.0, zoom_factor) if zoom_in else (zoom_factor, 1.0)
         frames = []
         for i in range(n):
             t = i / max(1, n - 1)
@@ -353,47 +365,28 @@ def _ken_burns_clip(img, out_path, duration, fps, zoom_in=True):
     return None
 
 
-def _product_beauty(hero, product_img, out_path, duration, fps=30.0):
-    """Shot 3 as a real-product beauty close-up: the uploaded product, its
-    background removed and grounded with a soft shadow, centred on a soft
-    backdrop colour-matched to the hero, then a slow Ken Burns push-in.
+def _hero_push_in(hero, out_path, duration, fps=30.0):
+    """Shot 3: slow Ken Burns push-in on the SAME hero image (model + handbag).
 
-    Reuses product_overlay's GrabCut / resize / lighting / shadow helpers so
-    the result matches the app's other compositing. Saves the composed still
-    for inspection. Returns out_path, or a hero push-in on failure.
+    Uses the hero image directly — no product cutout, no compositing, no
+    background removal — so the model's face, outfit and the handbag she is
+    holding stay pixel-perfect and identity-consistent with shots 1-2.
+
+    The hero prompt already injects the product (e.g. "hand holding a {desc}
+    at hip level"), so the bag is already in-frame. A subtle push-in keeps
+    both subject and product in view without the low-res cutout artifacts
+    that plagued the old composited beauty shot.
+
+    Returns out_path, or None on total failure.
     """
     try:
-        from modules.product_overlay import (
-            remove_background, resize_product, match_lighting,
-            feather_alpha, make_shadow,
+        # Subtle zoom (1.0 -> 1.06) to avoid interpolation blur / pixelation.
+        # Hero is used as-is — no resizing or compositing.
+        return _ken_burns_clip(
+            hero, out_path, duration, fps, zoom_in=True, zoom_factor=1.06,
         )
-        W, H = hero.size
-        # Soft studio backdrop derived from the hero (blur + darken).
-        bg = hero.convert("RGB").filter(
-            ImageFilter.GaussianBlur(radius=max(6, W // 40)))
-        bg = Image.blend(bg, Image.new("RGB", (W, H), (18, 18, 18)), 0.45)
-
-        prod = remove_background(product_img)
-        prod = resize_product(prod, bg, width_frac=0.62)
-        if prod.height > int(0.92 * H) or prod.width > int(0.92 * W):
-            prod.thumbnail((int(0.92 * W), int(0.92 * H)), Image.LANCZOS)
-        x = (W - prod.width) // 2
-        y = (H - prod.height) // 2
-        prod = match_lighting(prod, bg, (x, y, x + prod.width, y + prod.height))
-        prod = feather_alpha(prod, radius=1.5)
-
-        shadow = make_shadow(prod, blur_radius=max(10, W // 60),
-                             opacity=110, y_offset=max(6, H // 80))
-        pad = (shadow.width - prod.width) // 2
-        canvas = bg.convert("RGBA")
-        canvas.alpha_composite(shadow, (max(0, x - pad), max(0, y - pad)))
-        canvas.alpha_composite(prod, (x, y))
-        still = canvas.convert("RGB")
-        still.save(os.path.join(os.path.dirname(out_path),
-                                "story_shot3_product.png"))
-        return _ken_burns_clip(still, out_path, duration, fps, zoom_in=True)
     except Exception:
-        return _ken_burns_clip(hero, out_path, duration, fps, zoom_in=True)
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -402,8 +395,13 @@ def _product_beauty(hero, product_img, out_path, duration, fps=30.0):
 
 def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
     """Ask local Ollama llava whether the generated hero matches the brief
-    (demographic + clothing, plus the product when one is described). Returns
-    True on failure so verification never blocks the ad."""
+    (demographic + clothing, plus the product when one is described).
+
+    The visual check is deliberately tolerant: a generally faithful image is
+    acceptable at 80/100 or above, but obvious detached/floating product
+    artifacts still fail when a product is present. Returns True on a checker
+    failure so verification never blocks the ad.
+    """
 
     pro = ((cfg or {}).get("product_describe") or {})
     host = (pro.get("host") or "http://localhost:11434").rstrip("/")
@@ -423,15 +421,30 @@ def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
     body_txt = f", {body} build" if body else ""
     age_txt  = f", in her {age}" if age else ""
     prod_txt = (f", and holding or wearing {product_desc}" if product_desc else "")
+    artifact_rule = (
+        "Set product_artifact to true only for an obvious severe defect: "
+        "the product is visibly floating, detached from the person, fused "
+        "into the body, duplicated, or badly malformed. Minor uncertainty "
+        "about the exact product identity is not an artifact."
+        if product_desc else
+        "Set product_artifact to false because no product is being evaluated."
+    )
 
     payload = {
         "model": model,
         "messages": [{
             "role": "user",
             "content": (
-                f"Does this advertisement photo show a {eth} woman{body_txt}"
-                f"{age_txt}, wearing {attire}{prod_txt}? "
-                "Reply with exactly 'Yes' or 'No'."
+                f"Evaluate whether this advertisement photo generally matches "
+                f"the brief: a {eth} woman{body_txt}{age_txt}, wearing "
+                f"{attire}{prod_txt}. Give one overall fidelity score from "
+                "0 to 100. Judge the overall demographic, age, body type, "
+                "outfit, pose, and advertisement composition together. Do not "
+                "penalize small visual differences or uncertainty when the "
+                "image is broadly consistent with the brief. "
+                f"{artifact_rule} "
+                'Reply with JSON only, exactly in this shape: '
+                '{"score": 0, "product_artifact": false}'
             ),
             "images": [b64],
         }],
@@ -442,7 +455,18 @@ def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
         resp = requests.post(f"{host}/api/chat", json=payload, timeout=120)
         resp.raise_for_status()
         answer = ((resp.json().get("message") or {}).get("content") or "").strip().lower()
-        return answer.startswith("yes")
+        match = re.search(
+            r'"score"\s*:\s*(\d{1,3}).*?"product_artifact"\s*:\s*(true|false)',
+            answer,
+            flags=re.DOTALL,
+        )
+        if not match:
+            # Keep compatibility with older local vision models that ignore
+            # the JSON request but still return a simple affirmative answer.
+            return answer.startswith(("yes", "likely", "mostly"))
+        score = min(100, max(0, int(match.group(1))))
+        has_artifact = match.group(2) == "true"
+        return score >= 80 and not has_artifact
     except Exception:
         return True
 
@@ -682,7 +706,9 @@ def assemble_storyboard(
 
 def run_storyboard(
     profile, clothing, brand_name, context=None, cfg=None,
-    product_file=None, brief="", target_duration=20.0, log=_safe_print,
+    product_file=None, brief="", target_duration=20.0,
+    background_focus: str = "Auto", brand_tone: str = "Auto",
+    log=_safe_print,
 ):
     """Hero-anchored storyboard: ONE verified FLUX hero drives EVERY shot.
 
@@ -731,6 +757,9 @@ def run_storyboard(
     )
     if not shots or len(shots) < 3:
         raise RuntimeError("Could not produce a 3-shot script for this context.")
+    # Enforce narrative motion: shot 1 enters (walk), shot 2 presents (sway).
+    shots[0]["motion"] = "walk"
+    shots[1]["motion"] = "sway"
     for i, s in enumerate(shots, 1):
         log(f"   Shot {i} [{s['motion']}] {s['duration']}s")
 
@@ -747,6 +776,8 @@ def run_storyboard(
             product_description=product_desc,
             product_category=product_category,
             scene=hero_scene,
+            background_focus=background_focus,
+            brand_tone=brand_tone,
         )
         seed = random.randint(0, 999999)
         hero_img, provider, res, steps_used = generate_image(prompt, seed, cfg)
@@ -772,6 +803,8 @@ def run_storyboard(
             clip = animate_image(
                 hero_img, config=cfg, profile=profile,
                 clothing=clothing, motion_style=s["motion"], scene=hero_scene,
+                product_category=product_category,
+                product_description=product_desc,
             )
         except Exception as e:
             # animate_image tries every configured HF account; if all fail
@@ -797,33 +830,36 @@ def run_storyboard(
         log("ℹ️ " + ", ".join(f"shot {i}" for i in used_fallback)
             + " used cinematic zoom (Wan unavailable).")
 
-    if product_img_pil is not None:
-        log("🎯 Shot 3: real-product beauty close-up (uploaded product).")
-        clip3 = _product_beauty(
-            hero_img, product_img_pil, f"outputs/story_{run_id}_shot3.mp4",
-            duration=shots[2]["duration"], fps=30.0,
-        )
-    else:
-        log("🎞️ Shot 3: cinematic push-in on the hero (no product uploaded).")
-        clip3 = _ken_burns_clip(
-            hero_img, f"outputs/story_{run_id}_shot3_kb.mp4",
-            duration=shots[2]["duration"], fps=30.0, zoom_in=True,
-        )
+    log("🎯 Shot 3: subtle push-in on hero (model + handbag in frame).")
+    clip3 = _hero_push_in(
+        hero_img, f"outputs/story_{run_id}_shot3.mp4",
+        duration=shots[2]["duration"], fps=30.0,
+    )
     if not clip3:
-        raise RuntimeError("Could not build the product-reveal clip.")
+        raise RuntimeError("Could not build the shot-3 push-in clip.")
     clips.append(clip3)
 
     # --- Voiceover: two beats. The CTA offset is None = "end 0.2s into the
     #     card", resolved frame-accurately inside assemble_storyboard. ---
     log("🔊 Generating voiceover (edge-tts)...")
+    # Map brand tone to a voice that fits the brand aesthetic.
+    tts_cfg = (cfg or {}).get("tts", {}) or {}
+    voice_map = tts_cfg.get("voices", {}) or {}
+    tone_key = str(brand_tone).strip().lower()
+    voice = voice_map.get(tone_key, tts_cfg.get("default_voice", "en-US-JennyNeural"))
+    rate = str(tts_cfg.get("speech_rate", "+0%"))
+    log(f"🔊 Voice: {voice} ({brand_tone})")
+
     vo_items = []
     v1 = tts_voiceover("Step out of the ordinary.",
-                       f"outputs/storyboard_vo_{run_id}_1.mp3")
+                       f"outputs/storyboard_vo_{run_id}_1.mp3",
+                       voice=voice, rate=rate)
     if v1:
         vo_items.append((v1, 0.7))
     v2 = tts_voiceover(
         f"{brand_name} — own the moment. Find your nearest showroom.",
         f"outputs/storyboard_vo_{run_id}_2.mp3",
+        voice=voice, rate=rate,
     )
     if v2:
         vo_items.append((v2, None))

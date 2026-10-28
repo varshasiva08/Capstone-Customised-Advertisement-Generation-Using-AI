@@ -15,6 +15,7 @@ The brand card is built from:
 """
 
 import os
+import subprocess
 import time
 import textwrap
 
@@ -183,6 +184,34 @@ def generate_tagline(brief: str, profile: dict, brand_name: str,
         return f"Define your style."
 
 
+def _mux_audio(video_path: str, audio_path: str, out_path: str) -> None:
+    """Mux a voiceover into a rendered video using the bundled FFmpeg."""
+    from imageio_ffmpeg import get_ffmpeg_exe
+
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Audio file does not exist: {audio_path}")
+
+    result = subprocess.run(
+        [
+            get_ffmpeg_exe(), "-y",
+            "-i", video_path,
+            "-i", audio_path,
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-movflags", "+faststart",
+            out_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(
+            f"FFmpeg audio mux failed: {result.stderr[-1000:]}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -195,6 +224,7 @@ def apply_ad_overlay(
     product_img: Image.Image = None,
     target_duration_sec: int = 15,
     fade_frames: int = 12,
+    audio_path: str = None,
 ) -> str:
     """
     Post-process the generated video to look like an advertisement.
@@ -238,12 +268,11 @@ def apply_ad_overlay(
         return video_path
 
     # --- Build walking frames — forward loop with crossfade at join point ---
-    card_duration_sec = 2.5
     fade_sec          = fade_frames / fps
-    walk_duration_sec = max(
-        len(source_frames) / fps,
-        target_duration_sec - card_duration_sec - fade_sec
-    )
+    # Card owns a fraction of the target duration (max 2.5s), so short ads
+    # (e.g. 5s) don't get a disproportionately long card.
+    card_duration_sec = min(2.5, max(1.0, target_duration_sec * 0.25))
+    walk_duration_sec = max(0.0, target_duration_sec - card_duration_sec - fade_sec)
     walk_frame_count = int(walk_duration_sec * fps)
 
     # Crossfade the end of the clip into the beginning for smooth looping
@@ -257,13 +286,10 @@ def apply_ad_overlay(
         blended_loop.append(blended)
     seamless_clip = source_frames + blended_loop
 
-    walk_frames = []
-    while len(walk_frames) < walk_frame_count:
-        walk_frames.extend(seamless_clip)
-    walk_frames = walk_frames[:walk_frame_count]
+    seamless_len = len(seamless_clip)
 
-    # --- Sample background color from corners of last frame ---
-    last = walk_frames[-1]
+    # --- Sample background color from corners of last source frame ---
+    last = source_frames[-1]
     corners = [last[0, 0], last[0, -1], last[-1, 0], last[-1, -1]]
     bg_color = tuple(int(v) for v in np.array(corners).mean(axis=0).astype(int))
     if sum(bg_color) < 300:
@@ -279,7 +305,7 @@ def apply_ad_overlay(
     )
 
     # --- Fade transition ---
-    last_frame = walk_frames[-1].astype(float)
+    last_frame = seamless_clip[-1].astype(float)
     card_float = card.astype(float)
     fade = []
     for i in range(fade_frames):
@@ -290,18 +316,32 @@ def apply_ad_overlay(
     # --- Brand card hold ---
     hold = [card] * int(fps * card_duration_sec)
 
-    # --- Write final video ---
+    # --- Write final video (stream walk frames directly, no big list) ---
     writer = imageio.get_writer(
         out_path, fps=fps, codec="libx264", pixelformat="yuv420p"
     )
-    for f in walk_frames:
-        writer.append_data(f)
+    frames_written = 0
+    while frames_written < walk_frame_count:
+        for f in seamless_clip:
+            if frames_written >= walk_frame_count:
+                break
+            writer.append_data(f)
+            frames_written += 1
     for f in fade:
         writer.append_data(f)
     for f in hold:
         writer.append_data(f)
     writer.close()
 
-    actual_duration = (len(walk_frames) + len(fade) + len(hold)) / fps
+    if audio_path:
+        silent_path = out_path + ".silent.mp4"
+        os.replace(out_path, silent_path)
+        try:
+            _mux_audio(silent_path, audio_path, out_path)
+        finally:
+            if os.path.exists(silent_path):
+                os.unlink(silent_path)
+
+    actual_duration = (walk_frame_count + len(fade) + len(hold)) / fps
     print(f"[compositor] Final ad: {actual_duration:.1f}s → {out_path}")
     return out_path
