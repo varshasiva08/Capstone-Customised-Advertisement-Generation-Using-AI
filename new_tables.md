@@ -57,9 +57,9 @@ Reference: answering "matches" for every image would agree with the human on 77.
 
 | axis | n images | human: matches | DeepFace passes | CLIP matches | human: within 10 years |
 |---|---|---|---|---|---|
-| gender (target: female) | 89 | 99% | 76% | 100% |  |
+| gender (target: female) | 89 | 100% | 76% | 100% |  |
 | gender (target: male) | 56 | 100% | 100% | 100% |  |
-| gender (target: all) | 145 | 99% | 86% | 100% |  |
+| gender (target: all) | 145 | 100% | 86% | 100% |  |
 | age (target: 30s) | 47 |  | 89% | n/a | 98% |
 | age (target: 50s) | 98 |  | 51% | n/a | 95% |
 | age (target: all) | 145 |  | 63% | n/a | 96% |
