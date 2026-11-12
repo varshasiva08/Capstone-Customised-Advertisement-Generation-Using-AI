@@ -1,0 +1,9 @@
+{
+  "scorer": "LLaVA (via Ollama)",
+  "total_images": 108,
+  "scored": 108,
+  "mean_dfc": 0.951,
+  "ethnicity_accuracy": 0.898,
+  "age_accuracy": 0.954,
+  "gender_accuracy": 1.0
+}

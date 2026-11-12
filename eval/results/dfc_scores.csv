@@ -1,0 +1,325 @@
+image,seed,target_ethnicity,target_body_type,target_age,target_gender,llava_response,pred_ethnicity,pred_age,pred_gender,ethnicity_match,age_match,gender_match,overall_dfc
+African-American_medium_20s_seed123.png,123,African American,medium,20s,Female," Ethnicity: African American
+Age: Late 20s to 30s
+Gender: Female ",african american,20s,Female,True,True,True,1.0
+African-American_medium_20s_seed42.png,42,African American,medium,20s,Female," Ethnicity: White
+Age: 30s
+Gender: Female ",Unknown,30s,Female,False,True,True,0.667
+African-American_medium_20s_seed456.png,456,African American,medium,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_medium_30s_seed123.png,123,African American,medium,30s,Female," Ethnicity: African American
+Age: 30s-40s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_medium_30s_seed42.png,42,African American,medium,30s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_medium_30s_seed456.png,456,African American,medium,30s,Female," Ethnicity: African American
+Age: 30s to 40s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_medium_40s_seed123.png,123,African American,medium,40s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_medium_40s_seed42.png,42,African American,medium,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_medium_40s_seed456.png,456,African American,medium,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_medium_50s_seed123.png,123,African American,medium,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_medium_50s_seed42.png,42,African American,medium,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_medium_50s_seed456.png,456,African American,medium,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_plus-size_20s_seed123.png,123,African American,plus-size,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_20s_seed42.png,42,African American,plus-size,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_20s_seed456.png,456,African American,plus-size,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_30s_seed123.png,123,African American,plus-size,30s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_30s_seed42.png,42,African American,plus-size,30s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_30s_seed456.png,456,African American,plus-size,30s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_plus-size_40s_seed123.png,123,African American,plus-size,40s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_plus-size_40s_seed42.png,42,African American,plus-size,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_plus-size_40s_seed456.png,456,African American,plus-size,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_plus-size_50s_seed123.png,123,African American,plus-size,50s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_plus-size_50s_seed42.png,42,African American,plus-size,50s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_plus-size_50s_seed456.png,456,African American,plus-size,50s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_slim_20s_seed123.png,123,African American,slim,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_slim_20s_seed42.png,42,African American,slim,20s,Female," Ethnicity: African American
+Age: 20s
+Gender: Female ",african american,20s,Female,True,True,True,1.0
+African-American_slim_20s_seed456.png,456,African American,slim,20s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_slim_30s_seed123.png,123,African American,slim,30s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_slim_30s_seed42.png,42,African American,slim,30s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_slim_30s_seed456.png,456,African American,slim,30s,Female," Ethnicity: African American
+Age: 30s
+Gender: Female ",african american,30s,Female,True,True,True,1.0
+African-American_slim_40s_seed123.png,123,African American,slim,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_slim_40s_seed42.png,42,African American,slim,40s,Female," Ethnicity: Black
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_slim_40s_seed456.png,456,African American,slim,40s,Female," Ethnicity: African American
+Age: 40s
+Gender: Female ",african american,40s,Female,True,True,True,1.0
+African-American_slim_50s_seed123.png,123,African American,slim,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_slim_50s_seed42.png,42,African American,slim,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+African-American_slim_50s_seed456.png,456,African American,slim,50s,Female," Ethnicity: African American
+Age: 50s
+Gender: Female ",african american,50s,Female,True,True,True,1.0
+East-Asian_medium_20s_seed123.png,123,East Asian,medium,20s,Female," Ethnicity: Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_20s_seed42.png,42,East Asian,medium,20s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_20s_seed456.png,456,East Asian,medium,20s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_30s_seed123.png,123,East Asian,medium,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_30s_seed42.png,42,East Asian,medium,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_30s_seed456.png,456,East Asian,medium,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_40s_seed123.png,123,East Asian,medium,40s,Female," Ethnicity: East Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_medium_40s_seed42.png,42,East Asian,medium,40s,Female," Ethnicity: East Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_medium_40s_seed456.png,456,East Asian,medium,40s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_medium_50s_seed123.png,123,East Asian,medium,50s,Female," Ethnicity: East Asian
+Age: 50s
+Gender: Female ",east asian,50s,Female,True,True,True,1.0
+East-Asian_medium_50s_seed42.png,42,East Asian,medium,50s,Female," Ethnicity: East Asian
+Age: 40s-50s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_medium_50s_seed456.png,456,East Asian,medium,50s,Female," Ethnicity: East Asian
+Age: 50s
+Gender: Female ",east asian,50s,Female,True,True,True,1.0
+East-Asian_plus-size_20s_seed123.png,123,East Asian,plus-size,20s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_20s_seed42.png,42,East Asian,plus-size,20s,Female," Ethnicity: Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_20s_seed456.png,456,East Asian,plus-size,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,False,True,True,0.667
+East-Asian_plus-size_30s_seed123.png,123,East Asian,plus-size,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,False,True,True,0.667
+East-Asian_plus-size_30s_seed42.png,42,East Asian,plus-size,30s,Female," Ethnicity: Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_30s_seed456.png,456,East Asian,plus-size,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_40s_seed123.png,123,East Asian,plus-size,40s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_40s_seed42.png,42,East Asian,plus-size,40s,Female," Ethnicity: Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_40s_seed456.png,456,East Asian,plus-size,40s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_plus-size_50s_seed123.png,123,East Asian,plus-size,50s,Female," Ethnicity: Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,False,True,0.667
+East-Asian_plus-size_50s_seed42.png,42,East Asian,plus-size,50s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,False,False,True,0.333
+East-Asian_plus-size_50s_seed456.png,456,East Asian,plus-size,50s,Female," Ethnicity: East Asian
+Age: 30s-40s
+Gender: Female ",east asian,30s,Female,True,False,True,0.667
+East-Asian_slim_20s_seed123.png,123,East Asian,slim,20s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_slim_20s_seed42.png,42,East Asian,slim,20s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_slim_20s_seed456.png,456,East Asian,slim,20s,Female," Ethnicity: East Asian
+Age: Late 20s to early 30s
+Gender: Female ",east asian,20s,Female,True,True,True,1.0
+East-Asian_slim_30s_seed123.png,123,East Asian,slim,30s,Female," Ethnicity: Asian
+Age: Late 20s to Early 30s
+Gender: Female ",east asian,20s,Female,True,True,True,1.0
+East-Asian_slim_30s_seed42.png,42,East Asian,slim,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_slim_30s_seed456.png,456,East Asian,slim,30s,Female," Ethnicity: East Asian
+Age: 30s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_slim_40s_seed123.png,123,East Asian,slim,40s,Female," Ethnicity: Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_slim_40s_seed42.png,42,East Asian,slim,40s,Female," Ethnicity: East Asian
+Age: 30s to 40s
+Gender: Female ",east asian,30s,Female,True,True,True,1.0
+East-Asian_slim_40s_seed456.png,456,East Asian,slim,40s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,False,True,True,0.667
+East-Asian_slim_50s_seed123.png,123,East Asian,slim,50s,Female," Ethnicity: East Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_slim_50s_seed42.png,42,East Asian,slim,50s,Female," Ethnicity: East Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+East-Asian_slim_50s_seed456.png,456,East Asian,slim,50s,Female," Ethnicity: Asian
+Age: 40s
+Gender: Female ",east asian,40s,Female,True,True,True,1.0
+South-Asian_medium_20s_seed123.png,123,South Asian,medium,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_20s_seed42.png,42,South Asian,medium,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_20s_seed456.png,456,South Asian,medium,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_30s_seed123.png,123,South Asian,medium,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_30s_seed42.png,42,South Asian,medium,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_30s_seed456.png,456,South Asian,medium,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_40s_seed123.png,123,South Asian,medium,40s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_medium_40s_seed42.png,42,South Asian,medium,40s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_medium_40s_seed456.png,456,South Asian,medium,40s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_medium_50s_seed123.png,123,South Asian,medium,50s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_medium_50s_seed42.png,42,South Asian,medium,50s,Female," Ethnicity: Caucasian
+Age: 50s
+Gender: Female ",east asian,50s,Female,False,True,True,0.667
+South-Asian_medium_50s_seed456.png,456,South Asian,medium,50s,Female," Ethnicity: South Asian
+Age: 50s
+Gender: Female ",south asian,50s,Female,True,True,True,1.0
+South-Asian_plus-size_20s_seed123.png,123,South Asian,plus-size,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_20s_seed42.png,42,South Asian,plus-size,20s,Female," Ethnicity: Caucasian
+Age: 30s
+Gender: Female ",east asian,30s,Female,False,True,True,0.667
+South-Asian_plus-size_20s_seed456.png,456,South Asian,plus-size,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_30s_seed123.png,123,South Asian,plus-size,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_30s_seed42.png,42,South Asian,plus-size,30s,Female," Ethnicity: South Asian (Indian subcontinent)
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_30s_seed456.png,456,South Asian,plus-size,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_40s_seed123.png,123,South Asian,plus-size,40s,Female," Ethnicity: South Asian (Indian)
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_plus-size_40s_seed42.png,42,South Asian,plus-size,40s,Female," Ethnicity: Female
+Age: 30s
+Gender: Female ",Unknown,30s,Female,False,True,True,0.667
+South-Asian_plus-size_40s_seed456.png,456,South Asian,plus-size,40s,Female," Ethnicity: Indian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_plus-size_50s_seed123.png,123,South Asian,plus-size,50s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_plus-size_50s_seed42.png,42,South Asian,plus-size,50s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,False,True,0.667
+South-Asian_plus-size_50s_seed456.png,456,South Asian,plus-size,50s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,False,True,0.667
+South-Asian_slim_20s_seed123.png,123,South Asian,slim,20s,Female," Ethnicity: Female, likely South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_20s_seed42.png,42,South Asian,slim,20s,Female," Ethnicity: Caucasian
+Age: 30s
+Gender: Female ",east asian,30s,Female,False,True,True,0.667
+South-Asian_slim_20s_seed456.png,456,South Asian,slim,20s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_30s_seed123.png,123,South Asian,slim,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_30s_seed42.png,42,South Asian,slim,30s,Female," Ethnicity: South Asian
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_30s_seed456.png,456,South Asian,slim,30s,Female," Ethnicity: South Asian (Indian)
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_40s_seed123.png,123,South Asian,slim,40s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_slim_40s_seed42.png,42,South Asian,slim,40s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0
+South-Asian_slim_40s_seed456.png,456,South Asian,slim,40s,Female," Ethnicity: South Asian (Indian)
+Age: 30s
+Gender: Female ",south asian,30s,Female,True,True,True,1.0
+South-Asian_slim_50s_seed123.png,123,South Asian,slim,50s,Female," Ethnicity: Female
+Age: 40s
+Gender: Female ",Unknown,40s,Female,False,True,True,0.667
+South-Asian_slim_50s_seed42.png,42,South Asian,slim,50s,Female," Ethnicity: Female
+Age: 50s
+Gender: Female ",Unknown,50s,Female,False,True,True,0.667
+South-Asian_slim_50s_seed456.png,456,South Asian,slim,50s,Female," Ethnicity: South Asian
+Age: 40s
+Gender: Female ",south asian,40s,Female,True,True,True,1.0

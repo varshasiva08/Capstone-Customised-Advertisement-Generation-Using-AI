@@ -1,0 +1,22 @@
+image,seed,condition,ethnicity,body_type,age,iterations_used,ethnicity_score,age_score,gender_score,overall
+p00_seed42_legacy.png,42,legacy_cdvr,South Asian,slim,20s,,9,9,10,9.3
+p01_seed42_legacy.png,42,legacy_cdvr,South Asian,slim,30s,,9,7,10,8
+p02_seed42_legacy.png,42,legacy_cdvr,South Asian,slim,40s,,9,7,10,9
+p03_seed42_legacy.png,42,legacy_cdvr,South Asian,slim,50s,,6,7,10,6.5
+p04_seed42_legacy.png,42,legacy_cdvr,South Asian,medium,20s,,6,8,9,7
+p05_seed42_legacy.png,42,legacy_cdvr,South Asian,medium,30s,,10,7,10,7
+p06_seed42_legacy.png,42,legacy_cdvr,South Asian,medium,40s,,9,9,10,9
+p07_seed42_legacy.png,42,legacy_cdvr,South Asian,medium,50s,,9,7,8,7
+p08_seed42_legacy.png,42,legacy_cdvr,South Asian,plus-size,20s,,1,7,10,2
+p09_seed42_legacy.png,42,legacy_cdvr,South Asian,plus-size,30s,,9,9,10,9
+p10_seed42_legacy.png,42,legacy_cdvr,South Asian,plus-size,40s,,9,9,10,9
+p11_seed42_legacy.png,42,legacy_cdvr,South Asian,plus-size,50s,,8,8,9,8
+p12_seed42_legacy.png,42,legacy_cdvr,East Asian,slim,20s,,10,8,10,9
+p13_seed42_legacy.png,42,legacy_cdvr,East Asian,slim,30s,,5,7,9,6
+p14_seed42_legacy.png,42,legacy_cdvr,East Asian,slim,40s,,9,8,10,9
+p15_seed42_legacy.png,42,legacy_cdvr,East Asian,slim,50s,,5,7,10,6.6
+p16_seed42_legacy.png,42,legacy_cdvr,East Asian,medium,20s,,10,8,10,9
+p21_seed42_legacy.png,42,legacy_cdvr,East Asian,plus-size,30s,,9,6,8,8
+p24_seed42_legacy.png,42,legacy_cdvr,African American,slim,20s,,0,0,0,0
+p29_seed42_legacy.png,42,legacy_cdvr,African American,medium,30s,,10,9,10,10
+p34_seed42_legacy.png,42,legacy_cdvr,African American,plus-size,40s,,5,5,8,6

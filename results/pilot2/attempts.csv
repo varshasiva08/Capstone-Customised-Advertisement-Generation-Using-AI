@@ -1,0 +1,38 @@
+unit,arm,attempt,reused,applied,score,age_est,race_top3,ethnicity_pass,gender_pass,age_pass
+p000_r0,vanilla,0,1,{},1.339,30.0,"[[""asian"", 74.6], [""latino hispanic"", 10.9], [""indian"", 5.7]]",0,1,1
+p000_r0,resample,0,1,{},1.339,30.0,"[[""asian"", 74.6], [""latino hispanic"", 10.9], [""indian"", 5.7]]",0,1,1
+p000_r0,resample,1,0,{},1.554,25.0,"[[""latino hispanic"", 40.5], [""indian"", 32.9], [""asian"", 8.0]]",1,1,0
+p000_r0,resample,2,0,{},1.4041,30.0,"[[""latino hispanic"", 54.7], [""white"", 13.7], [""indian"", 11.7]]",0,1,1
+p000_r0,resample,3,0,{},1.4853,30.0,"[[""latino hispanic"", 48.7], [""indian"", 24.5], [""asian"", 10.9]]",0,1,1
+p000_r0,cpdc,0,1,{},1.339,30.0,"[[""asian"", 74.6], [""latino hispanic"", 10.9], [""indian"", 5.7]]",0,1,1
+p000_r0,cpdc,1,0,"{""ethnicity"": 3}",1.3899,31.0,"[[""asian"", 54.1], [""latino hispanic"", 25.1], [""indian"", 9.2]]",0,1,1
+p000_r0,cpdc,2,0,"{""ethnicity"": 3}",2.0,30.0,"[[""latino hispanic"", 56.4], [""indian"", 29.7], [""white"", 4.3]]",1,1,1
+p001_r0,vanilla,0,1,{},0.7486,31.0,"[[""middle eastern"", 27.9], [""latino hispanic"", 27.0], [""white"", 22.5]]",0,1,0
+p001_r0,resample,0,1,{},0.7486,31.0,"[[""middle eastern"", 27.9], [""latino hispanic"", 27.0], [""white"", 22.5]]",0,1,0
+p001_r0,resample,1,0,{},1.4623,49.0,"[[""latino hispanic"", 41.1], [""asian"", 28.5], [""indian"", 18.8]]",0,1,1
+p001_r0,resample,2,0,{},0.9753,57.0,"[[""latino hispanic"", 35.5], [""indian"", 17.4], [""white"", 16.0]]",0,0,1
+p001_r0,resample,3,0,{},0.9201,43.0,"[[""middle eastern"", 37.3], [""white"", 22.7], [""latino hispanic"", 17.8]]",0,1,0
+p001_r0,cpdc,0,1,{},0.7486,31.0,"[[""middle eastern"", 27.9], [""latino hispanic"", 27.0], [""white"", 22.5]]",0,1,0
+p001_r0,cpdc,1,0,"{""age"": [""older"", 3]}",1.4222,48.0,"[[""latino hispanic"", 36.6], [""middle eastern"", 20.0], [""white"", 17.8]]",0,1,1
+p001_r0,cpdc,2,0,"{""ethnicity"": 3}",0.7357,32.0,"[[""middle eastern"", 34.9], [""latino hispanic"", 28.9], [""white"", 24.1]]",0,1,0
+p001_r0,cpdc,3,0,"{""age"": [""older"", 3]}",1.3932,53.0,"[[""latino hispanic"", 42.9], [""white"", 27.5], [""middle eastern"", 12.9]]",0,1,1
+p002_r0,vanilla,0,1,{},1.4675,28.0,"[[""latino hispanic"", 41.4], [""indian"", 22.2], [""white"", 10.4]]",0,1,1
+p002_r0,resample,0,1,{},1.4675,28.0,"[[""latino hispanic"", 41.4], [""indian"", 22.2], [""white"", 10.4]]",0,1,1
+p002_r0,resample,1,0,{},1.5078,31.0,"[[""latino hispanic"", 42.7], [""indian"", 22.4], [""middle eastern"", 11.4]]",0,1,1
+p002_r0,resample,2,0,{},1.3766,29.0,"[[""latino hispanic"", 59.6], [""white"", 13.7], [""indian"", 11.7]]",0,1,1
+p002_r0,resample,3,0,{},1.4627,28.0,"[[""latino hispanic"", 41.9], [""indian"", 21.9], [""white"", 12.2]]",0,1,1
+p002_r0,cpdc,0,1,{},1.4675,28.0,"[[""latino hispanic"", 41.4], [""indian"", 22.2], [""white"", 10.4]]",0,1,1
+p002_r0,cpdc,1,0,"{""ethnicity"": 2}",1.5113,30.0,"[[""latino hispanic"", 36.0], [""indian"", 19.3], [""middle eastern"", 18.8]]",0,1,1
+p002_r0,cpdc,2,0,"{""ethnicity"": 2}",1.9333,27.0,"[[""latino hispanic"", 34.3], [""indian"", 28.3], [""black"", 10.4]]",1,1,1
+p003_r0,vanilla,0,1,{},1.35,53.0,"[[""middle eastern"", 62.2], [""white"", 23.7], [""latino hispanic"", 9.2]]",0,1,1
+p003_r0,resample,0,1,{},1.35,53.0,"[[""middle eastern"", 62.2], [""white"", 23.7], [""latino hispanic"", 9.2]]",0,1,1
+p003_r0,resample,1,0,{},1.3842,54.0,"[[""middle eastern"", 55.3], [""white"", 23.0], [""latino hispanic"", 9.9]]",0,1,1
+p003_r0,resample,2,0,{},1.3501,50.0,"[[""middle eastern"", 76.1], [""white"", 13.7], [""latino hispanic"", 5.8]]",0,1,1
+p003_r0,resample,3,0,{},1.3695,49.0,"[[""middle eastern"", 62.3], [""latino hispanic"", 16.8], [""indian"", 11.0]]",0,1,1
+p003_r0,cpdc,0,1,{},1.35,53.0,"[[""middle eastern"", 62.2], [""white"", 23.7], [""latino hispanic"", 9.2]]",0,1,1
+p003_r0,cpdc,1,0,"{""ethnicity"": 3}",1.3763,53.0,"[[""middle eastern"", 75.4], [""indian"", 9.8], [""white"", 5.0]]",0,1,1
+p003_r0,cpdc,2,0,"{""ethnicity"": 3}",1.5095,50.0,"[[""middle eastern"", 27.3], [""latino hispanic"", 23.6], [""white"", 21.5]]",0,1,1
+p003_r0,cpdc,3,0,"{""ethnicity"": 2}",1.5096,55.0,"[[""latino hispanic"", 37.0], [""indian"", 19.6], [""asian"", 13.8]]",0,1,1
+p004_r0,vanilla,0,1,{},1.9778,29.0,"[[""black"", 100.0], [""asian"", 0.0], [""indian"", 0.0]]",1,1,1
+p004_r0,resample,0,1,{},1.9778,29.0,"[[""black"", 100.0], [""asian"", 0.0], [""indian"", 0.0]]",1,1,1
+p004_r0,cpdc,0,1,{},1.9778,29.0,"[[""black"", 100.0], [""asian"", 0.0], [""indian"", 0.0]]",1,1,1

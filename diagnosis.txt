@@ -1,0 +1,37 @@
+unit,arm,target,age_est,top3_race,eth_pass,gender_pass,age_pass
+p000_r0,vanilla,South Asian/female/30s,30,"latino hispanic 48; middle eastern 15; white 15",0,1,1
+p000_r0,resample,South Asian/female/30s,31,"latino hispanic 47; indian 25; white 9",0,1,1
+p000_r0,cpdc,South Asian/female/30s,30,"latino hispanic 46; indian 33; asian 10",0,1,1
+p001_r0,vanilla,South Asian/female/50s,45,"latino hispanic 42; indian 36; middle eastern 10",0,1,0
+p001_r0,resample,South Asian/female/50s,45,"latino hispanic 42; indian 36; middle eastern 10",0,1,0
+p001_r0,cpdc,South Asian/female/50s,50,"white 38; latino hispanic 32; middle eastern 21",0,1,1
+p002_r0,vanilla,South Asian/male/30s,28,"latino hispanic 41; middle eastern 23; white 19",0,1,1
+p002_r0,resample,South Asian/male/30s,30,"indian 45; latino hispanic 34; black 8",1,1,1
+p002_r0,cpdc,South Asian/male/30s,28,"latino hispanic 41; middle eastern 23; white 19",0,1,1
+p003_r0,vanilla,South Asian/male/50s,55,"middle eastern 35; asian 22; indian 15",0,1,1
+p003_r0,resample,South Asian/male/50s,55,"middle eastern 35; asian 22; indian 15",0,1,1
+p003_r0,cpdc,South Asian/male/50s,52,"indian 35; middle eastern 28; latino hispanic 24",1,1,1
+p004_r0,vanilla,African American/female/30s,30,"black 100; indian 0; asian 0",1,0,1
+p004_r0,resample,African American/female/30s,32,"black 100; indian 0; latino hispanic 0",1,1,1
+p004_r0,cpdc,African American/female/30s,28,"black 97; indian 2; latino hispanic 1",1,1,1
+p005_r0,vanilla,African American/female/50s,32,"black 77; latino hispanic 11; indian 6",1,1,0
+p005_r0,resample,African American/female/50s,30,"black 90; latino hispanic 6; indian 3",1,1,0
+p005_r0,cpdc,African American/female/50s,32,"black 100; indian 0; latino hispanic 0",1,1,0
+p006_r0,vanilla,African American/male/30s,27,"black 100; indian 0; asian 0",1,1,1
+p006_r0,resample,African American/male/30s,27,"black 100; indian 0; asian 0",1,1,1
+p006_r0,cpdc,African American/male/30s,27,"black 100; indian 0; asian 0",1,1,1
+p007_r0,vanilla,African American/male/50s,51,"black 100; indian 0; latino hispanic 0",1,1,1
+p007_r0,resample,African American/male/50s,51,"black 100; indian 0; latino hispanic 0",1,1,1
+p007_r0,cpdc,African American/male/50s,51,"black 100; indian 0; latino hispanic 0",1,1,1
+p008_r0,vanilla,East Asian/female/30s,25,"asian 100; latino hispanic 0; indian 0",1,1,0
+p008_r0,resample,East Asian/female/30s,30,"asian 100; indian 0; latino hispanic 0",1,1,1
+p008_r0,cpdc,East Asian/female/30s,27,"asian 94; latino hispanic 4; indian 2",1,1,1
+p009_r0,vanilla,East Asian/female/50s,41,"asian 100; latino hispanic 0; indian 0",1,0,0
+p009_r0,resample,East Asian/female/50s,52,"asian 99; latino hispanic 1; indian 0",1,1,1
+p009_r0,cpdc,East Asian/female/50s,43,"asian 78; latino hispanic 14; indian 3",1,1,0
+p010_r0,vanilla,East Asian/male/30s,31,"asian 96; latino hispanic 2; white 1",1,1,1
+p010_r0,resample,East Asian/male/30s,31,"asian 96; latino hispanic 2; white 1",1,1,1
+p010_r0,cpdc,East Asian/male/30s,31,"asian 96; latino hispanic 2; white 1",1,1,1
+p011_r0,vanilla,East Asian/male/50s,48,"asian 95; latino hispanic 3; indian 2",1,1,1
+p011_r0,resample,East Asian/male/50s,48,"asian 95; latino hispanic 3; indian 2",1,1,1
+p011_r0,cpdc,East Asian/male/50s,48,"asian 95; latino hispanic 3; indian 2",1,1,1

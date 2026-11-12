@@ -1,0 +1,145 @@
+unit,profile_id,repeat,ethnicity,gender,body_type,age,arm,calls,best_attempt,stop_reason,image,verifier_ethnicity_pass,verifier_gender_pass,verifier_age_pass,verifier_all_pass,deepface_ethnicity_pass,deepface_ethnicity_strict,deepface_gender_pass,deepface_gender_strict,deepface_age_pass,deepface_age_strict,deepface_all_pass,deepface_face
+p000_r0,0,0,South Asian,female,medium,30s,vanilla,1,0,single_call,images\p000_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p000_r0,0,0,South Asian,female,medium,30s,resample,4,3,passed,images\p000_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r0,0,0,South Asian,female,medium,30s,cpdc,3,0,stalled,images\p000_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p001_r0,1,0,South Asian,female,medium,50s,vanilla,1,0,single_call,images\p001_r0_vanilla_best.png,0,0,0,0,0,0,0,1,0,0,0,1
+p001_r0,1,0,South Asian,female,medium,50s,resample,4,3,budget,images\p001_r0_resample_best.png,1,1,0,0,1,0,1,1,0,0,0,1
+p001_r0,1,0,South Asian,female,medium,50s,cpdc,3,2,stalled,images\p001_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p002_r0,2,0,South Asian,male,medium,30s,vanilla,1,0,single_call,images\p002_r0_vanilla_best.png,1,1,1,1,1,0,1,1,1,0,1,1
+p002_r0,2,0,South Asian,male,medium,30s,resample,1,0,passed,images\p002_r0_resample_best.png,1,1,1,1,1,0,1,1,1,0,1,1
+p002_r0,2,0,South Asian,male,medium,30s,cpdc,1,0,passed,images\p002_r0_cpdc_best.png,1,1,1,1,1,0,1,1,1,0,1,1
+p003_r0,3,0,South Asian,male,medium,50s,vanilla,1,0,single_call,images\p003_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r0,3,0,South Asian,male,medium,50s,resample,4,1,budget,images\p003_r0_resample_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r0,3,0,South Asian,male,medium,50s,cpdc,4,2,budget,images\p003_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p004_r0,4,0,African American,female,medium,30s,vanilla,1,0,single_call,images\p004_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p004_r0,4,0,African American,female,medium,30s,resample,1,0,passed,images\p004_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p004_r0,4,0,African American,female,medium,30s,cpdc,1,0,passed,images\p004_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p005_r0,5,0,African American,female,medium,50s,vanilla,1,0,single_call,images\p005_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r0,5,0,African American,female,medium,50s,resample,4,0,budget,images\p005_r0_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r0,5,0,African American,female,medium,50s,cpdc,4,1,budget,images\p005_r0_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p006_r0,6,0,African American,male,medium,30s,vanilla,1,0,single_call,images\p006_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r0,6,0,African American,male,medium,30s,resample,1,0,passed,images\p006_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r0,6,0,African American,male,medium,30s,cpdc,1,0,passed,images\p006_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r0,7,0,African American,male,medium,50s,vanilla,1,0,single_call,images\p007_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r0,7,0,African American,male,medium,50s,resample,1,0,passed,images\p007_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r0,7,0,African American,male,medium,50s,cpdc,1,0,passed,images\p007_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r0,8,0,East Asian,female,medium,30s,vanilla,1,0,single_call,images\p008_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p008_r0,8,0,East Asian,female,medium,30s,resample,2,1,passed,images\p008_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r0,8,0,East Asian,female,medium,30s,cpdc,2,1,passed,images\p008_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p009_r0,9,0,East Asian,female,medium,50s,vanilla,1,0,single_call,images\p009_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p009_r0,9,0,East Asian,female,medium,50s,resample,2,1,passed,images\p009_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p009_r0,9,0,East Asian,female,medium,50s,cpdc,4,1,budget,images\p009_r0_cpdc_best.png,1,0,1,0,1,1,0,1,1,1,0,1
+p010_r0,10,0,East Asian,male,medium,30s,vanilla,1,0,single_call,images\p010_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p010_r0,10,0,East Asian,male,medium,30s,resample,1,0,passed,images\p010_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p010_r0,10,0,East Asian,male,medium,30s,cpdc,1,0,passed,images\p010_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r0,11,0,East Asian,male,medium,50s,vanilla,1,0,single_call,images\p011_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r0,11,0,East Asian,male,medium,50s,resample,1,0,passed,images\p011_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r0,11,0,East Asian,male,medium,50s,cpdc,1,0,passed,images\p011_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p012_r0,12,0,Latin American,female,medium,30s,vanilla,1,0,single_call,images\p012_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p012_r0,12,0,Latin American,female,medium,30s,resample,1,0,passed,images\p012_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p012_r0,12,0,Latin American,female,medium,30s,cpdc,1,0,passed,images\p012_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p013_r0,13,0,Latin American,female,medium,50s,vanilla,1,0,single_call,images\p013_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p013_r0,13,0,Latin American,female,medium,50s,resample,4,3,budget,images\p013_r0_resample_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p013_r0,13,0,Latin American,female,medium,50s,cpdc,4,3,budget,images\p013_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p014_r0,14,0,Latin American,male,medium,30s,vanilla,1,0,single_call,images\p014_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p014_r0,14,0,Latin American,male,medium,30s,resample,1,0,passed,images\p014_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p014_r0,14,0,Latin American,male,medium,30s,cpdc,1,0,passed,images\p014_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p015_r0,15,0,Latin American,male,medium,50s,vanilla,1,0,single_call,images\p015_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p015_r0,15,0,Latin American,male,medium,50s,resample,1,0,passed,images\p015_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p015_r0,15,0,Latin American,male,medium,50s,cpdc,1,0,passed,images\p015_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p016_r0,16,0,Middle Eastern,female,medium,30s,vanilla,1,0,single_call,images\p016_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p016_r0,16,0,Middle Eastern,female,medium,30s,resample,1,0,passed,images\p016_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p016_r0,16,0,Middle Eastern,female,medium,30s,cpdc,1,0,passed,images\p016_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p017_r0,17,0,Middle Eastern,female,medium,50s,vanilla,1,0,single_call,images\p017_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p017_r0,17,0,Middle Eastern,female,medium,50s,resample,4,3,budget,images\p017_r0_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p017_r0,17,0,Middle Eastern,female,medium,50s,cpdc,4,3,budget,images\p017_r0_cpdc_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p018_r0,18,0,Middle Eastern,male,medium,30s,vanilla,1,0,single_call,images\p018_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p018_r0,18,0,Middle Eastern,male,medium,30s,resample,4,3,passed,images\p018_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p018_r0,18,0,Middle Eastern,male,medium,30s,cpdc,4,1,budget,images\p018_r0_cpdc_best.png,0,1,1,0,0,1,1,1,1,0,0,1
+p019_r0,19,0,Middle Eastern,male,medium,50s,vanilla,1,0,single_call,images\p019_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p019_r0,19,0,Middle Eastern,male,medium,50s,resample,3,2,passed,images\p019_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p019_r0,19,0,Middle Eastern,male,medium,50s,cpdc,2,1,passed,images\p019_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p020_r0,20,0,White,female,medium,30s,vanilla,1,0,single_call,images\p020_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p020_r0,20,0,White,female,medium,30s,resample,1,0,passed,images\p020_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p020_r0,20,0,White,female,medium,30s,cpdc,1,0,passed,images\p020_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,female,medium,50s,vanilla,1,0,single_call,images\p021_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,female,medium,50s,resample,1,0,passed,images\p021_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,female,medium,50s,cpdc,1,0,passed,images\p021_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p022_r0,22,0,White,male,medium,30s,vanilla,1,0,single_call,images\p022_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p022_r0,22,0,White,male,medium,30s,resample,2,1,passed,images\p022_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p022_r0,22,0,White,male,medium,30s,cpdc,3,2,passed,images\p022_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p023_r0,23,0,White,male,medium,50s,vanilla,1,0,single_call,images\p023_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p023_r0,23,0,White,male,medium,50s,resample,1,0,passed,images\p023_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p023_r0,23,0,White,male,medium,50s,cpdc,1,0,passed,images\p023_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r1,0,1,South Asian,female,medium,30s,vanilla,1,0,single_call,images\p000_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r1,0,1,South Asian,female,medium,30s,resample,1,0,passed,images\p000_r1_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r1,0,1,South Asian,female,medium,30s,cpdc,1,0,passed,images\p000_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r2,0,2,South Asian,female,medium,30s,vanilla,1,0,single_call,images\p000_r2_vanilla_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p000_r2,0,2,South Asian,female,medium,30s,resample,3,2,passed,images\p000_r2_resample_best.png,1,1,1,1,1,0,1,1,1,1,1,1
+p000_r2,0,2,South Asian,female,medium,30s,cpdc,2,1,passed,images\p000_r2_cpdc_best.png,1,1,1,1,1,0,1,1,1,0,1,1
+p001_r1,1,1,South Asian,female,medium,50s,vanilla,1,0,single_call,images\p001_r1_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p001_r1,1,1,South Asian,female,medium,50s,resample,4,3,budget,images\p001_r1_resample_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p001_r1,1,1,South Asian,female,medium,50s,cpdc,4,2,budget,images\p001_r1_cpdc_best.png,1,1,0,0,1,0,1,1,0,0,0,1
+p001_r2,1,2,South Asian,female,medium,50s,vanilla,1,0,single_call,images\p001_r2_vanilla_best.png,0,0,0,0,0,0,0,0,0,0,0,1
+p001_r2,1,2,South Asian,female,medium,50s,resample,4,3,budget,images\p001_r2_resample_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p001_r2,1,2,South Asian,female,medium,50s,cpdc,3,2,passed,images\p001_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p002_r1,2,1,South Asian,male,medium,30s,vanilla,1,0,single_call,images\p002_r1_vanilla_best.png,1,1,1,1,1,0,1,1,1,1,1,1
+p002_r1,2,1,South Asian,male,medium,30s,resample,1,0,passed,images\p002_r1_resample_best.png,1,1,1,1,1,0,1,1,1,1,1,1
+p002_r1,2,1,South Asian,male,medium,30s,cpdc,1,0,passed,images\p002_r1_cpdc_best.png,1,1,1,1,1,0,1,1,1,1,1,1
+p002_r2,2,2,South Asian,male,medium,30s,vanilla,1,0,single_call,images\p002_r2_vanilla_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p002_r2,2,2,South Asian,male,medium,30s,resample,2,1,passed,images\p002_r2_resample_best.png,1,1,1,1,1,0,1,1,1,0,1,1
+p002_r2,2,2,South Asian,male,medium,30s,cpdc,2,1,passed,images\p002_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p003_r1,3,1,South Asian,male,medium,50s,vanilla,1,0,single_call,images\p003_r1_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r1,3,1,South Asian,male,medium,50s,resample,4,3,budget,images\p003_r1_resample_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r1,3,1,South Asian,male,medium,50s,cpdc,4,1,budget,images\p003_r1_cpdc_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p003_r2,3,2,South Asian,male,medium,50s,vanilla,1,0,single_call,images\p003_r2_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r2,3,2,South Asian,male,medium,50s,resample,4,2,budget,images\p003_r2_resample_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p003_r2,3,2,South Asian,male,medium,50s,cpdc,4,2,budget,images\p003_r2_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p004_r1,4,1,African American,female,medium,30s,vanilla,1,0,single_call,images\p004_r1_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p004_r1,4,1,African American,female,medium,30s,resample,2,1,passed,images\p004_r1_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p004_r1,4,1,African American,female,medium,30s,cpdc,2,1,passed,images\p004_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p004_r2,4,2,African American,female,medium,30s,vanilla,1,0,single_call,images\p004_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p004_r2,4,2,African American,female,medium,30s,resample,1,0,passed,images\p004_r2_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p004_r2,4,2,African American,female,medium,30s,cpdc,1,0,passed,images\p004_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p005_r1,5,1,African American,female,medium,50s,vanilla,1,0,single_call,images\p005_r1_vanilla_best.png,1,0,0,0,1,1,0,1,0,0,0,1
+p005_r1,5,1,African American,female,medium,50s,resample,4,1,budget,images\p005_r1_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r1,5,1,African American,female,medium,50s,cpdc,3,2,stalled,images\p005_r1_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r2,5,2,African American,female,medium,50s,vanilla,1,0,single_call,images\p005_r2_vanilla_best.png,1,0,0,0,1,1,0,1,0,0,0,1
+p005_r2,5,2,African American,female,medium,50s,resample,4,1,budget,images\p005_r2_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r2,5,2,African American,female,medium,50s,cpdc,4,1,budget,images\p005_r2_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p006_r1,6,1,African American,male,medium,30s,vanilla,1,0,single_call,images\p006_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r1,6,1,African American,male,medium,30s,resample,1,0,passed,images\p006_r1_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r1,6,1,African American,male,medium,30s,cpdc,1,0,passed,images\p006_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r2,6,2,African American,male,medium,30s,vanilla,1,0,single_call,images\p006_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p006_r2,6,2,African American,male,medium,30s,resample,1,0,passed,images\p006_r2_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p006_r2,6,2,African American,male,medium,30s,cpdc,1,0,passed,images\p006_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p007_r1,7,1,African American,male,medium,50s,vanilla,1,0,single_call,images\p007_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p007_r1,7,1,African American,male,medium,50s,resample,1,0,passed,images\p007_r1_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p007_r1,7,1,African American,male,medium,50s,cpdc,1,0,passed,images\p007_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p007_r2,7,2,African American,male,medium,50s,vanilla,1,0,single_call,images\p007_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r2,7,2,African American,male,medium,50s,resample,1,0,passed,images\p007_r2_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r2,7,2,African American,male,medium,50s,cpdc,1,0,passed,images\p007_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r1,8,1,East Asian,female,medium,30s,vanilla,1,0,single_call,images\p008_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r1,8,1,East Asian,female,medium,30s,resample,1,0,passed,images\p008_r1_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r1,8,1,East Asian,female,medium,30s,cpdc,1,0,passed,images\p008_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r2,8,2,East Asian,female,medium,30s,vanilla,1,0,single_call,images\p008_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r2,8,2,East Asian,female,medium,30s,resample,1,0,passed,images\p008_r2_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p008_r2,8,2,East Asian,female,medium,30s,cpdc,1,0,passed,images\p008_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p009_r1,9,1,East Asian,female,medium,50s,vanilla,1,0,single_call,images\p009_r1_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p009_r1,9,1,East Asian,female,medium,50s,resample,4,3,budget,images\p009_r1_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p009_r1,9,1,East Asian,female,medium,50s,cpdc,2,1,passed,images\p009_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p009_r2,9,2,East Asian,female,medium,50s,vanilla,1,0,single_call,images\p009_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p009_r2,9,2,East Asian,female,medium,50s,resample,1,0,passed,images\p009_r2_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p009_r2,9,2,East Asian,female,medium,50s,cpdc,1,0,passed,images\p009_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p010_r1,10,1,East Asian,male,medium,30s,vanilla,1,0,single_call,images\p010_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p010_r1,10,1,East Asian,male,medium,30s,resample,1,0,passed,images\p010_r1_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p010_r1,10,1,East Asian,male,medium,30s,cpdc,1,0,passed,images\p010_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p010_r2,10,2,East Asian,male,medium,30s,vanilla,1,0,single_call,images\p010_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p010_r2,10,2,East Asian,male,medium,30s,resample,1,0,passed,images\p010_r2_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p010_r2,10,2,East Asian,male,medium,30s,cpdc,1,0,passed,images\p010_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r1,11,1,East Asian,male,medium,50s,vanilla,1,0,single_call,images\p011_r1_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r1,11,1,East Asian,male,medium,50s,resample,1,0,passed,images\p011_r1_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r1,11,1,East Asian,male,medium,50s,cpdc,1,0,passed,images\p011_r1_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r2,11,2,East Asian,male,medium,50s,vanilla,1,0,single_call,images\p011_r2_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r2,11,2,East Asian,male,medium,50s,resample,1,0,passed,images\p011_r2_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p011_r2,11,2,East Asian,male,medium,50s,cpdc,1,0,passed,images\p011_r2_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1

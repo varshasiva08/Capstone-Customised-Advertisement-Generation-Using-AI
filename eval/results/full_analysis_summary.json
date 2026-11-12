@@ -1,0 +1,43 @@
+{
+  "scorer_agreement": {
+    "matched_images": 108,
+    "ethnicity_agreement": 0.88,
+    "age_agreement": 0.296,
+    "gender_agreement": 1.0,
+    "overall_agreement": 0.725,
+    "pearson_correlation": -0.152
+  },
+  "side_by_side": {
+    "clip": {
+      "ethnicity": 0.963,
+      "age": 0.343,
+      "gender": 1.0
+    },
+    "llava": {
+      "ethnicity": 0.898,
+      "age": 0.954,
+      "gender": 1.0
+    }
+  },
+  "bias_distribution": {
+    "by_ethnicity": {
+      "African American": 36,
+      "East Asian": 36,
+      "South Asian": 36
+    },
+    "by_body_type": {
+      "medium": 36,
+      "plus-size": 36,
+      "slim": 36
+    },
+    "by_age": {
+      "20s": 27,
+      "30s": 27,
+      "40s": 27,
+      "50s": 27
+    },
+    "chi_square_ethnicity": 0.0,
+    "chi_square_body_type": 0.0,
+    "chi_square_age": 0.0
+  }
+}

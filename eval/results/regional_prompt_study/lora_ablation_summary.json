@@ -1,0 +1,24 @@
+{
+  "config_a_baseline": {
+    "config_label": "Baseline FLUX (generic prompt, no LoRA)",
+    "n_images": 15,
+    "clip_race_accuracy": 0.0,
+    "clip_gender_accuracy": 0.0,
+    "clip_overall_mean": 0.0,
+    "clip_race_conf_mean": 0.0,
+    "llava_ethnicity_mean": 0.0,
+    "llava_overall_mean": 0.0,
+    "llava_ethnicity_conf_mean": 0.0
+  },
+  "config_b_prompt": {
+    "config_label": "FLUX + Regional Prompt (no LoRA)",
+    "n_images": 15,
+    "clip_race_accuracy": 0.0,
+    "clip_gender_accuracy": 0.0,
+    "clip_overall_mean": 0.0,
+    "clip_race_conf_mean": 0.0,
+    "llava_ethnicity_mean": 0.0,
+    "llava_overall_mean": 0.0,
+    "llava_ethnicity_conf_mean": 0.0
+  }
+}

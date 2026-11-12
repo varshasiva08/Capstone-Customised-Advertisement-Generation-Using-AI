@@ -1,0 +1,49 @@
+# secrets
+.env
+*.env
+secrets*.yaml
+secrets*.json
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+.ipynb_checkpoints/
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# generated outputs
+outputs/
+*.log
+chroma_db/
+
+# media
+driving_videos/
+*.mp4
+*.mov
+*.avi
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# keep paper figures
+!docs/figures/
+!docs/figures/**
+
+# models / caches
+*.pt
+*.safetensors
+*.bin
+*.ckpt
+.deepface/
+
+# rating study: never commit the answer key
+results/**/rating/rating_key_DO_NOT_SHARE.csv

@@ -1,0 +1,225 @@
+# AdFidelity configuration
+#
+# Everything the app, the parser, the verifier and the experiment runner
+# read lives here. No LLM (Ollama / LLaVA / phi3) is used anywhere in the
+# default path: the brief parser is deterministic, verification uses trained
+# face-attribute models (see `scoring:`), and taglines/shot plans are templates.
+
+required_fields: [ethnicity, gender, body_type, age]
+
+options:
+  ethnicity: [South Asian, East Asian, Southeast Asian, African American,
+              Latin American, Middle Eastern, White]
+  gender: [female, male]
+  body_type: [slim, medium, plus-size]
+  age: [20s, 30s, 40s, 50s, 60s]
+  clothing: [White Blazer Suit, Black Blazer Suit, Navy Blue Suit,
+             Kurta & Pants, Anarkali Suit, Modest Maxi Dress]
+  background: [Warm Beige, Pure White, Light Grey,
+               Soft Pink, Sage Green, Deep Navy]
+
+defaults:
+  gender: female
+  clothing: White Blazer Suit
+  background: Pure White
+
+# Optional South-Asian sub-regions (prompt cue only - see
+# profiler/regional_prompt_builder.py). Descriptors are deliberately NON-physical
+# (heritage + attire): earlier versions tied skin tone to region, which is
+# stereotyping. Whether a region cue changes outputs is an empirical question
+# for the experiments, not an assumption.
+regions:
+  South Asian:
+    South Indian:
+      descriptor: "of South Indian heritage"
+      attire_cue: "wearing traditional South Indian gold jewellery"
+    North Indian:
+      descriptor: "of North Indian heritage"
+      attire_cue: "wearing traditional North Indian jhumka earrings"
+    Bengali:
+      descriptor: "of Bengali heritage"
+      attire_cue: "wearing traditional Bengali gold jewellery"
+    Punjabi:
+      descriptor: "of Punjabi heritage"
+      attire_cue: "wearing Punjabi-style gold jewellery"
+    Gujarati:
+      descriptor: "of Gujarati heritage"
+      attire_cue: "wearing traditional Gujarati jewellery"
+    Maharashtrian:
+      descriptor: "of Maharashtrian heritage"
+      attire_cue: "wearing a traditional Maharashtrian nath nose ring"
+    Northeast Indian:
+      descriptor: "of Northeast Indian heritage"
+      attire_cue: "wearing traditional Northeast Indian jewellery"
+
+# ---------------------------------------------------------------------------
+# Verification / scoring (non-LLM).
+#   verifier  - the scorer that drives the correction loop at generation time
+#   evaluator - scorers used for reported results; must differ from the
+#               verifier so the loop is not graded by the thing it optimises
+# ---------------------------------------------------------------------------
+scoring:
+  verifier: deepface
+  evaluators: [deepface, human]
+  detector: retinaface           # deepface face detector (weights from GitHub releases)
+  min_face_confidence: 0.80      # below this => "no face" => attempt fails
+  # Age: target decade [lo, lo+10). An estimate passes if it is within
+  # `age_tolerance_years` of that range (estimator MAE is ~4-7 years, so a
+  # strict decade match is noisy). Strict matches are reported as well.
+  age_tolerance_years: 3
+  age_error_scale_years: 15      # error of this many years => normalised error 1.0
+  ethnicity_pass_prob: 0.25      # floor on P(target); target must ALSO be the argmax (chance = 0.17)
+  gender_pass_prob: 0.80
+  # South Asian faces are spread over several DeepFace classes (see scoring/fidelity.py).
+  # Pass if P(indian) >= this even when 'indian' is not the top class. Set to {} for strict argmax only.
+  lenient_ethnicity_min_prob:
+    South Asian: 0.25
+  # DeepFace race labels each target ethnicity may legitimately map to.
+  # Southeast Asian and East Asian are both "asian" in DeepFace: reported but
+  # flagged as non-separable.
+  race_map:
+    South Asian: [indian]
+    East Asian: [asian]
+    Southeast Asian: [asian]
+    African American: [black]
+    Latin American: [latino hispanic]
+    Middle Eastern: [middle eastern]
+    White: [white]
+  non_separable_ethnicities: [East Asian, Southeast Asian]
+
+# Closed-loop correction (modules/cpdc.py, modules/correction_loop.py)
+loop:
+  max_calls: 4                   # total generation calls per image (1 initial + 3 retries)
+  num_levels: 4
+  epsilon: 0.03                  # min normalised-error improvement to count as progress
+  stall_limit: 2                 # consecutive non-improving rounds before stopping an axis
+  max_axes_per_round: 1          # correct only the worst failing axis per round (pilot: multi-axis edits caused collateral damage)
+  level_cap: 3                   # strongest correction wording allowed (1..num_levels)
+
+# Product description (no LLM). `local` = user text + dominant colour from the
+# photo. `hf` = optional hosted vision model (needs HF tokens).
+# Used ONLY by the teammates' product / storyboard / video modules (not by the verification pipeline).
+ollama:
+  model: phi3:mini
+  host: http://localhost:11434
+
+product_describe:
+  provider: ollama
+  model: llava
+  host: http://localhost:11434
+
+wan:
+  model: Wan-AI/Wan2.1-I2V-14B-720P   # only used by the paid HF path
+  # Video provider:
+  #   space  -> FREE public Hugging Face Space via gradio_client. Costs
+  #             nothing. Uses a Wan 2.2 I2V Lightning (4-8 step distilled)
+  #             model, so a clip finishes in a couple of minutes instead
+  #             of the ~40-60 min taken by the full 14B Wan Space.
+  #   fal-ai -> Hugging Face Inference API (needs paid HF credits).
+  provider: space
+  space_id: Saravutw/WAN2.2_I2V_LIGHTNING_4-8step_custom
+  space_timeout: 900            # seconds to wait in the free queue
+  # Free-Space (Lightning distilled) generation params. Output resolution
+  # follows the input image, so no height/width are needed here.
+  steps: 4
+  duration_seconds: 3.5
+  guidance_scale: 1.0
+  guidance_scale_2: 1.0
+  scheduler: UniPCMultistep
+  flow_shift: 3.0
+  quality: 5
+  frame_multiplier: 16          # must be an int in [16, 32, 64, 128]
+  safe_mode: false
+  negative_prompt: "blurry, low quality, worst quality, distorted face, deformed hands, extra fingers, fused fingers, watermark, text, signature, static, jump cut, messy background"
+
+body_type_extras:
+  plus-size:
+    female: "size 18, wide hips, fuller waist, rounder face, heavier build,"
+    male: "large frame, broad waist, rounder face, heavier build,"
+  medium: ""
+  slim: ""
+
+generation:
+  model_id: black-forest-labs/FLUX.1-schnell
+  # Image provider:
+  #   cloudflare -> Cloudflare Workers AI (FREE: 10,000 Neurons/day, no card).
+  #                 Needs CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN in .env.
+  #   hf         -> Hugging Face Inference API (needs paid HF credits).
+  provider: cloudflare
+  cloudflare_model: "@cf/black-forest-labs/flux-1-schnell"
+  resolution: [768, 1280]       # used on GPU
+  num_inference_steps: 4         # used on GPU
+  cpu_resolution: [512, 512]     # used on CPU (faster testing)
+  cpu_steps: 2                   # used on CPU (faster testing)
+
+corrections:
+  # Target-aware, direction-aware ladders (level_1 = gentlest ... level_4 = strongest).
+  # {ethnicity} / {gender_noun} / {age} are filled from the target profile, so the
+  # same ladder serves every target and never pushes towards the wrong class.
+  ethnicity:
+    level_1: "{ethnicity} {gender_noun}"
+    level_2: "clearly {ethnicity} {gender_noun}"
+    level_3: "{ethnicity} {gender_noun} with authentic {ethnicity} features"
+    level_4: "photograph of a real {ethnicity} {gender_noun}, authentic {ethnicity} appearance and features"
+  gender:
+    level_1: "{gender_noun}"
+    level_2: "clearly a {gender_noun}"
+    level_3: "a {gender_noun}, unmistakably {gender_adj}"
+    level_4: "a {gender_noun}, unmistakably {gender_adj} appearance"
+  age:
+    # model rendered the subject TOO OLD -> push younger
+    younger:
+      level_1: "youthful"
+      level_2: "youthful, smooth skin"
+      level_3: "youthful face, smooth skin, no wrinkles"
+      level_4: "visibly young adult face, smooth skin, no wrinkles or age lines, dark hair"
+    # model rendered the subject TOO YOUNG -> push older
+    older:
+      level_1: "mature"
+      level_2: "mature face, faint age lines"
+      level_3: "mature face, visible age lines"
+      level_4: "visibly older face, visible age lines, some grey in the hair"
+  # Legacy (target-agnostic) tokens, kept ONLY for the fixed-escalation baseline
+  # so it reproduces the original CDVR behaviour in the ablation.
+  legacy:
+    STF:
+      mild: "deep brown skin tone,"
+      strong: "very dark rich brown skin, deep melanin-rich complexion,"
+    AF:
+      mild: "mature woman,"
+      strong: "visible age lines, mature face, silver streaks in hair,"
+    BTF:
+      mild: "fuller figure, size 16,"
+      strong: "size 18, wide hips, fuller waist, visibly heavier build,"
+
+# Scene clause injected as {scene_clause} into prompt_template below.
+# This is the fallback when the user picks a plain colour background, and it
+# reproduces the original wording exactly (byte-identical prompts for every
+# existing caller - app.py, eval/, tests/).
+studio_scene: "studio photography, seamless {background} background, softbox lighting"
+
+# Scene / background-effect presets. Each value REPLACES the studio_scene
+# clause, so its own lighting is baked in and nothing studio-related
+# (softbox, seamless) fights it. Keep entries short: FLUX.1-schnell is a
+# 4-step distilled model and weights the front of the prompt most heavily.
+# Any custom scene text the user types goes through the same path.
+background_presets:
+  Luxury Hotel Lobby: "realistic luxury hotel lobby with cinematic warm lighting, polished marble floor, brass and velvet furnishings, glowing pendant lamps, shallow depth of field"
+  Golden Hour Rooftop: "rooftop terrace at golden hour, warm low sun, soft rim light, hazy city skyline bokeh behind"
+  Neon City Bokeh: "rain-slick city street at night, glowing neon signage, colourful bokeh highlights, cinematic contrast"
+  Marble Gallery: "bright contemporary art gallery, white marble walls, soft diffused daylight, minimal architecture"
+  Soft Studio Gradient: "seamless soft gradient backdrop, blush pink fading to warm beige, evenly lit, subtle vignette"
+  Misty Forest: "misty pine forest at dawn, soft cool light through the trees, atmospheric haze, muted green tones"
+
+# Advertisement-framed prompt. Leaves clear empty space so the
+# Module 4 (product/brand compositor) has room to place a product or logo.
+prompt_template: >
+  professional advertisement photograph for a clothing brand campaign,
+  full body shot of a {body_type} {ethnicity} {gender_noun} in {possessive} {age},
+  {body_type_extras} head to toe, standing pose, body squarely facing camera,
+  feet pointing forward, shoulders square to camera, face clearly visible,
+  looking directly into camera, strictly front-facing view, no side profile,
+  wearing {clothing}, modest outfit, high neckline, fully covered arms and legs,
+  no bare skin, no revealing clothing, conservative modest fashion,
+  commercial fashion advertising, high fashion editorial, {scene_clause}, sharp focus, 8k,
+  visible feet, empty space reserved for product placement and logo
