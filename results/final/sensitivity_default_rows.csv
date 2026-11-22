@@ -1,0 +1,7 @@
+grader,contrast,diff_pp,ci_low,ci_high,profiles,excludes_zero
+Rater 1 (drop 43 suspect final images),cpdc - vanilla,6.4,0.0,14.4,44,no
+Rater 1 (drop 43 suspect final images),cpdc - resample,5.2,-1.9,13.3,45,no
+Rater 1 (drop 43 suspect final images),resample - vanilla,1.1,-7.8,10.0,45,no
+Rater 2 (drop 18 suspect final images),cpdc - vanilla,2.4,-9.0,13.9,48,no
+Rater 2 (drop 18 suspect final images),cpdc - resample,2.4,-9.9,14.6,49,no
+Rater 2 (drop 18 suspect final images),resample - vanilla,-2.1,-12.8,8.3,48,no

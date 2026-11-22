@@ -8,3 +8,13 @@
 * Regional cues are non-physical (heritage/attire), not skin-tone.
 * Fixed old CLIP scorer label mapping (it merged White/Middle Eastern/Latino/Southeast Asian into other classes).
 * Streamlit UI rebuilt: editable parsed profile, verification gallery, prompt trace, no Ollama requirement.
+
+
+* Multi-account generation fix: `generator/adapter.py` now imports `generator.flux_pipeline` (with account rotation) instead of the non-rotating copy in `eval/generator/`.
+* Experiment grew from 48 units / 24 profiles to 80 units / 52 profiles / 272 rated images (batches `main`, `extra1`, `extra2`).
+* Two independent raters on all 272 images; a third rater resolves the 21 gender disagreements.
+* `eval/rating_app.py` fixed: no pre-selected answers, all four questions required.
+* New `eval/analyze_final.py` (arm table, contrasts, McNemar, rater agreement, per-group DeepFace validity, robustness) writing `results/final/`; new helper scripts `check_ratings_vs_target.py`, `make_image_map.py`, `make_gender_check_set.py`.
+* Retired `analyze_human_eval.py`, `second_rater_kappa.py`, `list_gender_disagreements.py` (replaced by `analyze_final.py`); stale `new_tables.md` removed.
+* Paper reframed around verifier validity; CPDC is the testbed.
+

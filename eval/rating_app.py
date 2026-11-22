@@ -53,12 +53,16 @@ left.image(os.path.join(FOLDER, "images", cur + ".png"), width="stretch")
 with right:
     with st.form(f"f_{cur}", clear_on_submit=True):
         visible = st.checkbox("A face is clearly visible", value=True)
-        g = st.radio("Gender (as it appears)", GENDER, horizontal=True)
-        e = st.selectbox("Ethnicity (as it appears)", ETH)
-        a = st.radio("Apparent age decade", AGE, horizontal=True)
-        b = st.radio("Body type", BODY, horizontal=True)
+        # index=None: nothing is pre-selected, so a skipped question cannot be saved by accident
+        g = st.radio("Gender (as it appears)", GENDER, horizontal=True, index=None)
+        e = st.selectbox("Ethnicity (as it appears)", ETH, index=None, placeholder="choose one")
+        a = st.radio("Apparent age decade", AGE, horizontal=True, index=None)
+        b = st.radio("Body type", BODY, horizontal=True, index=None)
         note = st.text_input("Notes (optional)")
         if st.form_submit_button("Save and next", type="primary"):
+            if None in (g, e, a, b):
+                st.error("Please answer all four questions (gender, ethnicity, age, body type).")
+                st.stop()
             new = not os.path.exists(out)
             with open(out, "a", newline="") as f:
                 w = csv.DictWriter(f, COLS)

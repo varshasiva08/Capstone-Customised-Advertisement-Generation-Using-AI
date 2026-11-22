@@ -1,0 +1,51 @@
+unit,arm,attempt,reused,image,applied,score,age_est,race_top3,ethnicity_pass,gender_pass,age_pass
+p000_r0,vanilla,0,1,images/all/p000_r0_a0.png,{},1.3985,28.0,"[[""latino hispanic"", 39.9], [""asian"", 22.0], [""indian"", 13.2]]",0,1,1
+p000_r0,resample,0,1,images/all/p000_r0_a0.png,{},1.3985,28.0,"[[""latino hispanic"", 39.9], [""asian"", 22.0], [""indian"", 13.2]]",0,1,1
+p000_r0,resample,1,0,images/all/p000_r0_resample_a1.png,{},1.3982,27.0,"[[""latino hispanic"", 41.9], [""asian"", 17.7], [""indian"", 16.6]]",0,1,1
+p000_r0,resample,2,0,images/all/p000_r0_resample_a2.png,{},1.4653,30.0,"[[""latino hispanic"", 36.7], [""asian"", 29.5], [""indian"", 14.5]]",0,1,1
+p000_r0,resample,3,0,images/all/p000_r0_resample_a3.png,{},1.5777,26.0,"[[""latino hispanic"", 49.0], [""indian"", 35.0], [""white"", 5.6]]",1,1,0
+p000_r0,cpdc,0,1,images/all/p000_r0_a0.png,{},1.3985,28.0,"[[""latino hispanic"", 39.9], [""asian"", 22.0], [""indian"", 13.2]]",0,1,1
+p000_r0,cpdc,1,0,images/all/p000_r0_cpdc_a1.png,"{""ethnicity"": 3}",2.0,31.0,"[[""latino hispanic"", 43.0], [""indian"", 33.0], [""middle eastern"", 8.2]]",1,1,1
+p000_r1,vanilla,0,1,images/all/p000_r1_a0.png,{},1.9982,30.0,"[[""indian"", 37.3], [""latino hispanic"", 32.4], [""asian"", 14.6]]",1,1,1
+p000_r1,resample,0,1,images/all/p000_r1_a0.png,{},1.9982,30.0,"[[""indian"", 37.3], [""latino hispanic"", 32.4], [""asian"", 14.6]]",1,1,1
+p000_r1,cpdc,0,1,images/all/p000_r1_a0.png,{},1.9982,30.0,"[[""indian"", 37.3], [""latino hispanic"", 32.4], [""asian"", 14.6]]",1,1,1
+p001_r0,vanilla,0,1,images/all/p001_r0_a0.png,{},0.9546,42.0,"[[""latino hispanic"", 31.9], [""white"", 22.0], [""middle eastern"", 17.8]]",0,1,0
+p001_r0,resample,0,1,images/all/p001_r0_a0.png,{},0.9546,42.0,"[[""latino hispanic"", 31.9], [""white"", 22.0], [""middle eastern"", 17.8]]",0,1,0
+p001_r0,resample,1,0,images/all/p001_r0_resample_a1.png,{},0.8693,39.0,"[[""latino hispanic"", 37.3], [""white"", 23.5], [""middle eastern"", 21.4]]",0,1,0
+p001_r0,resample,2,0,images/all/p001_r0_resample_a2.png,{},0.7362,35.0,"[[""latino hispanic"", 61.0], [""indian"", 13.1], [""white"", 10.4]]",0,1,0
+p001_r0,resample,3,0,images/all/p001_r0_resample_a3.png,{},0.8406,39.0,"[[""latino hispanic"", 46.7], [""asian"", 13.9], [""white"", 12.5]]",0,1,0
+p001_r0,cpdc,0,1,images/all/p001_r0_a0.png,{},0.9546,42.0,"[[""latino hispanic"", 31.9], [""white"", 22.0], [""middle eastern"", 17.8]]",0,1,0
+p001_r0,cpdc,1,0,images/all/p001_r0_cpdc_a1.png,"{""ethnicity"": 3}",1.2745,47.0,"[[""latino hispanic"", 47.3], [""white"", 17.6], [""middle eastern"", 11.0]]",0,1,1
+p001_r0,cpdc,2,0,images/all/p001_r0_cpdc_a2.png,"{""ethnicity"": 3}",1.3333,30.0,"[[""indian"", 42.2], [""latino hispanic"", 35.1], [""middle eastern"", 8.0]]",1,1,0
+p001_r0,cpdc,3,0,images/all/p001_r0_cpdc_a3.png,"{""age"": [""older"", 3]}",0.4367,40.0,"[[""latino hispanic"", 23.8], [""asian"", 21.3], [""indian"", 21.1]]",0,0,0
+p001_r1,vanilla,0,1,images/all/p001_r1_a0.png,{},0.7964,29.0,"[[""latino hispanic"", 30.5], [""white"", 22.1], [""middle eastern"", 17.5]]",0,1,0
+p001_r1,resample,0,1,images/all/p001_r1_a0.png,{},0.7964,29.0,"[[""latino hispanic"", 30.5], [""white"", 22.1], [""middle eastern"", 17.5]]",0,1,0
+p001_r1,resample,1,0,images/all/p001_r1_resample_a1.png,{},1.4877,42.0,"[[""latino hispanic"", 42.7], [""indian"", 25.2], [""white"", 10.3]]",1,1,0
+p001_r1,resample,2,0,images/all/p001_r1_resample_a2.png,{},1.5767,48.0,"[[""latino hispanic"", 27.4], [""indian"", 23.6], [""middle eastern"", 22.2]]",0,1,1
+p001_r1,resample,3,0,images/all/p001_r1_resample_a3.png,{},0.9904,43.0,"[[""latino hispanic"", 55.5], [""indian"", 24.3], [""asian"", 9.3]]",0,1,0
+p001_r1,cpdc,0,1,images/all/p001_r1_a0.png,{},0.7964,29.0,"[[""latino hispanic"", 30.5], [""white"", 22.1], [""middle eastern"", 17.5]]",0,1,0
+p001_r1,cpdc,1,0,images/all/p001_r1_cpdc_a1.png,"{""age"": [""older"", 3]}",0.6774,24.0,"[[""white"", 44.0], [""latino hispanic"", 40.8], [""middle eastern"", 12.5]]",0,1,0
+p001_r1,cpdc,2,0,images/all/p001_r1_cpdc_a2.png,"{""age"": [""older"", 3]}",0.9978,46.0,"[[""latino hispanic"", 55.4], [""indian"", 19.1], [""asian"", 8.4]]",0,1,0
+p001_r1,cpdc,3,0,images/all/p001_r1_cpdc_a3.png,"{""ethnicity"": 3}",1.3333,35.0,"[[""indian"", 44.9], [""latino hispanic"", 38.0], [""asian"", 5.5]]",1,1,0
+p002_r0,vanilla,0,1,images/all/p002_r0_a0.png,{},2.0,32.0,"[[""latino hispanic"", 42.1], [""indian"", 38.0], [""black"", 7.7]]",1,1,1
+p002_r0,resample,0,1,images/all/p002_r0_a0.png,{},2.0,32.0,"[[""latino hispanic"", 42.1], [""indian"", 38.0], [""black"", 7.7]]",1,1,1
+p002_r0,cpdc,0,1,images/all/p002_r0_a0.png,{},2.0,32.0,"[[""latino hispanic"", 42.1], [""indian"", 38.0], [""black"", 7.7]]",1,1,1
+p002_r1,vanilla,0,1,images/all/p002_r1_a0.png,{},1.9333,27.0,"[[""latino hispanic"", 39.3], [""indian"", 33.9], [""black"", 11.7]]",1,1,1
+p002_r1,resample,0,1,images/all/p002_r1_a0.png,{},1.9333,27.0,"[[""latino hispanic"", 39.3], [""indian"", 33.9], [""black"", 11.7]]",1,1,1
+p002_r1,cpdc,0,1,images/all/p002_r1_a0.png,{},1.9333,27.0,"[[""latino hispanic"", 39.3], [""indian"", 33.9], [""black"", 11.7]]",1,1,1
+p003_r0,vanilla,0,1,images/all/p003_r0_a0.png,{},1.3959,51.0,"[[""middle eastern"", 41.3], [""white"", 29.3], [""latino hispanic"", 19.8]]",0,1,1
+p003_r0,resample,0,1,images/all/p003_r0_a0.png,{},1.3959,51.0,"[[""middle eastern"", 41.3], [""white"", 29.3], [""latino hispanic"", 19.8]]",0,1,1
+p003_r0,resample,1,0,images/all/p003_r0_resample_a1.png,{},1.4407,52.0,"[[""middle eastern"", 47.5], [""latino hispanic"", 22.2], [""indian"", 15.3]]",0,1,1
+p003_r0,resample,2,0,images/all/p003_r0_resample_a2.png,{},1.5011,57.0,"[[""latino hispanic"", 32.3], [""indian"", 16.3], [""middle eastern"", 15.6]]",0,1,1
+p003_r0,resample,3,0,images/all/p003_r0_resample_a3.png,{},1.4391,54.0,"[[""latino hispanic"", 47.2], [""indian"", 15.0], [""black"", 13.7]]",0,1,1
+p003_r0,cpdc,0,1,images/all/p003_r0_a0.png,{},1.3959,51.0,"[[""middle eastern"", 41.3], [""white"", 29.3], [""latino hispanic"", 19.8]]",0,1,1
+p003_r0,cpdc,1,0,images/all/p003_r0_cpdc_a1.png,"{""ethnicity"": 3}",1.3487,52.0,"[[""white"", 60.1], [""middle eastern"", 26.1], [""latino hispanic"", 10.0]]",0,1,1
+p003_r0,cpdc,2,0,images/all/p003_r0_cpdc_a2.png,"{""ethnicity"": 3}",1.9774,49.0,"[[""latino hispanic"", 36.2], [""indian"", 27.5], [""black"", 12.6]]",1,1,1
+p003_r1,vanilla,0,1,images/all/p003_r1_a0.png,{},1.603,53.0,"[[""middle eastern"", 24.1], [""latino hispanic"", 21.5], [""indian"", 19.5]]",0,1,1
+p003_r1,resample,0,1,images/all/p003_r1_a0.png,{},1.603,53.0,"[[""middle eastern"", 24.1], [""latino hispanic"", 21.5], [""indian"", 19.5]]",0,1,1
+p003_r1,resample,1,0,images/all/p003_r1_resample_a1.png,{},1.5243,53.0,"[[""middle eastern"", 29.7], [""latino hispanic"", 25.4], [""indian"", 17.1]]",0,1,1
+p003_r1,resample,2,0,images/all/p003_r1_resample_a2.png,{},1.4507,47.0,"[[""latino hispanic"", 34.8], [""indian"", 19.2], [""middle eastern"", 18.1]]",0,1,1
+p003_r1,resample,3,0,images/all/p003_r1_resample_a3.png,{},1.3966,54.0,"[[""middle eastern"", 47.9], [""white"", 20.8], [""latino hispanic"", 17.9]]",0,1,1
+p003_r1,cpdc,0,1,images/all/p003_r1_a0.png,{},1.603,53.0,"[[""middle eastern"", 24.1], [""latino hispanic"", 21.5], [""indian"", 19.5]]",0,1,1
+p003_r1,cpdc,1,0,images/all/p003_r1_cpdc_a1.png,"{""ethnicity"": 1}",1.3347,53.0,"[[""white"", 72.9], [""latino hispanic"", 13.6], [""middle eastern"", 12.3]]",0,1,1
+p003_r1,cpdc,2,0,images/all/p003_r1_cpdc_a2.png,"{""ethnicity"": 3}",2.0,53.0,"[[""middle eastern"", 36.7], [""indian"", 25.4], [""latino hispanic"", 15.7]]",1,1,1

@@ -1,4 +1,5 @@
 # Module 4 — Product Integration: Summary
+> **Demo only.** This module is part of the interactive app. It is not evaluated in the paper and depends on a local Ollama.
 
 ## What this module does
 

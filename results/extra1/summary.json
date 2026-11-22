@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "created": "2026-11-21 11:39:18",
+    "dry_run": false,
+    "arms": [
+      "vanilla",
+      "resample",
+      "cpdc"
+    ],
+    "grid_size": 24,
+    "repeats": 1,
+    "max_calls": 4,
+    "verifier": "deepface",
+    "evaluators": [
+      "deepface",
+      "human (separate)"
+    ],
+    "evaluator_independent_of_verifier": false,
+    "generator": "cloudflare",
+    "note": "",
+    "stopped_early": false
+  },
+  "per_arm": {
+    "vanilla": {
+      "n_units": 24,
+      "mean_calls": 1.0,
+      "deepface_ethnicity": {
+        "k": 13,
+        "rate": 0.5416666666666666,
+        "ci95": [
+          0.3507455355310663,
+          0.7210894164831857
+        ]
+      },
+      "deepface_gender": {
+        "k": 23,
+        "rate": 0.9583333333333334,
+        "ci95": [
+          0.7975777375115778,
+          0.9926067346451949
+        ]
+      },
+      "deepface_age": {
+        "k": 16,
+        "rate": 0.6666666666666666,
+        "ci95": [
+          0.46705959494080457,
+          0.8202802131162036
+        ]
+      },
+      "deepface_all": {
+        "k": 10,
+        "rate": 0.4166666666666667,
+        "ci95": [
+          0.24467347246538232,
+          0.6116566235061137
+        ]
+      }
+    },
+    "resample": {
+      "n_units": 24,
+      "mean_calls": 2.5,
+      "deepface_ethnicity": {
+        "k": 20,
+        "rate": 0.8333333333333334,
+        "ci95": [
+          0.6414652961213058,
+          0.9332143199927109
+        ]
+      },
+      "deepface_gender": {
+        "k": 24,
+        "rate": 1.0,
+        "ci95": [
+          0.8620194241710247,
+          1.0000000000000002
+        ]
+      },
+      "deepface_age": {
+        "k": 21,
+        "rate": 0.875,
+        "ci95": [
+          0.6899571185214244,
+          0.9565574496068442
+        ]
+      },
+      "deepface_all": {
+        "k": 19,
+        "rate": 0.7916666666666666,
+        "ci95": [
+          0.5952915551476453,
+          0.9075531089521192
+        ]
+      }
+    },
+    "cpdc": {
+      "n_units": 24,
+      "mean_calls": 2.375,
+      "deepface_ethnicity": {
+        "k": 19,
+        "rate": 0.7916666666666666,
+        "ci95": [
+          0.5952915551476453,
+          0.9075531089521192
+        ]
+      },
+      "deepface_gender": {
+        "k": 24,
+        "rate": 1.0,
+        "ci95": [
+          0.8620194241710247,
+          1.0000000000000002
+        ]
+      },
+      "deepface_age": {
+        "k": 20,
+        "rate": 0.8333333333333334,
+        "ci95": [
+          0.6414652961213058,
+          0.9332143199927109
+        ]
+      },
+      "deepface_all": {
+        "k": 16,
+        "rate": 0.6666666666666666,
+        "ci95": [
+          0.46705959494080457,
+          0.8202802131162036
+        ]
+      }
+    }
+  },
+  "paired": {
+    "deepface: cpdc vs vanilla": {
+      "all_axes_pass_diff_by_profile": {
+        "mean_diff": 0.25,
+        "ci_low": 0.08333333333333333,
+        "ci_high": 0.4166666666666667,
+        "n": 24,
+        "excludes_zero": true
+      },
+      "mcnemar_p_units": 0.03125,
+      "discordant_units": {
+        "cpdc_only": 6,
+        "vanilla_only": 0
+      },
+      "mean_calls": {
+        "cpdc": 2.375,
+        "vanilla": 1.0
+      }
+    },
+    "deepface: cpdc vs resample": {
+      "all_axes_pass_diff_by_profile": {
+        "mean_diff": -0.125,
+        "ci_low": -0.2916666666666667,
+        "ci_high": 0.041666666666666664,
+        "n": 24,
+        "excludes_zero": false
+      },
+      "mcnemar_p_units": 0.375,
+      "discordant_units": {
+        "cpdc_only": 1,
+        "resample_only": 4
+      },
+      "mean_calls": {
+        "cpdc": 2.375,
+        "resample": 2.5
+      }
+    }
+  }
+}

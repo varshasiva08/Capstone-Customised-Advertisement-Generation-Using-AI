@@ -47,3 +47,13 @@ driving_videos/
 
 # rating study: never commit the answer key
 results/**/rating/rating_key_DO_NOT_SHARE.csv
+
+
+# private / unblinding files
+*_key*.csv
+rater2/
+rater3/
+rater3_key_PRIVATE.csv
+_archive/
+Paper_Drafts/
+.pytest_cache/

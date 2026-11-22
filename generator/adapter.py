@@ -20,8 +20,8 @@ def make_generate_fn(cfg: dict, provider: str = None, profile: dict = None):
     if provider == "mock":
         return _mock(profile)
 
-    from eval.generator.flux_pipeline import generate_image
-
+    # from eval.generator.flux_pipeline import generate_image
+    from generator.flux_pipeline import generate_image
     def gen(prompt: str, seed: int):
         import time
         last = None
