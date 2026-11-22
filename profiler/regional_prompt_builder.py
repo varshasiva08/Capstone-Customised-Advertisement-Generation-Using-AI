@@ -43,7 +43,7 @@ unless you want to extend regional splits to them too.
 
 from __future__ import annotations
 
-from profiler.prompt_builder import build_prompt, load_config
+from profiler.prompt_builder import build_prompt, load_config, subject_anchor
 
 
 def list_regions(ethnicity: str, config: dict = None) -> list[str]:
@@ -60,7 +60,9 @@ def build_regional_prompt(profile: dict, clothing: str, background: str,
                            iteration: int = 0,
                            correction_levels: dict = None,
                            product_description: str = None,
-                           product_category: str = "handbag") -> str:
+                           product_category: str = "handbag",
+                           scene: str = None,
+                           background_focus: str = "Auto") -> str:
     """
     Same signature as build_prompt(), plus an optional `region` string.
 
@@ -70,6 +72,8 @@ def build_regional_prompt(profile: dict, clothing: str, background: str,
                  config['regions'][profile['ethnicity']]. If None, or if
                  no regions are defined for this ethnicity, behaves
                  identically to build_prompt() (no regional injection).
+        scene:   Optional scene / background-effect text, forwarded to
+                 build_prompt() unchanged.
 
     Returns:
         The complete prompt string, with the region's descriptor and
@@ -87,6 +91,8 @@ def build_regional_prompt(profile: dict, clothing: str, background: str,
         correction_levels=correction_levels,
         product_description=product_description,
         product_category=product_category,
+        scene=scene,
+        background_focus=background_focus,
     )
 
     if not region:
@@ -116,7 +122,7 @@ def build_regional_prompt(profile: dict, clothing: str, background: str,
     # prompt_builder.py uses for correction tokens, so region descriptors
     # sit next to the subject, and correction tokens (added by build_prompt
     # above) sit after them.
-    anchor = f"woman in her {profile['age']}"
+    anchor = subject_anchor(profile)
     if anchor in base_prompt:
         # Insert the region block immediately after the anchor, before
         # whatever build_prompt already inserted there (correction tokens).

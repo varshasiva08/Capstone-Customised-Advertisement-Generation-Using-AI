@@ -1,0 +1,13 @@
+grader,contrast,diff_pp,ci_low,ci_high,profiles,excludes_zero
+DeepFace,cpdc - vanilla,22.1,12.5,32.7,52,yes
+DeepFace,cpdc - resample,-4.8,-15.4,5.1,52,no
+DeepFace,resample - vanilla,26.9,16.0,39.1,52,yes
+Rater 1,cpdc - vanilla,6.7,0.6,14.1,52,yes
+Rater 1,cpdc - resample,3.2,-4.5,11.9,52,no
+Rater 1,resample - vanilla,3.5,-5.1,12.2,52,no
+Rater 2,cpdc - vanilla,4.5,-6.7,15.7,52,no
+Rater 2,cpdc - resample,4.5,-7.7,16.7,52,no
+Rater 2,resample - vanilla,-0.0,-10.6,10.6,52,no
+Both agree,cpdc - vanilla,2.9,-6.1,11.9,52,no
+Both agree,cpdc - resample,3.8,-6.4,14.1,52,no
+Both agree,resample - vanilla,-1.0,-9.0,7.1,52,no

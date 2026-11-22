@@ -53,12 +53,12 @@ DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
 # Map from FairFace race labels → your config.yaml ethnicity labels
 RACE_TO_ETHNICITY = {
     "Indian":           "South Asian",
-    "Southeast Asian":  "South Asian",
-    "Middle Eastern":   "South Asian",
+    "Southeast Asian":  "Southeast Asian",
+    "Middle Eastern":   "Middle Eastern",
     "East Asian":       "East Asian",
     "Black":            "African American",
-    "White":            "African American",   # fallback
-    "Latino_Hispanic":  "South Asian",        # fallback
+    "White":            "White",
+    "Latino_Hispanic":  "Latin American",
 }
 
 # Map from FairFace age labels → your config.yaml age labels

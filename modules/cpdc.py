@@ -1,199 +1,149 @@
 """
-modules/cpdc.py — Confidence-Proportional Demographic Correction (CPDC)
+CPDC - Confidence-Proportional Demographic Correction (v2).
 
-Replaces CDVR's binary pass/fail correction trigger with:
-  1. A continuous error signal per axis, drawn from whichever scorer is
-     empirically reliable on that axis (see docstrings below — this choice
-     is justified by the CLIP-vs-LLaVA agreement analysis in
-     EVALUATION_RESULTS.md, Table 4).
-  2. A graduated correction level (not just mild/strong) proportional to
-     that error.
-  3. A diminishing-returns early-stop rule that halts correction on an axis
-     once further attempts stop improving confidence, instead of always
-     burning the full iteration budget.
+What changed from the first version, and why
+--------------------------------------------
+The original controller had three defects that inflated the reported gains:
 
-This module has NO dependency on FLUX, LLaVA, Ollama, or the HF API — it
-operates purely on confidence scores that the existing scorers already
-produce. That means it can be unit-tested standalone (see bottom of file)
-before ever being wired into the live generation loop.
+1. No pass threshold. It only stopped on an axis when the scorer returned a
+   perfect confidence, so almost every image was "corrected" (the earlier
+   "69% needed correction / 22 of 36 used all iterations" were artefacts).
+   -> A failing axis is now decided by the verifier (`FidelityReport`), and a
+      passing image is left alone.
+2. One-directional corrections. The skin-tone and age tokens always pushed
+   "darker" and "older" whatever the target (a 20s East Asian target got
+   "deep melanin-rich complexion" and "silver streaks in hair").
+   -> Ethnicity/gender tokens are built from the TARGET profile, and age has an
+      explicit direction (`younger` / `older`) taken from the signed estimate.
+3. Error signal came from a VLM's self-reported score. -> Errors now come from
+   classifier probabilities and an age estimate (scoring/fidelity.py).
 
-Drop-in point: profiler/prompt_builder.py currently takes `correction_keys`
-(a flat list) and `iteration` (used only to pick "mild" vs "strong").
-CPDC replaces that iteration-based severity pick with `select_level()`
-below, and the CDVR loop's flat threshold check
-(`if ethnicity_score < 7: correction_keys.append("STF")`) is replaced with
-`compute_error()` + `select_level()` + `should_stop()`.
+Algorithm (per generation attempt k >= 1)
+-----------------------------------------
+  for every failing, automatically-scored axis a:
+      e_a   = normalised error in [0, 1]                     (scoring)
+      L_a   = clip(ceil(e_a * K), 1, K)                      (graduated level)
+      stall = [prev_e_a - e_a < epsilon] for `stall_limit` consecutive rounds
+      if stall: stop correcting a (diminishing returns)
+  If no axis is left to correct and the image still fails, stop.
+
+Flags let the ablation switch components off individually:
+  proportional=False   -> level = attempt number (fixed escalation, not error-driven)
+  direction_aware=False-> age always "older" (the original behaviour)
+  early_stop=False     -> never stop an axis for stalling
+
+No dependency on FLUX, DeepFace or any model: pure functions + dataclasses.
 """
-
 from __future__ import annotations
+
+import math
 from dataclasses import dataclass, field
 from typing import Optional
 
-
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-
-# Number of graduated correction tokens available per axis. Must match the
-# number of "level_N" entries you add under `corrections:` in config.yaml.
-NUM_LEVELS = {
-    "STF": 4,   # skin tone / ethnicity fix
-    "AF":  4,   # age fix
-    # BTF intentionally excluded — no trained confidence classifier exists
-    # for body type, so it stays on the original binary rule.
-}
-
-# Minimum confidence improvement between rounds for a correction to be
-# considered "working". Below this for CONSECUTIVE_STALL_LIMIT rounds in a
-# row, CPDC stops trying rather than burning the remaining iteration budget.
-EPSILON = 0.03
-CONSECUTIVE_STALL_LIMIT = 2
+CORRECTABLE_AXES = ("ethnicity", "gender", "age")      # body_type has no verifier
 
 
-# ---------------------------------------------------------------------------
-# Error signal
-# ---------------------------------------------------------------------------
-
-def compute_error(confidence_target_class: float) -> float:
-    c = confidence_target_class
-    if c > 1.0:
-        # LLaVA occasionally answers the confidence field on the same
-        # 0-10 scale as the score field despite the prompt asking for
-        # 0.0-1.0 - defensively normalize rather than silently misreading
-        # e.g. "9.0" as near-total error.
-        c = c / 10.0
-    c = max(0.0, min(1.0, c))
-    return 1.0 - c
+def compute_error(confidence_target: float) -> float:
+    """Error = 1 - P(target), clamped to [0, 1]."""
+    return 1.0 - max(0.0, min(1.0, float(confidence_target)))
 
 
-# ---------------------------------------------------------------------------
-# Graduated correction level
-# ---------------------------------------------------------------------------
-
-def select_level(axis: str, error: float) -> int:
-    """
-    Map a continuous error to a discrete correction level for `axis`.
-
-    level = clip(ceil(error * K), 0, K), where K = NUM_LEVELS[axis].
-
-    error=0.0        -> level 0 (no correction needed)
-    error in (0,.25]  -> level 1 (mild, K=4 case)
-    error in (.25,.5] -> level 2
-    error in (.5,.75] -> level 3
-    error in (.75,1]  -> level 4 (max correction on first attempt)
-
-    Args:
-        axis:  "STF" or "AF" (must be a key in NUM_LEVELS).
-        error: output of compute_error().
-
-    Returns:
-        Integer level, 0..NUM_LEVELS[axis]. 0 means "don't correct".
-    """
-    if axis not in NUM_LEVELS:
-        raise ValueError(f"No graduated ladder defined for axis '{axis}'. "
-                          f"Known axes: {list(NUM_LEVELS)}")
-    k = NUM_LEVELS[axis]
+def select_level(error: float, num_levels: int = 4) -> int:
+    """level = clip(ceil(error * K), 1, K); 0 only when error <= 0."""
     if error <= 0:
         return 0
-    import math
-    level = math.ceil(error * k)
-    return max(0, min(k, level))
+    return max(1, min(num_levels, math.ceil(error * num_levels)))
 
-
-def level_to_config_key(level: int) -> str:
-    """Maps an integer level to the config.yaml key, e.g. 3 -> 'level_3'."""
-    return f"level_{level}"
-
-
-# ---------------------------------------------------------------------------
-# Diminishing-returns early stop
-# ---------------------------------------------------------------------------
 
 @dataclass
 class AxisTracker:
-    """
-    Tracks the error trajectory for one axis across CDVR iterations, and
-    decides whether further correction attempts are worth spending a
-    generation call on.
-
-    Usage inside the CDVR loop:
-
-        tracker = AxisTracker(axis="AF")
-        for iteration in range(1, max_iterations + 1):
-            ... generate image with correction level tracker.current_level() ...
-            confidence = <scorer output for target class>
-            stop = tracker.update(confidence)
-            if stop:
-                break   # correction-resistant; don't spend another call
-    """
+    """Error trajectory of one axis across attempts + stall detection."""
     axis: str
-    history: list[float] = field(default_factory=list)   # error history
+    epsilon: float = 0.03
+    stall_limit: int = 2
+    history: list = field(default_factory=list)
     stall_count: int = 0
 
-    def update(self, confidence_target_class: float) -> bool:
-        """
-        Record a new confidence reading and decide whether to stop.
-
-        Returns:
-            True  -> stop correcting this axis (diminishing returns hit).
-            False -> keep going.
-        """
-        error = compute_error(confidence_target_class)
-
+    def update(self, error: float) -> bool:
+        """Record an error reading. True => stop correcting this axis."""
         if self.history:
-            delta = self.history[-1] - error   # positive = improving
-            if delta < EPSILON:
-                self.stall_count += 1
-            else:
-                self.stall_count = 0
-
+            improvement = self.history[-1] - error
+            self.stall_count = self.stall_count + 1 if improvement < self.epsilon else 0
         self.history.append(error)
+        return self.stall_count >= self.stall_limit
 
-        return self.stall_count >= CONSECUTIVE_STALL_LIMIT
-
-    def current_level(self) -> int:
-        """Correction level to apply on the NEXT attempt, based on the
-        most recent error reading (or a cold start of 'unknown -> max
-        caution', i.e. level determined once the first reading arrives)."""
-        if not self.history:
-            return 0
-        return select_level(self.axis, self.history[-1])
-
-    def wasted(self) -> bool:
-        """True if this axis never improved enough to pass but we stopped
-        anyway (diminishing returns) — the case the 88%-waste finding is
-        about. Useful for the efficiency comparison table."""
-        return self.stall_count >= CONSECUTIVE_STALL_LIMIT and (
-            not self.history or self.history[-1] > 0.3   # still clearly failing
-        )
+    @property
+    def stopped(self) -> bool:
+        return self.stall_count >= self.stall_limit
 
 
-# ---------------------------------------------------------------------------
-# Standalone self-test — no external dependencies, run with:
-#     python modules/cpdc.py
-# ---------------------------------------------------------------------------
+@dataclass
+class Plan:
+    """What to change for the next attempt."""
+    levels: dict = field(default_factory=dict)   # axis -> level | ("younger"/"older", level)
+    reason: str = ""                             # "correct" | "no_face" | "passed" | "stalled"
+    stalled_axes: list = field(default_factory=list)
 
-if __name__ == "__main__":
-    print("=== select_level sanity check (K=4) ===")
-    for err in [0.0, 0.1, 0.26, 0.5, 0.51, 0.8, 1.0]:
-        print(f"  error={err:.2f} -> level {select_level('AF', err)}")
+    @property
+    def stop(self) -> bool:
+        return self.reason in ("passed", "stalled")
 
-    print("\n=== Simulated trajectory: a profile that stalls "
-          "(mirrors the real South-Asian_slim_20s_seed42 case) ===")
-    # Real data: age_conf went 0.376 -> ... -> 0.407 over 3 rounds, never
-    # passing. Simulate CPDC watching that same trajectory.
-    tracker = AxisTracker(axis="AF")
-    for i, conf in enumerate([0.376, 0.390, 0.407], start=1):
-        stop = tracker.update(conf)
-        print(f"  iteration {i}: confidence={conf:.3f}  "
-              f"next_level={tracker.current_level()}  stop={stop}")
-    print(f"  wasted={tracker.wasted()}  "
-          f"(blind escalation would have burned a 3rd generation call here; "
-          f"CPDC stops after iteration 2)")
 
-    print("\n=== Simulated trajectory: a profile that DOES converge ===")
-    tracker2 = AxisTracker(axis="AF")
-    for i, conf in enumerate([0.32, 0.55, 0.78], start=1):
-        stop = tracker2.update(conf)
-        print(f"  iteration {i}: confidence={conf:.3f}  "
-              f"next_level={tracker2.current_level()}  stop={stop}")
+class CorrectionController:
+    def __init__(self, num_levels: int = 4, epsilon: float = 0.03, stall_limit: int = 2,
+                 proportional: bool = True, direction_aware: bool = True,
+                 early_stop: bool = True, max_axes: Optional[int] = 1,
+                 level_cap: Optional[int] = None):
+        # max_axes: correct at most this many failing axes per round (worst first).
+        #   Pilot data showed that correcting several axes at once, or using the
+        #   strongest wording, often damaged axes that were already fine.
+        # level_cap: strongest wording allowed (None -> num_levels).
+        self.max_axes = max_axes
+        self.level_cap = min(level_cap, num_levels) if level_cap else num_levels
+        self.K, self.epsilon, self.stall_limit = num_levels, epsilon, stall_limit
+        self.proportional, self.direction_aware, self.early_stop = (
+            proportional, direction_aware, early_stop)
+        self.trackers = {a: AxisTracker(a, epsilon, stall_limit) for a in CORRECTABLE_AXES}
+
+    @classmethod
+    def from_config(cls, cfg: dict, **flags):
+        lp = (cfg or {}).get("loop", {})
+        kw = dict(max_axes=lp.get("max_axes_per_round", 1), level_cap=lp.get("level_cap", 3))
+        kw.update(flags)
+        return cls(lp.get("num_levels", 4), lp.get("epsilon", 0.03),
+                   lp.get("stall_limit", 2), **kw)
+
+    def plan(self, report, attempt_number: int) -> Plan:
+        """`report` = FidelityReport of the attempt just made; attempt_number = the
+        1-based index of the attempt that will be generated NEXT."""
+        if report.all_passed:
+            return Plan(reason="passed")
+        if not report.face_found:
+            return Plan(reason="no_face")        # resample; nothing attribute-specific to fix
+
+        levels, stalled, cand = {}, [], []
+        for ax in report.failing():
+            if ax.axis not in CORRECTABLE_AXES:
+                continue
+            tr = self.trackers[ax.axis]
+            stop = tr.update(ax.error)
+            if stop and self.early_stop:
+                stalled.append(ax.axis)
+                continue
+            cand.append(ax)
+        cand.sort(key=lambda a: -a.error)                   # worst axis first
+        if self.max_axes:
+            cand = cand[:self.max_axes]
+        for ax in cand:
+            level = (select_level(ax.error, self.K) if self.proportional
+                     else min(self.K, attempt_number))
+            level = max(1, min(level, self.level_cap))
+            if ax.axis == "age":
+                direction = ("younger" if ax.direction > 0 else "older") \
+                    if self.direction_aware else "older"
+                levels["age"] = (direction, level)
+            else:
+                levels[ax.axis] = level
+        if not levels:
+            return Plan(reason="stalled", stalled_axes=stalled)
+        return Plan(levels=levels, reason="correct", stalled_axes=stalled)

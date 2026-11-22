@@ -1,0 +1,8 @@
+target,images,profiles,rater1_match_%,rater2_match_%,raters_agree_%,kappa_match
+African American,31,4,100.0,100.0,100.0,
+East Asian,22,4,95.5,100.0,95.5,0.0
+Latin American,42,12,16.7,31.0,52.4,-0.28
+Middle Eastern,60,12,43.3,50.0,83.3,0.67
+South Asian,90,8,75.6,64.4,60.0,0.06
+White,27,12,88.9,55.6,66.7,0.27
+ALL,272,52,65.1,62.1,72.1,0.4

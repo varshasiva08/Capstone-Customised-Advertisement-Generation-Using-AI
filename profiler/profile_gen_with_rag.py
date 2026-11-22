@@ -1,71 +1,29 @@
 """
-profile_gen.py — Updated with RAG context
-==========================================
-Replace your existing adfidelity/profiler/profile_gen.py with this file.
+Profile suggestions seeded by similar past campaigns (RAG), deterministic.
 
-The only change from the original:
-  - Accepts an optional `rag_context` string
-  - If provided, prepends it to the LLM prompt so it has historical context
-  - Everything else is identical to your original
+The retrieval store (rag/brief_rag.py) is unchanged: briefs are embedded with a
+small sentence-transformer (an embedding model, not a generative LLM). Past
+profiles that scored well for similar briefs are offered first; the remaining
+slots are filled by the coverage-maximising sampler in profile_gen.py.
 """
+from __future__ import annotations
 
-import json
-import requests
-
-SYSTEM_PROMPT = """You are a demographic profile generator for advertisement campaigns.
-Given a brand brief, generate exactly 6 diverse demographic profiles as a JSON array.
-Each profile must have these exact fields:
-- ethnicity: one of [South Asian, East Asian, African American]
-- body_type: one of [slim, medium, plus-size]
-- age: one of [20s, 30s, 40s, 50s]
-- skin_tone_description: brief descriptor
-- style_notes: 1 sentence about styling
-
-Cover diverse combinations. Reply ONLY with a JSON array, no extra text."""
+from profiler.profile_gen import generate_profiles as _stratified
+from profiler.text_parser import parse_brief_detailed
 
 
-def generate_profiles(brand_brief: str,
-                      model: str = "phi3:mini",
-                      host: str = "http://localhost:11434",
-                      rag_context: str = "") -> list[dict]:
-    """
-    Generate demographic profiles for a brand brief.
-
-    Args:
-        brand_brief:  The raw brand brief text.
-        model:        Ollama model to use.
-        host:         Ollama host URL.
-        rag_context:  Optional context string from BriefRAG.retrieve().
-                      If provided, the LLM uses similar past campaigns
-                      as reference when generating profiles.
-
-    Returns:
-        List of profile dicts.
-    """
-    # Build the full prompt — prepend RAG context if available
-    if rag_context:
-        prompt = f"{SYSTEM_PROMPT}\n\n{rag_context}Brand brief: {brand_brief}"
-    else:
-        prompt = f"{SYSTEM_PROMPT}\n\nBrand brief: {brand_brief}"
-
-    r = requests.post(
-        f"{host}/api/generate",
-        timeout=300,
-        json={
-            "model":  model,
-            "prompt": prompt,
-            "stream": False,
-            "format": "json",
-        },
-    )
-    r.raise_for_status()
-    raw = r.json()["response"].strip()
-
-    # Strip markdown fences if model adds them
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-
-    profiles = json.loads(raw.strip())
-    return profiles if isinstance(profiles, list) else [profiles]
+def generate_profiles(brand_brief: str, n: int = 6, cfg: dict = None, rag=None,
+                      seed: int = 0, **_ignored) -> list:
+    """`rag` is an optional rag.brief_rag.BriefRAG; without it this equals profile_gen."""
+    picked = []
+    if rag is not None:
+        try:
+            for prof in rag.retrieve_profiles(brand_brief):
+                if prof not in picked:
+                    picked.append(prof)
+        except Exception:                       # noqa: BLE001 - retrieval is best-effort
+            picked = []
+    held = parse_brief_detailed(brand_brief, cfg).profile()
+    picked = [{**p, **held} for p in picked][:n]
+    rest = [p for p in _stratified(brand_brief, n, cfg, seed) if p not in picked]
+    return (picked + rest)[:n]

@@ -23,6 +23,11 @@ Exits with code 0 if all non-skipped tests pass, 1 otherwise.
 import os
 import sys
 
+# Windows terminals may default to cp1252, which cannot print the status
+# symbols used by this dependency-free test runner.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Allow running this file directly (python3 tests/test_product_integration.py)
 # from the project root, without needing to install the project as a package.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -1,0 +1,6 @@
+,df_all,df_all,df_all,all1,all1,all1,all2,all2,all2,both,both,both
+arm,cpdc,resample,vanilla,cpdc,resample,vanilla,cpdc,resample,vanilla,cpdc,resample,vanilla
+batch,,,,,,,,,,,,
+extra1,66.7,79.2,41.7,50.0,45.8,41.7,29.2,25.0,20.8,20.8,16.7,16.7
+extra2,75.0,37.5,37.5,37.5,62.5,50.0,87.5,62.5,87.5,37.5,37.5,50.0
+main,72.9,75.0,56.2,87.5,81.2,79.2,72.9,70.8,70.8,70.8,64.6,64.6

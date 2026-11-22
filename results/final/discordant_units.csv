@@ -1,0 +1,9 @@
+grader,comparison,cpdc_only,other_only,mcnemar_p
+DeepFace,cpdc vs resample,6,7,1.0
+DeepFace,cpdc vs vanilla,17,0,0.0
+Rater 1,cpdc vs resample,5,3,0.727
+Rater 1,cpdc vs vanilla,8,3,0.227
+Rater 2,cpdc vs resample,12,8,0.503
+Rater 2,cpdc vs vanilla,9,6,0.607
+Both agree,cpdc vs resample,9,5,0.424
+Both agree,cpdc vs vanilla,9,6,0.607

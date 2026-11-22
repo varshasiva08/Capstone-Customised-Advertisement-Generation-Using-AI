@@ -18,10 +18,25 @@ pandas
 scikit-learn
 numpy
 opencv-python-headless
+lpips
+torchmetrics
+chromadb
+sentence-transformers
 
-# Evaluation - LLaVA DFC
-ollama
+# Evaluation - attribute scorer
+deepface
+tf-keras
+werkzeug
+flask
+flask-cors
+gunicorn
+tqdm
+gdown
+scipy
 
 # Evaluation - metrics report
 imageio
 imageio-ffmpeg
+
+# Needed only by the product-description / storyboard / video modules
+ollama

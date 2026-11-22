@@ -1,0 +1,5 @@
+label,agreement_%,kappa,kappa_95CI_over_profiles
+gender (raw labels),92.3,0.83,"[0.74, 0.91]"
+ethnicity (8 labels),56.2,0.47,"[0.33, 0.60]"
+"age, exact decade",47.8,0.35,"[0.27, 0.41]"
+"age, within 10 years",90.1,,

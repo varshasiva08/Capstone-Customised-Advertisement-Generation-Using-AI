@@ -1,0 +1,73 @@
+unit,profile_id,repeat,ethnicity,gender,body_type,age,arm,calls,best_attempt,stop_reason,image,verifier_ethnicity_pass,verifier_gender_pass,verifier_age_pass,verifier_all_pass,deepface_ethnicity_pass,deepface_ethnicity_strict,deepface_gender_pass,deepface_gender_strict,deepface_age_pass,deepface_age_strict,deepface_all_pass,deepface_face
+p000_r0,0,0,Latin American,female,slim,30s,vanilla,1,0,single_call,images\p000_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p000_r0,0,0,Latin American,female,slim,30s,resample,3,2,passed,images\p000_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p000_r0,0,0,Latin American,female,slim,30s,cpdc,2,1,passed,images\p000_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p001_r0,1,0,Latin American,female,slim,50s,vanilla,1,0,single_call,images\p001_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p001_r0,1,0,Latin American,female,slim,50s,resample,4,3,budget,images\p001_r0_resample_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p001_r0,1,0,Latin American,female,slim,50s,cpdc,4,3,passed,images\p001_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p002_r0,2,0,Latin American,female,plus-size,30s,vanilla,1,0,single_call,images\p002_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p002_r0,2,0,Latin American,female,plus-size,30s,resample,1,0,passed,images\p002_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p002_r0,2,0,Latin American,female,plus-size,30s,cpdc,1,0,passed,images\p002_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p003_r0,3,0,Latin American,female,plus-size,50s,vanilla,1,0,single_call,images\p003_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p003_r0,3,0,Latin American,female,plus-size,50s,resample,3,2,passed,images\p003_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p003_r0,3,0,Latin American,female,plus-size,50s,cpdc,3,2,passed,images\p003_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p004_r0,4,0,Latin American,male,slim,30s,vanilla,1,0,single_call,images\p004_r0_vanilla_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p004_r0,4,0,Latin American,male,slim,30s,resample,4,3,budget,images\p004_r0_resample_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p004_r0,4,0,Latin American,male,slim,30s,cpdc,4,2,budget,images\p004_r0_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p005_r0,5,0,Latin American,male,slim,50s,vanilla,1,0,single_call,images\p005_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p005_r0,5,0,Latin American,male,slim,50s,resample,1,0,passed,images\p005_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p005_r0,5,0,Latin American,male,slim,50s,cpdc,1,0,passed,images\p005_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p006_r0,6,0,Latin American,male,plus-size,30s,vanilla,1,0,single_call,images\p006_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r0,6,0,Latin American,male,plus-size,30s,resample,1,0,passed,images\p006_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p006_r0,6,0,Latin American,male,plus-size,30s,cpdc,1,0,passed,images\p006_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p007_r0,7,0,Latin American,male,plus-size,50s,vanilla,1,0,single_call,images\p007_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p007_r0,7,0,Latin American,male,plus-size,50s,resample,3,2,passed,images\p007_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p007_r0,7,0,Latin American,male,plus-size,50s,cpdc,4,1,budget,images\p007_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p008_r0,8,0,Middle Eastern,female,slim,30s,vanilla,1,0,single_call,images\p008_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p008_r0,8,0,Middle Eastern,female,slim,30s,resample,4,3,passed,images\p008_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p008_r0,8,0,Middle Eastern,female,slim,30s,cpdc,4,2,budget,images\p008_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p009_r0,9,0,Middle Eastern,female,slim,50s,vanilla,1,0,single_call,images\p009_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p009_r0,9,0,Middle Eastern,female,slim,50s,resample,4,1,budget,images\p009_r0_resample_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p009_r0,9,0,Middle Eastern,female,slim,50s,cpdc,4,3,budget,images\p009_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p010_r0,10,0,Middle Eastern,female,plus-size,30s,vanilla,1,0,single_call,images\p010_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p010_r0,10,0,Middle Eastern,female,plus-size,30s,resample,4,3,passed,images\p010_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p010_r0,10,0,Middle Eastern,female,plus-size,30s,cpdc,4,2,budget,images\p010_r0_cpdc_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p011_r0,11,0,Middle Eastern,female,plus-size,50s,vanilla,1,0,single_call,images\p011_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p011_r0,11,0,Middle Eastern,female,plus-size,50s,resample,4,0,budget,images\p011_r0_resample_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p011_r0,11,0,Middle Eastern,female,plus-size,50s,cpdc,4,0,budget,images\p011_r0_cpdc_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p012_r0,12,0,Middle Eastern,male,slim,30s,vanilla,1,0,single_call,images\p012_r0_vanilla_best.png,0,1,0,0,0,0,1,1,0,0,0,1
+p012_r0,12,0,Middle Eastern,male,slim,30s,resample,2,1,passed,images\p012_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p012_r0,12,0,Middle Eastern,male,slim,30s,cpdc,2,1,passed,images\p012_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p013_r0,13,0,Middle Eastern,male,slim,50s,vanilla,1,0,single_call,images\p013_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p013_r0,13,0,Middle Eastern,male,slim,50s,resample,1,0,passed,images\p013_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p013_r0,13,0,Middle Eastern,male,slim,50s,cpdc,1,0,passed,images\p013_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p014_r0,14,0,Middle Eastern,male,plus-size,30s,vanilla,1,0,single_call,images\p014_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p014_r0,14,0,Middle Eastern,male,plus-size,30s,resample,4,3,passed,images\p014_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p014_r0,14,0,Middle Eastern,male,plus-size,30s,cpdc,2,1,passed,images\p014_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p015_r0,15,0,Middle Eastern,male,plus-size,50s,vanilla,1,0,single_call,images\p015_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,1,0,1
+p015_r0,15,0,Middle Eastern,male,plus-size,50s,resample,3,2,passed,images\p015_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p015_r0,15,0,Middle Eastern,male,plus-size,50s,cpdc,2,1,passed,images\p015_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p016_r0,16,0,White,female,slim,30s,vanilla,1,0,single_call,images\p016_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p016_r0,16,0,White,female,slim,30s,resample,1,0,passed,images\p016_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p016_r0,16,0,White,female,slim,30s,cpdc,1,0,passed,images\p016_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p017_r0,17,0,White,female,slim,50s,vanilla,1,0,single_call,images\p017_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p017_r0,17,0,White,female,slim,50s,resample,1,0,passed,images\p017_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p017_r0,17,0,White,female,slim,50s,cpdc,1,0,passed,images\p017_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p018_r0,18,0,White,female,plus-size,30s,vanilla,1,0,single_call,images\p018_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p018_r0,18,0,White,female,plus-size,30s,resample,1,0,passed,images\p018_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p018_r0,18,0,White,female,plus-size,30s,cpdc,1,0,passed,images\p018_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p019_r0,19,0,White,female,plus-size,50s,vanilla,1,0,single_call,images\p019_r0_vanilla_best.png,1,0,0,0,1,1,0,1,0,0,0,1
+p019_r0,19,0,White,female,plus-size,50s,resample,4,3,passed,images\p019_r0_resample_best.png,1,1,1,1,1,1,1,1,1,1,1,1
+p019_r0,19,0,White,female,plus-size,50s,cpdc,4,3,budget,images\p019_r0_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p020_r0,20,0,White,male,slim,30s,vanilla,1,0,single_call,images\p020_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p020_r0,20,0,White,male,slim,30s,resample,1,0,passed,images\p020_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p020_r0,20,0,White,male,slim,30s,cpdc,1,0,passed,images\p020_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,male,slim,50s,vanilla,1,0,single_call,images\p021_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,male,slim,50s,resample,1,0,passed,images\p021_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p021_r0,21,0,White,male,slim,50s,cpdc,1,0,passed,images\p021_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p022_r0,22,0,White,male,plus-size,30s,vanilla,1,0,single_call,images\p022_r0_vanilla_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p022_r0,22,0,White,male,plus-size,30s,resample,4,0,budget,images\p022_r0_resample_best.png,0,1,1,0,0,0,1,1,1,0,0,1
+p022_r0,22,0,White,male,plus-size,30s,cpdc,4,3,budget,images\p022_r0_cpdc_best.png,1,1,0,0,1,1,1,1,0,0,0,1
+p023_r0,23,0,White,male,plus-size,50s,vanilla,1,0,single_call,images\p023_r0_vanilla_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p023_r0,23,0,White,male,plus-size,50s,resample,1,0,passed,images\p023_r0_resample_best.png,1,1,1,1,1,1,1,1,1,0,1,1
+p023_r0,23,0,White,male,plus-size,50s,cpdc,1,0,passed,images\p023_r0_cpdc_best.png,1,1,1,1,1,1,1,1,1,0,1,1

@@ -1,0 +1,224 @@
+{
+  "created_at": "2026-08-24T21:56:45",
+  "assets": {
+    "image": "outputs/output_seed42.png",
+    "video": "outputs/video.mp4"
+  },
+  "generation_metrics": {
+    "generation_time": {
+      "value": 45.0,
+      "unit": "seconds",
+      "status": "Measured",
+      "note": ""
+    },
+    "inference_cost": {
+      "value": 0.0,
+      "unit": "USD",
+      "status": "Measured",
+      "note": ""
+    },
+    "gpu_usage": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "nvidia-smi is unavailable (common for cloud/API generation)."
+    }
+  },
+  "image_metrics": {
+    "resolution": {
+      "value": "1024 x 1024",
+      "unit": "pixels",
+      "status": "Measured",
+      "note": ""
+    },
+    "sharpness_variance_laplacian": {
+      "value": 621.59,
+      "unit": "higher is sharper",
+      "status": "Measured",
+      "note": ""
+    },
+    "aesthetic_quality_proxy": {
+      "value": 89.44,
+      "unit": "0-100",
+      "status": "Measured",
+      "note": "Heuristic aesthetic proxy from sharpness, exposure and colour; do not present as a learned aesthetic score."
+    },
+    "niqe": {
+      "value": 7.0425,
+      "unit": "lower is better",
+      "status": "Measured",
+      "note": ""
+    },
+    "brisque": {
+      "value": 60.6245,
+      "unit": "lower is better",
+      "status": "Measured",
+      "note": ""
+    },
+    "psnr": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-image is required."
+    },
+    "ssim": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-image is required."
+    },
+    "lpips": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-image is required."
+    }
+  },
+  "video_metrics": {
+    "resolution": {
+      "value": "960 x 960",
+      "unit": "pixels",
+      "status": "Measured",
+      "note": ""
+    },
+    "duration": {
+      "value": 5.031,
+      "unit": "seconds",
+      "status": "Measured",
+      "note": ""
+    },
+    "frame_rate": {
+      "value": 32.0,
+      "unit": "FPS",
+      "status": "Measured",
+      "note": ""
+    },
+    "sampled_frames": {
+      "value": 16,
+      "unit": "frames",
+      "status": "Measured",
+      "note": ""
+    },
+    "scene_consistency_temporal_ssim": {
+      "value": 0.78008,
+      "unit": "0\u20131",
+      "status": "Measured",
+      "note": "Adjacent sampled frames; high values indicate stable appearance, not necessarily realism."
+    },
+    "fvd": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-video is required."
+    },
+    "temporal_flicker": {
+      "value": 0.04451,
+      "unit": "0-1, lower is better",
+      "status": "Measured",
+      "note": "Mean adjacent-frame luminance change; intended motion can increase this value."
+    },
+    "motion_smoothness_optical_flow": {
+      "value": 4.76423,
+      "unit": "pixels/frame, lower is smoother",
+      "status": "Measured",
+      "note": "Mean change in dense optical flow between adjacent samples."
+    },
+    "subject_consistency_proxy": {
+      "value": 0.68787,
+      "unit": "0-1, higher is more stable",
+      "status": "Measured",
+      "note": "Central 50% x 60% crop SSIM proxy; assumes the person is centred."
+    },
+    "background_consistency_proxy": {
+      "value": 0.86757,
+      "unit": "0-1, higher is more stable",
+      "status": "Measured",
+      "note": "Outer-border SSIM proxy; assumes a mostly fixed camera."
+    },
+    "aligned_frame_psnr": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-video is required."
+    },
+    "aligned_frame_ssim": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "A matched --reference-video is required."
+    }
+  },
+  "ai_specific_metrics": {
+    "prompt_adherence_clip": {
+      "value": 32.791,
+      "unit": "CLIP logit",
+      "status": "Measured",
+      "note": "Higher means stronger image\u2013prompt alignment; compare within one study."
+    },
+    "object_consistency": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Requires labelled object detections across a test set; do not infer it from a single asset."
+    },
+    "character_consistency": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Requires identity annotations or face embeddings across video frames/test cases."
+    },
+    "hallucination_rate": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Requires a labelled set of requested objects versus generated objects."
+    }
+  },
+  "study_metrics": {
+    "engagement": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "watch_time": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "brand_recall": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "persuasiveness": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "conversion_intent": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "realism": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "creativity": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "trust": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "purchase_intention": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "audio_quality": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    },
+    "lip_sync_accuracy": {
+      "value": null,
+      "status": "Not measured",
+      "reason": "Collect through a participant study or platform analytics."
+    }
+  }
+}

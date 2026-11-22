@@ -1,58 +1,36 @@
+import io
 import os
-import re
+import random
 import time
+
 import streamlit as st
 import yaml
 from dotenv import load_dotenv
+from PIL import Image as PILImage
 
-from profiler.profile_gen import generate_profiles
-from profiler.prompt_builder import build_prompt
-from profiler.text_parser import check_ollama, parse_brief
-
-# ── RAG import (graceful fallback if not installed yet) ──────────────────────
-try:
-    from rag.brief_rag import BriefRAG
-    _RAG_AVAILABLE = True
-except ImportError:
-    _RAG_AVAILABLE = False
+from modules.correction_loop import run_loop
+from modules.prompt_adapter import make_prompt_builder
+from profiler.product_category import infer_category_from_text
+from profiler.profile_gen_with_rag import generate_profiles
+from profiler.prompt_builder import clean_scene
+from profiler.text_parser import parse_brief_detailed
 
 load_dotenv()
 
+
 @st.cache_resource
 def load_config():
-    with open("config.yaml") as f:
+    with open("config.yaml", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
-@st.cache_resource
-def load_rag():
-    """Load RAG store once — cached so it persists across reruns."""
-    if _RAG_AVAILABLE:
-        return BriefRAG()
-    return None
 
-CFG      = load_config()
-REQUIRED = CFG["required_fields"]
-
-OLLAMA_CFG   = CFG.get("ollama", {})
-OLLAMA_HOST  = OLLAMA_CFG.get("host", "http://localhost:11434")
-OLLAMA_MODEL = OLLAMA_CFG.get("model", "phi3:mini")
-
-rag = load_rag()
-
+CFG = load_config()
+OPT = CFG["options"]
+REGIONS = list(CFG.get("regions", {}).get("South Asian", {}))
 os.makedirs("outputs", exist_ok=True)
 
-st.set_page_config(
-    page_title="AdFidelity",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-try:
-    check_ollama(OLLAMA_HOST)
-except RuntimeError as e:
-    st.error(f"**Ollama is not running.**\n\n{e}\n\nPlease start Ollama before using AdFidelity.")
-    st.stop()
+st.set_page_config(page_title="AdFidelity", page_icon="🎯", layout="wide",
+                   initial_sidebar_state="expanded")
 
 # ─────────────────────────────────────────────
 # STYLES
@@ -105,22 +83,6 @@ section[data-testid="stSidebar"] { background: #10121E !important; border-right:
     letter-spacing: 0.12em;
     color: #3A3D5C;
     margin: 1rem 0 0.35rem 0;
-}
-
-/* ── RAG badge ── */
-.af-rag-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(179,136,255,0.08);
-    border: 1px solid rgba(179,136,255,0.2);
-    border-radius: 100px;
-    padding: 0.22rem 0.7rem;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: #B388FF;
-    margin-bottom: 0.6rem;
 }
 
 /* ── Profile chip ── */
@@ -323,400 +285,373 @@ section[data-testid="stSidebar"] .stNumberInput input {
 # ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
-PRODUCT_QUESTION = "Would you like to add a **product** to this ad? Reply **yes** or **no**."
-YES_WORDS = {"yes","yeah","yep","yup","y","sure","ok","okay"}
-NO_WORDS  = {"no","nope","nah","n","skip","none"}
-
-PRODUCT_KEYWORDS = {
-    "handbag":    ["handbag","bag","purse","tote","clutch","satchel"],
-    "sunglasses": ["sunglasses","glasses","eyewear","shades"],
-    "jewelry":    ["jewellery","jewelry","necklace","earrings","bracelet",
-                   "ring","pendant","chain","anklet","bangles","bangle"],
-    "clothing":   ["saree","sari","kurta","kurti","lehenga","salwar",
-                   "dress","outfit","suit","gown","top","shirt","blouse"],
-    "other":      ["watch","scarf","belt","shoes","heels","sandals",
-                   "cap","hat","accessory","accessories"],
+AXES = [("ethnicity", "Ethnicity"), ("gender", "Gender"), ("age", "Age"), ("body_type", "Body type")]
+POLICY_LABELS = {
+    "cpdc": "Adaptive correction (recommended)",
+    "resample": "Simple retry (same prompt, new seed)",
+    "vanilla": "Off - single generation",
 }
 
-def detect_product_in_brief(text):
-    lower = text.lower()
-    for cat, kws in PRODUCT_KEYWORDS.items():
-        for kw in kws:
-            if kw in lower:
-                return cat, kw
-    return None, None
 
-def missing_fields(profile):
-    return [f for f in REQUIRED if not profile.get(f)]
+@st.cache_resource(show_spinner="Loading face-attribute verifier (first run downloads weights)...")
+def load_verifier():
+    from scoring.cache import CachedScorer
+    from scoring.registry import get_scorer
+    return CachedScorer(get_scorer(CFG["scoring"]["verifier"], CFG))
 
-def parse_yes_no(text):
-    words = re.findall(r"[a-z]+", text.lower())
-    if any(w in YES_WORDS for w in words): return True
-    if any(w in NO_WORDS  for w in words): return False
-    return None
 
-def stage_index(stage):
-    return {"collecting":0,"pick_profile":1,"ask_product":2,"ready":3}.get(stage,0)
+def pills(report):
+    """HTML pass/fail pills, one per axis."""
+    out = []
+    for key, label in AXES:
+        ax = report.axes.get(key) if report else None
+        if ax is None or not ax.scored:
+            out.append(f'<span class="af-pill na" title="Not automatically verified">{label} · not auto-checked</span>')
+        elif ax.passed:
+            out.append(f'<span class="af-pill ok">{label} ✓ {ax.predicted}</span>')
+        else:
+            out.append(f'<span class="af-pill bad">{label} ✗ {ax.predicted or "?"} (want {ax.target})</span>')
+    if report is not None and not report.face_found:
+        out = ['<span class="af-pill bad">No face detected</span>']
+    return " ".join(out)
 
-# ─────────────────────────────────────────────
-# SESSION STATE
-# ─────────────────────────────────────────────
+
+def profile_summary(p):
+    bits = [p.get("ethnicity"), p.get("gender"), p.get("age"), p.get("body_type"), p.get("region")]
+    return " · ".join(b for b in bits if b) or "-"
+
+
 ss = st.session_state
-ss.setdefault("messages", [{"role":"assistant","content":(
-    "Describe your brand or advertisement — e.g. "
-    "*'sportswear brand targeting diverse women'* or "
-    "*'plus size Indian woman in her 40s, navy suit'*."
-)}])
-ss.setdefault("profile",  {})
-ss.setdefault("profiles", [])
-ss.setdefault("mode",     None)
-ss.setdefault("stage",    "collecting")
-ss.setdefault("want_product", None)
-ss.setdefault("product_category_detected", None)
-ss.setdefault("original_brief", "")
-ss.setdefault("seed", 42)
-ss.setdefault("brand_name", "")
-ss.setdefault("rag_context", "")          # ← NEW: stores RAG context for current brief
-ss.setdefault("last_fidelity_score", None) # ← NEW: stores score to save back to RAG
+ss.setdefault("brief", "")
+ss.setdefault("parsed", None)
+ss.setdefault("suggestions", [])
+ss.setdefault("result", None)
+ss.setdefault("ctx", {})
+
+st.markdown("""
+<style>
+.af-pill{display:inline-block;padding:3px 10px;margin:2px 3px 2px 0;border-radius:999px;font-size:.74rem;
+  font-weight:600;border:1px solid rgba(255,255,255,.12)}
+.af-pill.ok{background:rgba(46,204,113,.14);color:#6EE7A8;border-color:rgba(46,204,113,.4)}
+.af-pill.bad{background:rgba(255,82,82,.12);color:#FF8A8A;border-color:rgba(255,82,82,.4)}
+.af-pill.na{background:rgba(255,255,255,.05);color:#9A9CB5}
+.af-note{font-size:.8rem;color:#9A9CB5;margin:.2rem 0 .6rem}
+header[data-testid="stHeader"]{background:transparent !important}
+.af-section-title{color:#F1F1F8 !important;font-size:1.15rem !important;margin:1.4rem 0 .5rem !important}
+.af-label,.af-sub,.af-main-sub,[data-testid="stWidgetLabel"] p{color:#B4B6CE !important}
+.stTextArea textarea,.stTextInput input{background:rgba(255,255,255,.05) !important;color:#ECECF6 !important;
+  border:1px solid rgba(255,255,255,.14) !important}
+[data-testid="stFileUploaderDropzone"]{background:rgba(255,255,255,.05) !important}
+[data-testid="stFileUploaderDropzone"] *{color:#C9CBE0 !important}
+.stButton>button{color:#F1F1F8}
+[data-baseweb="textarea"],[data-baseweb="base-input"],[data-baseweb="input"]{background:rgba(255,255,255,.06) !important}
+[data-baseweb="textarea"] textarea,[data-baseweb="base-input"] input{background:transparent !important;
+  color:#ECECF6 !important;-webkit-text-fill-color:#ECECF6 !important}
+[data-testid="stTextArea"] div,[data-testid="stTextArea"] textarea{background:#171A2B !important;
+  color:#ECECF6 !important;-webkit-text-fill-color:#ECECF6 !important;border-color:rgba(255,255,255,.14) !important}
+[data-testid="stTextInput"] div,[data-testid="stTextInput"] input,[data-testid="stSelectbox"] div[data-baseweb="select"] div{
+  background:#171A2B !important;color:#ECECF6 !important;-webkit-text-fill-color:#ECECF6 !important}
+[data-testid="stSelectbox"] svg{fill:#B4B6CE !important}
+textarea::placeholder,input::placeholder{color:#8C8EA8 !important;-webkit-text-fill-color:#8C8EA8 !important}
+</style>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# SIDEBAR — controls
+# SIDEBAR - creative + verification settings
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<h2 class="af-wordmark">AdFidelity</h2>', unsafe_allow_html=True)
-    st.markdown('<p class="af-sub">Ad Generation Studio</p>', unsafe_allow_html=True)
-
-    # RAG status badge
-    if _RAG_AVAILABLE and rag is not None:
-        count = rag.count()
-        st.markdown(
-            f'<div class="af-rag-badge">🧠 RAG · {count} past campaign{"s" if count != 1 else ""}</div>',
-            unsafe_allow_html=True
-        )
-
-    # Step tracker
-    steps   = [("Brief","collecting"),("Profile","pick_profile"),("Product","ask_product"),("Generate","ready")]
-    current = stage_index(ss.stage)
-    pills   = '<div class="af-steps">'
-    for i,(label,_) in enumerate(steps):
-        cls  = "done" if i < current else ("active" if i == current else "pending")
-        icon = "✓"    if i < current else str(i+1)
-        pills += f'<div class="af-step-item"><div class="af-step-dot {cls}">{icon}</div><span class="af-step-label {cls}">{label}</span></div>'
-        if i < len(steps)-1:
-            pills += f'<div class="af-step-line {"done" if i < current else "pending"}"></div>'
-    pills += '</div>'
-    st.markdown(pills, unsafe_allow_html=True)
-
-    # Profile chip
-    if ss.stage in ("ask_product","ready","pick_profile") and ss.profile and len(ss.messages) > 2:
-        p = ss.profile
-        st.markdown(
-            f'<div class="af-chip"><span class="af-chip-dot"></span>'
-            f'{p.get("ethnicity","—")} · {p.get("body_type","—")} · {p.get("age","—")}</div>',
-            unsafe_allow_html=True
-        )
-
+    st.markdown('<p class="af-sub">Demographic-faithful ad studio</p>', unsafe_allow_html=True)
     st.divider()
 
-    if ss.stage == "ready":
-        # Brand
-        st.markdown('<p class="af-label">Brand name</p>', unsafe_allow_html=True)
-        brand_input = st.text_input("Brand", placeholder="Tanishq, Zara, Fabindia...", label_visibility="collapsed")
-        ss.brand_name = brand_input if brand_input else "Brand"
+    st.markdown('<p class="af-label">Brand name</p>', unsafe_allow_html=True)
+    brand = st.text_input("Brand", placeholder="Tanishq, Zara, Fabindia...", label_visibility="collapsed") or "Brand"
 
-        # Ad Style
-        st.markdown('<p class="af-label">Clothing</p>', unsafe_allow_html=True)
-        clothing = st.text_input("Clothing", placeholder="white blazer, red kurta, navy saree...", label_visibility="collapsed")
-        if not clothing:
-            clothing = "professional outfit"
+    st.markdown('<p class="af-label">Clothing</p>', unsafe_allow_html=True)
+    clothing = st.text_input("Clothing", placeholder="white blazer, red kurta, navy saree...",
+                             label_visibility="collapsed") or "professional outfit"
 
-        st.markdown('<p class="af-label">Background</p>', unsafe_allow_html=True)
-        background = st.selectbox("Background", CFG["options"]["background"], label_visibility="collapsed")
-
-        st.markdown('<p class="af-label">Seed</p>', unsafe_allow_html=True)
-        seed = st.number_input("Seed", 0, 999999, ss.seed, label_visibility="collapsed",
-                               help="Fixed seed for reproducible outputs.")
-        ss.seed = seed
-
-        # Product
-        product_file     = None
-        product_category = ss.get("product_category_detected") or "handbag"
-        if ss.want_product:
-            st.markdown('<p class="af-label">Product image</p>', unsafe_allow_html=True)
-            product_file = st.file_uploader("Product", type=["png","jpg"], label_visibility="collapsed")
-
-        # Tagline
-        st.markdown('<p class="af-label">Tagline</p>', unsafe_allow_html=True)
-        custom_tagline = st.text_input("Tagline", placeholder="Leave blank to auto-generate...", label_visibility="collapsed")
-
-        # Animation
-        st.divider()
-        st.markdown('<p class="af-label">Animation</p>', unsafe_allow_html=True)
-        animate_enabled = st.toggle("Generate video", value=False,
-                                    help="Animates via Wan2.1-I2V — uses HF credits.")
-        if animate_enabled:
-            motion_style = st.radio("Motion", ["sway","walk"],
-                                    format_func=lambda x: "↔ Sway & turn" if x=="sway" else "→ Walk & pose")
-            ad_duration  = st.radio("Duration", [5,10,15,20],
-                                    format_func=lambda x: f"{x}s", horizontal=True)
-        else:
-            motion_style = "sway"
-            ad_duration  = 15
-
-        st.divider()
-
-        # Generate button
-        if not missing_fields(ss.profile):
-            generate_clicked = st.button("✦ Generate Ad", type="primary")
-        else:
-            st.info("Complete the profile in chat to unlock.")
-            generate_clicked = False
-
+    st.markdown('<p class="af-label">Background</p>', unsafe_allow_html=True)
+    bg_mode = st.radio("BgMode", ["Colour", "Scene", "Custom"], horizontal=True, label_visibility="collapsed")
+    scene = None
+    background = CFG["defaults"]["background"]
+    if bg_mode == "Scene":
+        presets = CFG.get("background_presets", {})
+        preset = st.selectbox("Scene", list(presets), label_visibility="collapsed")
+        scene = presets.get(preset, "")
+    elif bg_mode == "Custom":
+        scene = st.text_area("Custom scene", placeholder="realistic luxury hotel lobby with cinematic lighting",
+                             label_visibility="collapsed", max_chars=200)
     else:
-        # Placeholders so variables exist
-        clothing = "professional outfit"
-        background = CFG["options"]["background"][0] if CFG["options"]["background"] else "white"
-        seed = ss.seed
-        product_file = None
-        product_category = "handbag"
-        custom_tagline = ""
-        animate_enabled = False
-        motion_style = "sway"
-        ad_duration = 15
-        generate_clicked = False
+        background = st.selectbox("Background", OPT["background"], label_visibility="collapsed")
+    scene = clean_scene(scene) or None
+    background_focus = st.selectbox("Background focus", ["Auto", "Blurred", "Sharp"])
+
+    st.markdown('<p class="af-label">Product (optional)</p>', unsafe_allow_html=True)
+    product_file = st.file_uploader("Product", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+    product_text = st.text_input("Product name", placeholder="e.g. black leather handbag (optional)",
+                                 label_visibility="collapsed")
+
+    st.markdown('<p class="af-label">Tagline</p>', unsafe_allow_html=True)
+    custom_tagline = st.text_input("Tagline", placeholder="Leave blank to auto-pick...", label_visibility="collapsed")
 
     st.divider()
-    st.button("↺ New brief", on_click=lambda: ss.update({
-        "profile":{}, "profiles":[], "mode":None,
-        "stage":"collecting", "want_product":None,
-        "original_brief":"", "product_category_detected":None,
-        "brand_name":"",
-        "rag_context":"",
-        "last_fidelity_score": None,
-        "messages": ss.messages[:1]
-    }))
+    st.markdown('<p class="af-label">Verify & auto-correct</p>', unsafe_allow_html=True)
+    policy = st.selectbox("Mode", list(POLICY_LABELS), format_func=POLICY_LABELS.get, label_visibility="collapsed",
+                          help="After each image a face-attribute model checks ethnicity, gender and age against "
+                               "your brief; failing axes are corrected in the next prompt.")
+    max_calls = 1 if policy == "vanilla" else st.slider("Max attempts", 2, 6, CFG["loop"]["max_calls"])
+    provider_choice = st.selectbox("Image source", ["Live (FLUX)", "Demo (sample images)"],
+                                   help="Demo mode uses bundled sample photos - for trying the interface offline.")
+    provider = "mock" if provider_choice.startswith("Demo") else None
+
+    st.divider()
+    animate_enabled = st.toggle("Generate video", value=False, help="Animates the final image.")
+    if animate_enabled:
+        motion_style = st.radio("Motion", ["sway", "walk"],
+                                format_func=lambda x: "↔ Sway & turn" if x == "sway" else "→ Walk & pose")
+        ad_duration = st.radio("Duration", [5, 10, 15, 20], format_func=lambda x: f"{x}s", horizontal=True)
+    else:
+        motion_style, ad_duration = "sway", 15
+
+    st.divider()
+    if st.button("↺ New brief"):
+        for k in ("brief", "parsed", "suggestions", "result", "ctx"):
+            ss.pop(k, None)
+        for k in list(ss.keys()):
+            if k.startswith("sel_"):
+                ss.pop(k)
+        st.rerun()
 
 # ─────────────────────────────────────────────
-# MAIN AREA — header + chat
+# MAIN - 1) brief
 # ─────────────────────────────────────────────
 st.markdown("""
 <div class="af-main-header">
   <h1 class="af-main-title">Ad Generation Studio</h1>
-  <p class="af-main-sub">Demographic-faithful · AI-powered · End-to-end</p>
+  <p class="af-main-sub">Say who the ad is for. AdFidelity checks the image and fixes it until it matches.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Chat history
-for m in ss.messages:
-    with st.chat_message(m["role"]):
-        st.markdown(m["content"])
+st.markdown('<h3 class="af-section-title">1 · Describe the person</h3>', unsafe_allow_html=True)
+brief = st.text_area("Brief", value=ss.brief, height=90, label_visibility="collapsed",
+                     placeholder="e.g. plus-size South Indian woman in her 40s, navy saree  ·  "
+                                 "or  ·  sportswear brand targeting diverse women")
+c1, c2, _ = st.columns([1, 1.3, 3])
+if c1.button("Analyse brief", type="primary"):
+    ss.brief = brief
+    ss.parsed = parse_brief_detailed(brief, CFG)
+    ss.suggestions = []
+    for k in [k for k in ss.keys() if k.startswith("sel_")]:
+        ss.pop(k)
+    ss.result = None
+    if not ss.parsed.fields:
+        ss.suggestions = generate_profiles(brief, n=6, cfg=CFG)
+if c2.button("Suggest 6 diverse profiles"):
+    ss.brief = brief
+    ss.suggestions = generate_profiles(brief, n=6, cfg=CFG, fixed=(ss.parsed.profile() if ss.parsed else None))
+
+parsed = ss.parsed
+if parsed is not None:
+    chips = []
+    for name, m in parsed.fields.items():
+        tag = "" if m.confidence == "high" else " (unsure)"
+        chips.append(f'<span class="af-pill {"ok" if m.confidence == "high" else "na"}" '
+                     f'title="matched: {m.evidence}">{name}: {m.value}{tag}</span>')
+    st.markdown(" ".join(chips) or '<span class="af-note">No demographic details found in the brief.</span>',
+                unsafe_allow_html=True)
+    for msg in parsed.unsupported:
+        st.warning(msg)
+    for msg in parsed.warnings:
+        st.info(msg)
+    for name, cands in parsed.ambiguous.items():
+        st.info(f"“{name}” is ambiguous ({', '.join(cands)}) - please choose below.")
+
+if ss.suggestions:
+    st.markdown('<p class="af-note">Pick a profile to use:</p>', unsafe_allow_html=True)
+    cols = st.columns(3)
+    for i, p in enumerate(ss.suggestions):
+        if cols[i % 3].button(f"{i+1}. {profile_summary(p)}", key=f"sug_{i}"):
+            for f in ("ethnicity", "gender", "age", "body_type"):
+                ss[f"sel_{f}"] = p.get(f)
+            ss["sel_region"] = p.get("region") or "-"
+            ss.suggestions = []
+            st.rerun()
 
 # ─────────────────────────────────────────────
-# CHAT INPUT + LOGIC
+# MAIN - 2) confirm profile
 # ─────────────────────────────────────────────
-if user_input := st.chat_input("Describe your brand or ad..."):
-    ss.messages.append({"role":"user","content":user_input})
-    ss.original_brief = ss.get("original_brief","") + " " + user_input
+st.markdown('<h3 class="af-section-title">2 · Confirm the profile</h3>', unsafe_allow_html=True)
+base = parsed.profile() if parsed else {}
 
-    if ss.stage == "pick_profile":
-        nums = re.findall(r"\b([1-6])\b", user_input)
-        if nums:
-            chosen = int(nums[0]) - 1
-            ss.profile = ss.profiles[chosen]
-            ss.mode    = "single"
-            ss.stage   = "ask_product"
-            p = ss.profile
-            ss.messages.append({"role":"assistant","content":
-                f"Going with **Profile {chosen+1}**: {p['ethnicity']}, {p['body_type']}, {p['age']}.\n\n" + PRODUCT_QUESTION})
-        else:
-            ss.profile = parse_brief(user_input, {}, CFG, REQUIRED, model=OLLAMA_MODEL, host=OLLAMA_HOST)
-            missing = missing_fields(ss.profile)
-            if not missing:
-                ss.mode  = "single"
-                ss.stage = "ask_product"
-                p = ss.profile
-                ss.messages.append({"role":"assistant","content":
-                    f"Got it — **{p['ethnicity']}, {p['body_type']}, {p['age']}**.\n\n" + PRODUCT_QUESTION})
-            else:
-                ss.messages.append({"role":"assistant","content":
-                    "Reply with a number **1–6** to pick a profile, or describe the demographic more specifically."})
 
-    elif ss.stage == "ask_product":
-        answer = parse_yes_no(user_input)
-        if answer is True:
-            ss.want_product = True
-            ss.stage = "ready"
-            ss.messages.append({"role":"assistant","content":
-                "Got it — upload your product image in the panel on the left, then hit **Generate**."})
-        elif answer is False:
-            ss.want_product = False
-            ss.stage = "ready"
-            ss.messages.append({"role":"assistant","content":
-                "No product — fill in the details on the left and hit **Generate**."})
-        else:
-            ss.messages.append({"role":"assistant","content":
-                "Just need a **yes** or **no** — " + PRODUCT_QUESTION})
+def pick(field, options, label):
+    key = f"sel_{field}"
+    if key not in ss:
+        v = base.get(field) or CFG["defaults"].get(field)
+        ss[key] = v if v in options else None
+    if ss[key] not in options:
+        ss[key] = None
+    return st.selectbox(label, options, key=key, index=None, placeholder="choose...")
 
+
+r = st.columns(5)
+with r[0]:
+    ethnicity = pick("ethnicity", OPT["ethnicity"], "Ethnicity")
+with r[1]:
+    gender = pick("gender", OPT["gender"], "Gender")
+with r[2]:
+    age = pick("age", OPT["age"], "Age")
+with r[3]:
+    body_type = pick("body_type", OPT["body_type"], "Body type")
+with r[4]:
+    if ethnicity == "South Asian":
+        ss.setdefault("sel_region", base.get("region") if base.get("region") in REGIONS else "-")
+        region = st.selectbox("Region (optional)", ["-"] + REGIONS, key="sel_region")
+        region = None if region == "-" else region
     else:
-        existing = ss.profile if len(ss.messages) > 2 else {}
-        ss.profile = parse_brief(user_input, existing, CFG, REQUIRED, model=OLLAMA_MODEL, host=OLLAMA_HOST)
-        missing = missing_fields(ss.profile)
+        region = None
+        st.selectbox("Region (optional)", ["-"], disabled=True, key="sel_region_off")
 
-        if not missing:
-            ss.mode = "single"
-            detected_cat, detected_kw = detect_product_in_brief(ss.get("original_brief",""))
-            if detected_cat:
-                ss.want_product = True
-                ss.product_category_detected = detected_cat
-                ss.stage = "ready"
-                ss.messages.append({"role":"assistant","content":
-                    f"Got it — **{ss.profile['body_type']} {ss.profile['ethnicity']} woman in her {ss.profile['age']}** with **{detected_kw}**.\n\n"
-                    "Upload your product image on the left and hit **Generate**."})
-            else:
-                ss.stage = "ask_product"
-                ss.messages.append({"role":"assistant","content":
-                    f"Got it — **{ss.profile['body_type']} {ss.profile['ethnicity']} woman in her {ss.profile['age']}**.\n\n" + PRODUCT_QUESTION})
-
-        elif len(missing) == 3:
-            # ── RAG: retrieve context before generating profiles ──────────────
-            ss.mode = "multi"
-            brief_text = ss.get("original_brief", user_input)
-
-            rag_context = ""
-            rag_note    = ""
-            if _RAG_AVAILABLE and rag is not None and rag.count() >= 2:
-                rag_context = rag.retrieve(brief_text)
-                ss.rag_context = rag_context
-                rag_note = "\n\n> 🧠 *Using similar past campaigns as context.*"
-
-            with st.spinner("Generating profiles..."):
-                try:
-                    ss.profiles = generate_profiles(
-                        user_input,
-                        model=OLLAMA_MODEL,
-                        host=OLLAMA_HOST,
-                        rag_context=rag_context      # ← RAG context passed here
-                    )
-                    reply = "Generated **6 demographic profiles** for your brand:\n\n"
-                    for i,p in enumerate(ss.profiles,1):
-                        reply += f"**{i}.** {p['ethnicity']}, {p['body_type']}, {p['age']}\n"
-                    reply += "\nWhich profile? Reply **1–6**, or describe a different demographic."
-                    reply += rag_note
-                    ss.stage = "pick_profile"
-                    ss.messages.append({"role":"assistant","content":reply})
-                except Exception as e:
-                    ss.messages.append({"role":"assistant","content":f"Profile generation failed: {e}"})
-        else:
-            ss.mode = "single"
-            questions = []
-            for field in missing:
-                opts  = ", ".join(CFG["options"][field])
-                label = {"ethnicity":"Ethnicity","body_type":"Body type","age":"Age group"}[field]
-                questions.append(f"- **{label}**: {opts}")
-            got   = {k:v for k,v in ss.profile.items() if k in REQUIRED and v}
-            intro = ("Got so far: " + ", ".join(f"**{v}**" for v in got.values()) + ".\n\n" if got else "")
-            ss.messages.append({"role":"assistant","content":
-                intro + "Just need a few more details:\n\n" + "\n".join(questions)})
-
-    st.rerun()
+profile = {"ethnicity": ethnicity, "gender": gender, "age": age, "body_type": body_type}
+if region:
+    profile["region"] = region
+missing = [k for k in ("ethnicity", "gender", "age", "body_type") if not profile.get(k)]
+if missing:
+    st.markdown(f'<p class="af-note">Still needed: {", ".join(missing)}</p>', unsafe_allow_html=True)
+else:
+    st.markdown(f'<div class="af-chip"><span class="af-chip-dot"></span>{profile_summary(profile)}</div>',
+                unsafe_allow_html=True)
+st.markdown('<p class="af-note">Ethnicity, gender and age are verified automatically on the result. '
+            'Body type is used in the prompt but is not auto-verified.</p>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# OUTPUT — render after generate clicked
+# MAIN - 3) generate
 # ─────────────────────────────────────────────
-if generate_clicked and ss.stage == "ready" and not missing_fields(ss.profile):
-    st.divider()
-    out = st.container()
+st.markdown('<h3 class="af-section-title">3 · Generate</h3>', unsafe_allow_html=True)
+go = st.button("✦ Generate ad image", type="primary", disabled=bool(missing))
 
-    from generator.flux_pipeline import generate_image
-    from modules.product_describe import describe_product
+if go and not missing:
+    ss.result = None
+    product_description, product_category, product_img = None, "other", None
+    if product_file is not None:
+        from modules.product_describe import describe_product
+        product_img = PILImage.open(product_file).convert("RGB")
+        product_description = (product_text.strip() if product_text.strip()
+                               else describe_product(product_img))
+    elif product_text:
+        product_description = product_text.strip()
+    if product_description:
+        product_category = infer_category_from_text(product_description) or "other"
+
+    build = make_prompt_builder(clothing, background, CFG, scene=scene,
+                                product_description=product_description,
+                                product_category=product_category, background_focus=background_focus)
+    from generator.adapter import make_generate_fn
+    gen = make_generate_fn(CFG, provider, profile)
+    run_cfg = {**CFG, "loop": {**CFG["loop"], "max_calls": max_calls}}
+    gallery = st.container()
+    tried = []
 
     try:
-        with out.status("Generating image...", expanded=True) as status:
-            product_description = None
-            if ss.want_product and product_file is not None:
-                status.write("👁️ Identifying product...")
-                from PIL import Image as PILImage
-                product_img = PILImage.open(product_file)
-                product_description = describe_product(product_img)
-                status.write(f"🛍️ *{product_description}*")
+        verifier = load_verifier()
+        with st.status("Generating and checking...", expanded=True) as status:
+            def on_attempt(att):
+                tried.append(att)
+                status.write(f"Attempt {att.index + 1}: "
+                             f"{'all checks passed ✓' if att.report.all_passed else 'needs correction'}")
 
-            prompt = build_prompt(
-                ss.profile, clothing, background, CFG,
-                product_description=product_description,
-                product_category=product_category
-            )
-            status.write("⚙️ Calling FLUX.1-schnell...")
-            img, device, res, steps_used = generate_image(prompt, int(seed), CFG)
-            status.update(label="Image ready ✓", state="complete")
-
-        out_path = f"outputs/output_seed{seed}.png"
-        img.save(out_path)
-
-        # Show image
-        c_img, c_vid = out.columns(2) if animate_enabled else (out, None)
-        c_img.image(img, caption=f"{device.upper()} · {res[0]}×{res[1]} · seed {seed}", use_container_width=True)
-
-        # ── RAG: store this run after successful generation ───────────────────
-        # We store with a default score of 7.0 if no CLIP scorer is available.
-        # If your teammate runs clip_fidelity_scorer.py separately and gets a
-        # score, they can update the store manually or integrate the scorer here.
-        if _RAG_AVAILABLE and rag is not None:
-            fidelity_score = ss.get("last_fidelity_score") or 7.0
-            rag.store(
-                brief=ss.get("original_brief", ""),
-                profile=ss.profile,
-                fidelity_score=fidelity_score
-            )
-
-        if animate_enabled:
-            from modules.motion import animate_image
-            from modules.ad_compositor import apply_ad_overlay, generate_tagline
-            try:
-                with out.status("Animating via Wan2.1-I2V...", expanded=True) as vs:
-                    vs.write(f"🎬 Style: {'Sway & turn' if motion_style=='sway' else 'Walk & pose'}")
-                    vs.write("🚀 Calling Wan2.1-I2V — ~60–120 s...")
-                    video_path = animate_image(
-                        img, config=CFG,
-                        profile=ss.profile,
-                        clothing=clothing,
-                        motion_style=motion_style
-                    )
-                    vs.update(label="Animation ready ✓", state="complete")
-
-                with out.status("Building ad overlay...", expanded=True) as cs:
-                    brand_name = ss.get("brand_name","Brand")
-                    if custom_tagline and custom_tagline.strip():
-                        tagline = custom_tagline.strip()
-                        cs.write(f"💬 Tagline: *{tagline}*")
-                    else:
-                        cs.write("✍️ Generating tagline...")
-                        tagline = generate_tagline(ss.get("original_brief",""), ss.profile, brand_name)
-                        cs.write(f"💬 *{tagline}*")
-
-                    cs.write("🎨 Compositing brand card...")
-                    prod_img_pil = None
-                    if product_file is not None:
-                        from PIL import Image as PILImage
-                        prod_img_pil = PILImage.open(product_file)
-
-                    ad_path = video_path.replace(".mp4","_ad.mp4")
-                    apply_ad_overlay(
-                        video_path=video_path,
-                        brand_name=brand_name,
-                        tagline=tagline,
-                        out_path=ad_path,
-                        product_img=prod_img_pil,
-                        target_duration_sec=ad_duration,
-                    )
-                    cs.update(label="Ad ready ✓", state="complete")
-
-                out.video(ad_path)
-                out.caption(f"📽️ {ad_path}")
-
-            except Exception as e:
-                out.error(f"Animation failed: {type(e).__name__}: {e}")
-
-    except Exception as e:
+            result = run_loop(profile, policy=policy, build_prompt_fn=build, generate_fn=gen,
+                              verifier=verifier, cfg=run_cfg, max_calls=max_calls,
+                              base_seed=random.randint(0, 99999), on_attempt=on_attempt)
+            status.update(label=f"Done - {result.calls} generation(s), "
+                                f"{'verified ✓' if result.best.report.all_passed else 'best available'}",
+                          state="complete")
+        ss.result = result
+        ss.ctx = {"profile": profile, "clothing": clothing, "scene": scene, "brand": brand,
+                  "demo": bool(getattr(gen, "is_mock", False))}
+        result.best.image.save(f"outputs/final_{int(time.time())}.png")
+    except Exception as e:                                   # noqa: BLE001
         import traceback
-        out.error(f"Generation failed: {type(e).__name__}: {e}")
-        out.code(traceback.format_exc())
+        st.error(f"Generation failed: {type(e).__name__}: {e}")
+        st.code(traceback.format_exc())
+
+result = ss.result
+if result is not None:
+    best = result.best
+    if ss.ctx.get("demo"):
+        st.info("Demo mode: images are bundled samples, not generated for this brief.")
+    left, right = st.columns([1.1, 1])
+    with left:
+        st.image(best.image, caption=f"Selected: attempt {best.index + 1} of {result.calls}",
+                 width='stretch')
+        buf = io.BytesIO()
+        best.image.save(buf, format="PNG")
+        st.download_button("⬇ Download image", buf.getvalue(), "adfidelity.png", "image/png")
+    with right:
+        st.markdown(pills(best.report), unsafe_allow_html=True)
+        if best.report.all_passed:
+            st.success("Matches the brief on every automatically verified axis.")
+        elif not best.report.face_found:
+            st.warning("No face was detected, so nothing could be verified.")
+        else:
+            st.warning("Closest attempt found - not every axis matched. Try more attempts or adjust the brief.")
+        rd = best.report.reading
+        if rd.face_found:
+            st.caption(f"Verifier estimate: age ≈ {rd.age:.0f}, "
+                       f"{'woman' if rd.gender.get('Woman', 0) >= rd.gender.get('Man', 0) else 'man'}. "
+                       "Automatic age and ethnicity estimates are approximate.")
+            top = sorted(rd.race.items(), key=lambda kv: -kv[1])[:3]
+            st.caption("Verifier ethnicity probabilities: " + ", ".join(f"{k} {v:.0f}%" for k, v in top)
+                       + f" · face found at {rd.face_confidence:.2f} confidence")
+    if result.calls > 1:
+        st.markdown('<p class="af-note">All attempts</p>', unsafe_allow_html=True)
+        cols = st.columns(min(result.calls, 4))
+        for a in result.attempts:
+            with cols[a.index % len(cols)]:
+                st.image(a.image, width='stretch',
+                         caption=f"#{a.index + 1}{' ★' if a.index == result.best_index else ''}")
+                st.markdown(pills(a.report), unsafe_allow_html=True)
+    with st.expander("Prompt trace"):
+        for a in result.attempts:
+            st.markdown(f"**Attempt {a.index + 1}** - corrections: `{a.applied or 'none'}`")
+            st.code(a.prompt, language=None)
+
+    # ─── Video / storyboard ───
+    if animate_enabled:
+        st.divider()
+        if st.button("🎬 Animate this image"):
+            try:
+                from modules.ad_compositor import apply_ad_overlay, generate_tagline
+                from modules.motion import animate_image
+                with st.status("Animating...", expanded=True) as vs:
+                    video_path = animate_image(best.image, config=CFG, profile=ss.ctx["profile"],
+                                               clothing=ss.ctx["clothing"], motion_style=motion_style,
+                                               scene=ss.ctx["scene"])
+                    tagline = (custom_tagline.strip() if custom_tagline.strip()
+                               else generate_tagline(ss.brief, ss.ctx["profile"], ss.ctx["brand"], cfg=CFG))
+                    ad_path = video_path.replace(".mp4", "_ad.mp4")
+                    apply_ad_overlay(video_path=video_path, brand_name=ss.ctx["brand"], tagline=tagline,
+                                     out_path=ad_path, product_img=(PILImage.open(product_file) if product_file is not None else None),
+                                     target_duration_sec=ad_duration)
+                    vs.update(label="Video ready ✓", state="complete")
+                st.video(ad_path)
+            except Exception as e:                           # noqa: BLE001
+                st.error(f"Animation failed: {type(e).__name__}: {e}")
+
+        st.markdown('<h3 class="af-section-title">🎬 Storyboard ad (20s)</h3>', unsafe_allow_html=True)
+        sb_ctx = st.text_input("Context / setting", placeholder="e.g. busy coffee shop, sunset beach, office...")
+        if st.button("Generate 20s ad"):
+            with st.status("Building storyboard ad...", expanded=True) as sts:
+                try:
+                    from modules.narrative import run_storyboard
+                    ad_path = run_storyboard(ss.ctx["profile"], ss.ctx["clothing"], ss.ctx["brand"],
+                                             context=sb_ctx.strip() or None, cfg=CFG,
+                                             product_file=product_file, brief=ss.brief,
+                                             target_duration=20, log=sts.write)
+                    sts.update(label="Storyboard ad ready ✓", state="complete")
+                    if ad_path and os.path.exists(ad_path):
+                        st.video(ad_path)
+                except Exception as e:                       # noqa: BLE001
+                    sts.update(label="Storyboard failed")
+                    st.error(f"{type(e).__name__}: {e}")
