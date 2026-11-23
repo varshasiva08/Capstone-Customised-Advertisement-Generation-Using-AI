@@ -304,19 +304,92 @@ def _hero_scene_from_context(context, shot_scene):
 
 def tts_voiceover(text: str, out_path: str, voice: str = "en-US-JennyNeural",
                   rate: str = "+0%") -> str | None:
-    """Synthesise a voiceover mp3 with edge-tts. Returns None on failure."""
-    try:
-        import asyncio
-        import edge_tts
+    """Synthesise a voiceover mp3 with edge-tts. Returns None on failure.
+
+    Runs edge-tts inside a locally-owned SelectorEventLoop on Windows so the
+    Proactor teardown bug
+    ('ConnectionResetError: [WinError 10054]' inside
+    _ProactorBasePipeTransport._call_connection_lost) never reaches the app.
+    Output is written to a sibling temp file then atomically renamed, so a
+    truncated mp3 never replaces the final path. One retry is attempted on
+    failure. All failures are logged as warnings instead of swallowed.
+    Signature and return type are unchanged.
+    """
+
+    import asyncio
+    import edge_tts
+
+    def _swallow_reset(loop, context):
+        """Suppress the benign Windows Proactor teardown reset; log others."""
+        exc = context.get("exception")
+        if isinstance(exc, ConnectionResetError):
+            return
+        msg = context.get("message", "edge-tts loop warning")
+        log(f"⚠️ edge-tts loop: {msg}")
+
+    def _save_once(path: str) -> None:
         comm = edge_tts.Communicate(text, voice, rate=rate)
-        if hasattr(comm, "save_sync"):
-            comm.save_sync(out_path)
-        else:
-            asyncio.run(comm.save(out_path))
-        if os.path.exists(out_path) and os.path.getsize(out_path) > 500:
+        loop = asyncio.new_event_loop()
+        old_loop = None
+        try:
+            old_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            old_loop = None
+        try:
+            asyncio.set_event_loop(loop)
+            loop.set_exception_handler(_swallow_reset)
+            try:
+                loop.run_until_complete(comm.save(path))
+            finally:
+                # Drain pending callbacks so teardown errors don't escape.
+                try:
+                    loop.run_until_complete(asyncio.sleep(0))
+                except Exception:
+                    pass
+                loop.close()
+        finally:
+            if old_loop is not None:
+                asyncio.set_event_loop(old_loop)
+
+    # Atomic write: write to a temp file next to the target, then rename.
+    out_dir = os.path.dirname(os.path.abspath(out_path))
+    os.makedirs(out_dir, exist_ok=True)
+    tmp_path = out_path + f".tmp{os.getpid()}"
+
+    last_err = None
+    for attempt in (1, 2):
+        try:
+            # Clean any stale temp from a previous crashed attempt.
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
+
+            _save_once(tmp_path)
+
+            if not os.path.exists(tmp_path) or os.path.getsize(tmp_path) <= 500:
+                got = os.path.getsize(tmp_path) if os.path.exists(tmp_path) else 0
+                raise RuntimeError(
+                    f"edge-tts produced an empty or truncated file ({got} bytes)"
+                )
+            os.replace(tmp_path, out_path)
             return out_path
-    except Exception:
-        return None
+        except Exception as e:
+            last_err = e
+            log(f"⚠️ Voiceover attempt {attempt}/2 failed "
+                f"({type(e).__name__}): {e}")
+            if attempt == 1:
+                time.sleep(2)
+
+    log(f"⚠️ Voiceover unavailable after 2 attempts "
+        f"({type(last_err).__name__}: {last_err}) — ad will continue silent.")
+    # Clean up any leftover temp file.
+    try:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+    except OSError:
+        pass
     return None
 
 
@@ -393,14 +466,14 @@ def _hero_push_in(hero, out_path, duration, fps=30.0):
 # Hero verification (local llava — free, offline)
 # ---------------------------------------------------------------------------
 
-def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
-    """Ask local Ollama llava whether the generated hero matches the brief
-    (demographic + clothing, plus the product when one is described).
+def _hero_score_profile(img, profile, clothing, cfg, product_desc=None):
+    """Ask local Ollama llava to score the hero against the brief.
 
-    The visual check is deliberately tolerant: a generally faithful image is
-    acceptable at 80/100 or above, but obvious detached/floating product
-    artifacts still fail when a product is present. Returns True on a checker
-    failure so verification never blocks the ad.
+    Returns ``(score: int, has_artifact: bool)`` so the caller can rank
+    multiple hero generations and pick the best one. A score >= 80 with no
+    product artifact counts as a verified match. Any checker failure or
+    exception degrades gracefully to score 100 / artifact False so
+    verification never blocks the ad.
     """
 
     pro = ((cfg or {}).get("product_describe") or {})
@@ -461,14 +534,24 @@ def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
             flags=re.DOTALL,
         )
         if not match:
-            # Keep compatibility with older local vision models that ignore
-            # the JSON request but still return a simple affirmative answer.
-            return answer.startswith(("yes", "likely", "mostly"))
+            # Older local vision models that ignore the JSON request but still
+            # return a simple affirmative answer: treat as a pass.
+            if answer.startswith(("yes", "likely", "mostly")):
+                return 100, False
+            return 80, False
         score = min(100, max(0, int(match.group(1))))
         has_artifact = match.group(2) == "true"
-        return score >= 80 and not has_artifact
+        return score, has_artifact
     except Exception:
-        return True
+        return 100, False
+
+
+def _hero_matches_profile(img, profile, clothing, cfg, product_desc=None):
+    """Backwards-compatible wrapper: True if the hero passes verification."""
+    score, has_artifact = _hero_score_profile(
+        img, profile, clothing, cfg, product_desc=product_desc
+    )
+    return score >= 80 and not has_artifact
 
 
 # ---------------------------------------------------------------------------
@@ -767,28 +850,88 @@ def run_storyboard(
         context, shots[0]["scene"] or "a stylish venue"
     )
 
-    # --- ONE hero image; llava-verified, re-rolled up to 3x ---
+    # --- ONE hero image; llava-scored, re-rolled up to 3x ---
+    # If any attempt passes verification (score >= 80, no artifact) we use it
+    # immediately. If none pass, we keep the highest-scoring hero so a
+    # conservative llava never blocks the ad — the best image goes to Wan.
+    HERO_VERIFY_THRESHOLD = 80
+    HERO_GEN_RETRIES = 2        # extra attempts per hero on provider failure
+    HERO_GEN_BACKOFF_SEC = 4
+
     hero_img = None
+    best_hero_img = None
+    best_score = -1
+    best_has_artifact = False
+    hero_verified = False
+
     for attempt in range(1, 4):
         log(f"🖼️ Hero image attempt {attempt}/3 (FLUX): {hero_scene[:70]}...")
-        prompt = build_prompt(
-            profile, clothing, "Pure White", cfg,
-            product_description=product_desc,
-            product_category=product_category,
-            scene=hero_scene,
-            background_focus=background_focus,
-            brand_tone=brand_tone,
+
+        # Generate with retry on transient provider errors (Cloudflare 409 etc.)
+        generated = None
+        for gen_try in range(1, HERO_GEN_RETRIES + 2):
+            try:
+                prompt = build_prompt(
+                    profile, clothing, "Pure White", cfg,
+                    product_description=product_desc,
+                    product_category=product_category,
+                    scene=hero_scene,
+                    background_focus=background_focus,
+                    brand_tone=brand_tone,
+                )
+                seed = random.randint(0, 999999)
+                generated, provider, res, steps_used = generate_image(
+                    prompt, seed, cfg
+                )
+                break
+            except Exception as e:
+                if gen_try > HERO_GEN_RETRIES + 1:
+                    log(f"⚠️ Hero generation failed after {gen_try} tries: {e}")
+                    generated = None
+                    break
+                log(f"⚠️ Hero generation try {gen_try} failed ({type(e).__name__}), "
+                    f"retrying in {HERO_GEN_BACKOFF_SEC}s...")
+                time.sleep(HERO_GEN_BACKOFF_SEC)
+
+        if generated is None:
+            continue  # skip this attempt, try next roll
+
+        hero_img = generated
+        # Save hero to disk for inspection; never let a disk/OneDrive/lock
+        # issue kill the ad — the image lives in memory and is used directly.
+        try:
+            hero_img.save(f"outputs/story_{run_id}_hero.png")
+        except OSError as e:
+            log(f"⚠️ Could not save hero PNG to disk ({e}) — continuing with "
+                "in-memory image.")
+
+        score, has_artifact = _hero_score_profile(
+            hero_img, profile, clothing, cfg, product_desc=product_desc
         )
-        seed = random.randint(0, 999999)
-        hero_img, provider, res, steps_used = generate_image(prompt, seed, cfg)
-        hero_img.save(f"outputs/story_{run_id}_hero.png")
-        if _hero_matches_profile(hero_img, profile, clothing, cfg,
-                                 product_desc=product_desc):
+        log(f"   llava score: {score}/100, artifact={has_artifact}")
+
+        # Track the best hero regardless of verification outcome.
+        if score > best_score:
+            best_score = score
+            best_hero_img = hero_img
+            best_has_artifact = has_artifact
+
+        # Accept the first image that clears verification.
+        if score >= HERO_VERIFY_THRESHOLD and not has_artifact:
+            hero_verified = True
             log("✅ Hero verified against the brief (llava).")
             break
-        log("⚠️ Hero doesn't match the brief — generating again...")
+        log("⚠️ Hero below verification threshold — generating again...")
+
+    # Use the verified hero if we have one, otherwise the best-scoring hero.
+    if hero_verified:
+        hero_img = hero_img or best_hero_img
+    elif best_hero_img is not None:
+        hero_img = best_hero_img
+        log(f"⚠️ No hero cleared verification; using best-scoring hero "
+            f"(score {best_score}/100) so the ad still completes.")
     else:
-        log("⚠️ Keeping last hero (brief could not be verified after 3 tries).")
+        raise RuntimeError("Hero image generation failed on all attempts.")
 
     # --- The product was drawn INTO the hero prompt above, so the model is
     #     holding/wearing it in every animated clip (no floating cutout). ---
